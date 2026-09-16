@@ -8,7 +8,15 @@
 
 ```bash
 sudo apt update
-sudo apt install php8.3 php8.3-cli php8.3-mbstring php8.3-xml php8.3-curl php8.3-mysql composer nodejs npm unzip -y
+sudo apt install php8.3 php8.3-cli php8.3-mbstring php8.3-xml php8.3-curl php8.3-mysql composer unzip -y
+```
+
+Node.js (le paquet `nodejs` des dépôts apt est souvent trop ancien : Vite 8 exige Node `^20.19.0` ou `>=22.12.0`). Installer via NodeSource :
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install nodejs -y
+node -v
 ```
 
 ### Récupération du projet
@@ -17,7 +25,7 @@ sudo apt install php8.3 php8.3-cli php8.3-mbstring php8.3-xml php8.3-curl php8.3
 git clone git@github.com:crm-event/crm-event-gestion.git
 cd crm-event-gestion
 composer install
-npm install --legacy-peer-deps
+npm install
 cp .env.example .env
 php artisan key:generate
 ```
@@ -43,7 +51,7 @@ php artisan serve
 
 - PHP 8.3 (Thread Safe) : https://windows.php.net/download/ → extraire dans `C:\php` → ajouter `C:\php` au PATH (variables d'environnement système)
 - Composer : https://getcomposer.org/Composer-Setup.exe
-- Node.js LTS : https://nodejs.org
+- Node.js LTS (Vite 8 exige Node `^20.19.0` ou `>=22.12.0`) : https://nodejs.org
 - Git : https://git-scm.com/download/win
 
 Dans `C:\php\php.ini`, décommenter (enlever le `;`) :
@@ -70,7 +78,7 @@ git --version
 git clone git@github.com:crm-event/crm-event-gestion.git
 cd crm-event-gestion
 composer install
-npm install --legacy-peer-deps
+npm install
 copy .env.example .env
 php artisan key:generate
 ```
