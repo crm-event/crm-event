@@ -109,3 +109,10 @@ Sinon, dans deux terminaux séparés :
 npm run dev
 php artisan serve
 ```
+
+---
+
+## Configuration IDE (optionnel)
+
+- **Interpréteur PHP** : `Settings → PHP` → faire pointer l'interpréteur vers le PHP 8.3 installé lors des prérequis (doit correspondre à la sortie de `php -v`).
+- **Interpréteur Node.js** : `Settings → Languages & Frameworks → Node.js` si vous préférez lancer `npm run dev` depuis l'IDE plutôt que le terminal.
