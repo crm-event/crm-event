@@ -37,6 +37,14 @@ php artisan migrate
 ### Lancer le projet
 
 ```bash
+composer run dev
+```
+
+Cette commande lance en même temps le serveur Laravel, Vite, la queue et les logs.
+
+Sinon, dans deux terminaux séparés :
+
+```bash
 npm run dev
 php artisan serve
 ```
@@ -88,6 +96,14 @@ php artisan migrate
 ```
 
 ### Lancer le projet
+
+```powershell
+composer run dev
+```
+
+Cette commande lance en même temps le serveur Laravel, Vite, la queue et les logs.
+
+Sinon, dans deux terminaux séparés :
 
 ```powershell
 npm run dev
