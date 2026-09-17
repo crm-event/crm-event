@@ -1,4 +1,4 @@
-# La Dernière Touche — Installation
+# CRM Event - Installation
 
 ---
 
@@ -10,8 +10,6 @@
 sudo apt update
 sudo apt install php8.3 php8.3-cli php8.3-mbstring php8.3-xml php8.3-curl php8.3-mysql composer unzip -y
 ```
-
-Node.js (le paquet `nodejs` des dépôts apt est souvent trop ancien : Vite 8 exige Node `^20.19.0` ou `>=22.12.0`). Installer via NodeSource :
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
