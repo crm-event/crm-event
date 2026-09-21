@@ -1,25 +1,24 @@
 {
-    "$schema": "https://www.schemastore.org/package.json",
+    "name": "crm-event",
     "private": true,
-    "type": "module",
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+        "dev:gestion": "npm run dev -w @crm-event/gestion",
+        "dev:client": "npm run dev -w @crm-event/client",
+        "build": "npm run build --workspaces --if-present",
+        "typecheck": "npm run typecheck --workspaces --if-present",
+        "api:openapi": "cross-env DB_CONNECTION=sqlite DB_DATABASE=:memory: php api/artisan scramble:export --path=packages/api-types/openapi.json",
+        "api:types": "openapi-typescript packages/api-types/openapi.json -o packages/api-types/index.d.ts",
+        "types": "npm run api:openapi && npm run api:types"
     },
     "devDependencies": {
-        "@headlessui/react": "^2.0.0",
-        "@inertiajs/react": "^2.0.0",
-        "@tailwindcss/forms": "^0.5.3",
-        "@tailwindcss/vite": "^4.0.0",
-        "@vitejs/plugin-react": "^6.1.1",
-        "autoprefixer": "^10.4.12",
-        "axios": "^1.7.4",
-        "concurrently": "^10.0.3",
-        "laravel-vite-plugin": "^3.1",
-        "postcss": "^8.4.31",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "tailwindcss": "^3.2.1",
-        "vite": "^8.0.0"
+        "cross-env": "^10.1.0",
+        "openapi-typescript": "^7.6.0"
+    },
+    "engines": {
+        "node": ">=22.12.0"
     }
 }

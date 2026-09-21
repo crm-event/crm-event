@@ -1,0 +1,64 @@
+name: API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'packages/api-types/**'
+      - '.github/workflows/api.yml'
+  pull_request:
+    paths:
+      - 'api/**'
+      - 'packages/api-types/**'
+      - '.github/workflows/api.yml'
+
+jobs:
+  test:
+    name: Tests, style et contrat OpenAPI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_sqlite, sqlite3, pdo_mysql
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('api/composer.lock') }}
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Préparer l'environnement
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Style (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Tests (sqlite en mémoire)
+        run: php artisan test
+
+      # Le contrat versionné doit correspondre au code : si l'API a changé,
+      # l'auteur doit lancer `npm run types` et committer le résultat, ce qui
+      # rend le changement visible pour l'autre équipe dans le diff de la PR.
+      # L'export ne doit jamais dépendre d'une base : les types viennent des
+      # docblocks @property des modèles (identique sur tous les postes).
+      - name: Contrat OpenAPI à jour
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+        run: |
+          php artisan scramble:export --path=../packages/api-types/openapi.json
+          git diff --exit-code -- ../packages/api-types/openapi.json \
+            || (echo "::error::packages/api-types/openapi.json n'est pas à jour : lancez 'npm run types' et committez." && exit 1)
