@@ -52,7 +52,12 @@ jobs:
       # Le contrat versionné doit correspondre au code : si l'API a changé,
       # l'auteur doit lancer `npm run types` et committer le résultat, ce qui
       # rend le changement visible pour l'autre équipe dans le diff de la PR.
+      # L'export ne doit jamais dépendre d'une base : les types viennent des
+      # docblocks @property des modèles (identique sur tous les postes).
       - name: Contrat OpenAPI à jour
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
         run: |
           php artisan scramble:export --path=../packages/api-types/openapi.json
           git diff --exit-code -- ../packages/api-types/openapi.json \

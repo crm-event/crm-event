@@ -72,9 +72,6 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
-        ],
-        "openapi": [
-            "@php artisan scramble:export --path=../packages/api-types/openapi.json"
         ]
     },
     "extra": {

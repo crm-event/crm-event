@@ -10,11 +10,12 @@
         "dev:client": "npm run dev -w @crm-event/client",
         "build": "npm run build --workspaces --if-present",
         "typecheck": "npm run typecheck --workspaces --if-present",
-        "api:openapi": "cd api && php artisan scramble:export --path=../packages/api-types/openapi.json",
+        "api:openapi": "cross-env DB_CONNECTION=sqlite DB_DATABASE=:memory: php api/artisan scramble:export --path=packages/api-types/openapi.json",
         "api:types": "openapi-typescript packages/api-types/openapi.json -o packages/api-types/index.d.ts",
         "types": "npm run api:openapi && npm run api:types"
     },
     "devDependencies": {
+        "cross-env": "^10.1.0",
         "openapi-typescript": "^7.6.0"
     },
     "engines": {
