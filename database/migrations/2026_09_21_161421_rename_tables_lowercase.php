@@ -40,10 +40,10 @@ return new class extends Migration
      */
     private function rename(string $from, string $to): void
     {
-        // Sur une base neuve, ces tables n'existent pas encore : elles sont
-        // creees par les migrations restees a la racine du depot, hors de
-        // api/. Sans ce garde-fou la migration echoue des la premiere table
-        // et toute installation from scratch est bloquee.
+        // Garde-fou : sur un SGBD insensible a la casse, les tables creees
+        // juste avant portent deja le nom en minuscules et `hasTable($from)`
+        // renvoie vrai a tort ou faux selon le serveur. Sans ce test, une
+        // installation from scratch peut echouer des la premiere table.
         if (! Schema::hasTable($from)) {
             return;
         }
