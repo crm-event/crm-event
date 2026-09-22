@@ -1,24 +1,23 @@
 {
     "name": "crm-event",
     "private": true,
-    "workspaces": [
-        "apps/*",
-        "packages/*"
-    ],
+    "type": "module",
     "scripts": {
-        "dev": "concurrently --kill-others --names api,gestion,client -c blue,magenta,cyan \"php api/artisan serve\" \"npm run dev:gestion\" \"npm run dev:client\"",
-        "dev:gestion": "npm run dev -w @crm-event/gestion",
-        "dev:client": "npm run dev -w @crm-event/client",
-        "build": "npm run build --workspaces --if-present",
-        "typecheck": "npm run typecheck --workspaces --if-present",
-        "api:openapi": "cross-env DB_CONNECTION=sqlite DB_DATABASE=:memory: php api/artisan scramble:export --path=packages/api-types/openapi.json",
-        "api:types": "openapi-typescript packages/api-types/openapi.json -o packages/api-types/index.d.ts",
-        "types": "npm run api:openapi && npm run api:types"
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "dependencies": {
+        "@inertiajs/react": "^2.0.0",
+        "axios": "^1.7.4",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0"
     },
     "devDependencies": {
-        "concurrently": "^10.0.5",
-        "cross-env": "^10.1.0",
-        "openapi-typescript": "^7.6.0"
+        "@tailwindcss/vite": "^4.1.0",
+        "@vitejs/plugin-react": "^6.1.1",
+        "laravel-vite-plugin": "^3.1",
+        "tailwindcss": "^4.1.0",
+        "vite": "^8.0.0"
     },
     "engines": {
         "node": ">=22.12.0"

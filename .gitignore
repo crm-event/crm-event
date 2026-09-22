@@ -1,19 +1,41 @@
 # Dépendances
-node_modules/
-vendor/
+/node_modules
+/vendor
 
-# Builds
-dist/
+# Build front (Vite) et assets générés
+/public/build
+/public/hot
+/public/storage
 
-# Environnements locaux (chaque app a son .env.example versionné)
+# Runtime Laravel
+/storage/*.key
+/storage/pail
+/bootstrap/cache/*.php
+.phpunit.result.cache
+/.phpunit.cache
+
+# Environnement local
 .env
-.env.*
+.env.backup
+.env.production
 !.env.example
 
 # IDE / outils locaux
-.idea/
-.vscode/
+/.idea
+/.vscode
+/.nova
+/.zed
+/.cursor
+/.codex
+/.fleet
 .claude/settings.local.json
+.phpactor.json
+_ide_helper.php
+/auth.json
+Homestead.json
+Homestead.yaml
+
+# Divers
 .DS_Store
 Thumbs.db
 *.log

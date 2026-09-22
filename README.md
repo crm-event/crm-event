@@ -1,4 +1,35 @@
-# CRM Event - Installation
+# CRM Event
+
+Application Laravel unique : **Laravel + Inertia.js + React**, une seule racine,
+un seul `composer.json`, un seul `package.json`.
+
+Deux espaces cohabitent dans la même application, derrière deux guards
+d'authentification distincts :
+
+| Espace | URL | Guard |
+| --- | --- | --- |
+| Back-office (coordinatrice) | `/gestion` | `manager` |
+| Portail (les mariés) | `/` | `couple` |
+
+Une session ouverte sur un espace ne donne aucun accès à l'autre.
+
+---
+
+## Versions
+
+Versions réellement utilisées (relevées dans `composer.lock` et
+`package-lock.json`) :
+
+| Outil | Version |
+| --- | --- |
+| PHP | 8.3 (contrainte `^8.3`) |
+| Laravel | 13.x |
+| Inertia (Laravel) | 2.x |
+| Inertia (React) | 2.x |
+| React | 19 |
+| Vite | 8 |
+| Tailwind CSS | 4 |
+| Node | ≥ 22.12 (exigé par Vite 8) |
 
 ---
 
@@ -28,37 +59,12 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Éditer `.env` : décommenter et renseigner `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
+Éditer `.env` : renseigner `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`,
+`DB_PASSWORD`.
 
 ```bash
 php artisan migrate
-```
-
-### Lancer le projet
-
-Depuis la racine du dépôt :
-
-```
-npm run dev
-```
-
-Cette commande lance en même temps l'API Laravel, le back-office et le portail
-client. `composer run dev`, depuis `api/`, fait exactement la même chose.
-
-Trois adresses :
-
-| Adresse | Quoi |
-| --- | --- |
-| http://localhost:5174 | portail client (groupe 2) |
-| http://localhost:5173 | back-office (groupe 1) |
-| http://localhost:8000 | API — sa racine redirige vers le front choisi par `FRONTEND_LOCAL_ENTRY` dans `api/.env` (`client` ou `gestion`) |
-
-Sinon, dans des terminaux séparés :
-
-```
-npm run dev:client
-npm run dev:gestion
-cd api && php artisan serve
+php artisan db:seed   # optionnel : un compte de démonstration par espace
 ```
 
 ---
@@ -67,12 +73,13 @@ cd api && php artisan serve
 
 ### Prérequis (installation manuelle)
 
-- PHP 8.3 (Thread Safe) : https://windows.php.net/download/ → extraire dans `C:\php` → ajouter `C:\php` au PATH (variables d'environnement système)
+- PHP 8.3 (Thread Safe) : https://windows.php.net/download/ → extraire dans `C:\php` → ajouter `C:\php` au PATH
 - Composer : https://getcomposer.org/Composer-Setup.exe
-- Node.js LTS (Vite 8 exige Node `^20.19.0` ou `>=22.12.0`) : https://nodejs.org
+- Node.js LTS (Vite 8 exige Node `>=22.12.0`) : https://nodejs.org
 - Git : https://git-scm.com/download/win
 
 Dans `C:\php\php.ini`, décommenter (enlever le `;`) :
+
 ```
 extension=curl
 extension=fileinfo
@@ -82,6 +89,7 @@ extension=pdo_mysql
 ```
 
 Vérification (PowerShell) :
+
 ```powershell
 php -v
 composer -V
@@ -101,42 +109,83 @@ copy .env.example .env
 php artisan key:generate
 ```
 
-Éditer `.env` : décommenter et renseigner `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
+Éditer `.env` comme ci-dessus, puis :
 
 ```powershell
 php artisan migrate
+php artisan db:seed
 ```
 
-### Lancer le projet
+---
 
-Depuis la racine du dépôt :
+## Lancer le projet
+
+Deux terminaux, depuis la racine :
+
+```
+php artisan serve
+```
 
 ```
 npm run dev
 ```
 
-Cette commande lance en même temps l'API Laravel, le back-office et le portail
-client. `composer run dev`, depuis `api/`, fait exactement la même chose.
+Une seule adresse : **http://localhost:8000**
 
-Trois adresses :
+- `http://localhost:8000/` → portail des mariés
+- `http://localhost:8000/gestion` → back-office
 
-| Adresse | Quoi |
-| --- | --- |
-| http://localhost:5174 | portail client (groupe 2) |
-| http://localhost:5173 | back-office (groupe 1) |
-| http://localhost:8000 | API — sa racine redirige vers le front choisi par `FRONTEND_LOCAL_ENTRY` dans `api/.env` (`client` ou `gestion`) |
+Les deux écrans de connexion sont `/login` et `/gestion/login`.
 
-Sinon, dans des terminaux séparés :
+### Comptes de démonstration (après `php artisan db:seed`)
+
+| Espace | E-mail | Mot de passe |
+| --- | --- | --- |
+| Back-office | `manager@crm-event.test` | `password` |
+| Portail | `couple@crm-event.test` | `password` |
+
+---
+
+## Tests et style
+
+```bash
+php artisan test        # suite PHPUnit (SQLite en mémoire)
+vendor/bin/pint         # formatage PHP
+vendor/bin/pint --test  # vérification sans modification
+```
+
+Le build front doit exister avant de lancer les tests qui rendent une page
+Inertia :
+
+```bash
+npm run build
+```
+
+---
+
+## Organisation du code
 
 ```
-npm run dev:client
-npm run dev:gestion
-cd api && php artisan serve
+app/Http/Controllers/Gestion/   back-office (guard "manager")
+app/Http/Controllers/Portail/   portail      (guard "couple")
+app/Models/                     User, Manager, Couple, Wedding, …
+resources/js/Pages/Gestion/     pages Inertia du back-office
+resources/js/Pages/Portail/     pages Inertia du portail
+routes/web.php                  toutes les routes
+database/migrations/            schéma métier
 ```
+
+### Modèle d'authentification
+
+La table `user` porte les identifiants (`email`, `password_hash`). Les tables
+`manager` et `couple` en sont des spécialisations qui partagent la même clé
+primaire. Les modèles `Manager` et `Couple` lisent la table `user` mais sont
+restreints à leur population par un global scope : c'est ce qui rend la
+séparation entre les deux espaces structurelle plutôt qu'un simple rôle.
 
 ---
 
 ## Configuration IDE (optionnel)
 
-- **Interpréteur PHP** : `Settings → PHP` → faire pointer l'interpréteur vers le PHP 8.3 installé lors des prérequis (doit correspondre à la sortie de `php -v`).
-- **Interpréteur Node.js** : `Settings → Languages & Frameworks → Node.js` si vous préférez lancer `npm run dev` depuis l'IDE plutôt que le terminal.
+- **Interpréteur PHP** : `Settings → PHP` → faire pointer l'interpréteur vers le PHP 8.3 installé (doit correspondre à la sortie de `php -v`).
+- **Interpréteur Node.js** : `Settings → Languages & Frameworks → Node.js`.
