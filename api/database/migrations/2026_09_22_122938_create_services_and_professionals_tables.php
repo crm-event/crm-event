@@ -35,7 +35,7 @@ return new class extends Migration
             $table->dateTime('balance_paid_at')->nullable();
             $table->string('balance_invoice_number', 50)->nullable();
 
-            $table->unsignedInteger('wedding_id');
+            $table->unsignedBigInteger('wedding_id');
 
             $table->foreign('wedding_id')
                 ->references('id')
@@ -128,7 +128,7 @@ return new class extends Migration
          * composed_of
          */
         Schema::create('composed_of', function (Blueprint $table) {
-            $table->unsignedInteger('wedding_id');
+            $table->unsignedBigInteger('wedding_id');
             $table->unsignedInteger('performance_id');
 
             $table->primary(['wedding_id', 'performance_id']);

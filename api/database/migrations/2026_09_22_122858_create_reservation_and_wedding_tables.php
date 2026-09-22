@@ -108,7 +108,7 @@ return new class extends Migration
          * wedding
          */
         Schema::create('wedding', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
 
             $table->date('wedding_date');
             $table->integer('guest_count')->nullable();
@@ -153,7 +153,7 @@ return new class extends Migration
             $table->string('title', 200);
             $table->integer('sort_order')->default(0);
             $table->text('notes')->nullable();
-            $table->unsignedInteger('wedding_id');
+            $table->unsignedBigInteger('wedding_id');
 
             $table->foreign('wedding_id')
                 ->references('id')
@@ -174,7 +174,7 @@ return new class extends Migration
 
             $table->text('review_question')->nullable();
             $table->text('review_answers')->nullable();
-            $table->unsignedInteger('wedding_id')->unique();
+            $table->unsignedBigInteger('wedding_id')->unique();
 
             $table->foreign('wedding_id')
                 ->references('id')

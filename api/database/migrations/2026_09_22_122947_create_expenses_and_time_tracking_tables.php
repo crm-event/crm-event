@@ -29,7 +29,7 @@ return new class extends Migration
             $table->decimal('refunded_amount', 10, 2)->nullable();
             $table->decimal('billed_to_client_amount', 10, 2)->nullable();
 
-            $table->unsignedInteger('wedding_id')->nullable();
+            $table->unsignedBigInteger('wedding_id')->nullable();
 
             $table->foreign('wedding_id')
                 ->references('id')
@@ -92,7 +92,7 @@ return new class extends Migration
             $table->string('task_label', 200)->nullable();
             $table->text('comment')->nullable();
 
-            $table->unsignedInteger('wedding_id');
+            $table->unsignedBigInteger('wedding_id');
             $table->unsignedInteger('time_category_id');
 
             $table->foreign('wedding_id')
