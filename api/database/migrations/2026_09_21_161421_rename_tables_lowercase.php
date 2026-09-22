@@ -40,6 +40,14 @@ return new class extends Migration
      */
     private function rename(string $from, string $to): void
     {
+        // Sur une base neuve, ces tables n'existent pas encore : elles sont
+        // creees par les migrations restees a la racine du depot, hors de
+        // api/. Sans ce garde-fou la migration echoue des la premiere table
+        // et toute installation from scratch est bloquee.
+        if (! Schema::hasTable($from)) {
+            return;
+        }
+
         $tmp = $from . '_tmp_rename';
 
         Schema::rename($from, $tmp);
