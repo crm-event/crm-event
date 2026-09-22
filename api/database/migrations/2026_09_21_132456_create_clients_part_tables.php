@@ -128,9 +128,13 @@ return new class extends Migration
                 ->onDelete('cascade');
         });
 
-        DB::statement(
-            'ALTER TABLE FEEDBACK ADD CONSTRAINT chk_feedback_rating CHECK (rating BETWEEN 1 AND 5)'
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                'ALTER TABLE FEEDBACK
+                    ADD CONSTRAINT chk_feedback_rating
+                    CHECK (rating BETWEEN 1 AND 5)'
+            );
+        }
 
         /*
          * SIGNS_IN_TO
