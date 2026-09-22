@@ -15,7 +15,7 @@ export function LoginPage() {
     const [submitting, setSubmitting] = useState(false);
 
     if (status === 'authenticated') {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/espace" replace />;
     }
 
     async function handleSubmit(event: FormEvent) {
@@ -25,7 +25,7 @@ export function LoginPage() {
 
         try {
             await login(email, password, remember);
-            const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/';
+            const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/espace';
             navigate(from, { replace: true });
         } catch (err: unknown) {
             setError(

@@ -1,1 +1,57 @@
 @import 'tailwindcss';
+
+/*
+|--------------------------------------------------------------------------
+| Charte graphique « La Dernière Touche »
+|--------------------------------------------------------------------------
+|
+| Les couleurs et les polices de la marque sont déclarées ici une seule fois.
+| Tailwind en génère les utilitaires (bg-ivory, text-sage, font-display…).
+| Aucune page du portail ne doit introduire une couleur hors de cette liste :
+| la charte fournie par la cliente n'en compte que cinq.
+|
+*/
+@theme {
+    --color-ivory: #f8f6f2; /* fond principal */
+    --color-blush: #f1e9e3; /* fond secondaire, encarts */
+    --color-sage: #72746a; /* unique couleur d'accent */
+    --color-ink: #000000; /* textes et aplats sombres */
+
+    /* Baskerville Display PT (charte) est une police payante : Libre
+       Baskerville en est l'équivalent libre le plus proche. */
+    --font-display: 'Libre Baskerville', Baskerville, 'Times New Roman', serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Interlettrage des micro-titres en capitales de la charte. */
+    --tracking-brand: 0.28em;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background-color: var(--color-ivory);
+        color: var(--color-ink);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+        background-color: var(--color-blush);
+    }
+
+    /* Respecte le réglage système « réduire les animations ». */
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}

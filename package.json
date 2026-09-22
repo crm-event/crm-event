@@ -6,6 +6,7 @@
         "packages/*"
     ],
     "scripts": {
+        "dev": "concurrently --kill-others --names api,gestion,client -c blue,magenta,cyan \"php api/artisan serve\" \"npm run dev:gestion\" \"npm run dev:client\"",
         "dev:gestion": "npm run dev -w @crm-event/gestion",
         "dev:client": "npm run dev -w @crm-event/client",
         "build": "npm run build --workspaces --if-present",
@@ -15,6 +16,7 @@
         "types": "npm run api:openapi && npm run api:types"
     },
     "devDependencies": {
+        "concurrently": "^10.0.5",
         "cross-env": "^10.1.0",
         "openapi-typescript": "^7.6.0"
     },
