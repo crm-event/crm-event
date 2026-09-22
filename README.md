@@ -36,17 +36,29 @@ php artisan migrate
 
 ### Lancer le projet
 
-```bash
-composer run dev
+Depuis la racine du dépôt :
+
+```
+npm run dev
 ```
 
-Cette commande lance en même temps le serveur Laravel, Vite, la queue et les logs.
+Cette commande lance en même temps l'API Laravel, le back-office et le portail
+client. `composer run dev`, depuis `api/`, fait exactement la même chose.
 
-Sinon, dans deux terminaux séparés :
+Trois adresses :
 
-```bash
-npm run dev
-php artisan serve
+| Adresse | Quoi |
+| --- | --- |
+| http://localhost:5174 | portail client (groupe 2) |
+| http://localhost:5173 | back-office (groupe 1) |
+| http://localhost:8000 | API — sa racine redirige vers le front choisi par `FRONTEND_LOCAL_ENTRY` dans `api/.env` (`client` ou `gestion`) |
+
+Sinon, dans des terminaux séparés :
+
+```
+npm run dev:client
+npm run dev:gestion
+cd api && php artisan serve
 ```
 
 ---
@@ -97,17 +109,29 @@ php artisan migrate
 
 ### Lancer le projet
 
-```powershell
-composer run dev
+Depuis la racine du dépôt :
+
+```
+npm run dev
 ```
 
-Cette commande lance en même temps le serveur Laravel, Vite, la queue et les logs.
+Cette commande lance en même temps l'API Laravel, le back-office et le portail
+client. `composer run dev`, depuis `api/`, fait exactement la même chose.
 
-Sinon, dans deux terminaux séparés :
+Trois adresses :
 
-```powershell
-npm run dev
-php artisan serve
+| Adresse | Quoi |
+| --- | --- |
+| http://localhost:5174 | portail client (groupe 2) |
+| http://localhost:5173 | back-office (groupe 1) |
+| http://localhost:8000 | API — sa racine redirige vers le front choisi par `FRONTEND_LOCAL_ENTRY` dans `api/.env` (`client` ou `gestion`) |
+
+Sinon, dans des terminaux séparés :
+
+```
+npm run dev:client
+npm run dev:gestion
+cd api && php artisan serve
 ```
 
 ---

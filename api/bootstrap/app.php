@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
+        // Uniquement un point d'entrée local vers les fronts (cf. routes/web.php).
+        web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         apiPrefix: 'api',
         commands: __DIR__.'/../routes/console.php',

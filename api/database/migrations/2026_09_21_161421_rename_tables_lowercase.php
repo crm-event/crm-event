@@ -48,7 +48,7 @@ return new class extends Migration
             return;
         }
 
-        $tmp = $from . '_tmp_rename';
+        $tmp = $from.'_tmp_rename';
 
         Schema::rename($from, $tmp);
         Schema::rename($tmp, $to);
