@@ -30,7 +30,15 @@ Thumbs.db
 # Confidentiels : jamais versionnés.
 /documents
 
-# Configuration locale des agents IA (chemins propres à chaque machine).
-# Chacun la génère avec `php artisan boost:install`.
+# Assistants IA : fichiers générés par `php artisan boost:install` pour l'outil
+# de chacun (skills, configuration MCP avec des chemins locaux). Seuls
+# AGENTS.md, CLAUDE.md et boost.json sont partagés.
 /.mcp.json
-.claude/settings.local.json
+/.claude/
+/.agents/
+/.factory/
+/.grok/
+/.junie/
+/.kiro/
+/.pi/
+/.github/skills/
