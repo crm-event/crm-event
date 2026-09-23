@@ -26,8 +26,8 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# Documents de travail locaux (fichiers de la cliente, comptes rendus, sauvegardes…)
-# Confidentiels : jamais versionnés.
+# Fichiers de la cliente, confidentiels. Ils sont conservés hors du dépôt, cette
+# ligne évite de les versionner s'ils sont recopiés ici.
 /documents
 
 # Assistants IA : fichiers générés par `php artisan boost:install` pour l'outil

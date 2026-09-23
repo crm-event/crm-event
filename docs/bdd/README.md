@@ -1,44 +1,44 @@
-# Base de données — modèle et choix de conception
+# Base de données : modèle et choix de conception
 
-> **Statut : proposition.** À relire et valider par les deux groupes avant
-> l'écriture des migrations. Les décisions marquées *proposée* ont été prises
+> Statut : proposition, à relire et valider par les deux groupes avant
+> l'écriture des migrations. Les décisions marquées « proposée » ont été prises
 > par un seul membre de l'équipe et doivent être confirmées.
 
-Ce document explique **pourquoi** la base est construite ainsi. Le détail des
-colonnes est dans le schéma lui-même.
+Ce document explique pourquoi la base est construite ainsi. Le détail des
+colonnes se trouve dans le schéma.
 
 | Fichier | Rôle |
 | --- | --- |
-| [`schema.dbml`](schema.dbml) | Schéma complet. À coller dans https://dbdiagram.io/d pour le diagramme |
-| `database/migrations/` | Source de vérité une fois les migrations écrites. En cas d'écart, ce sont elles qui font foi, et `schema.dbml` doit être mis à jour |
-| [`../CONTEXTE-PROJET.md`](../CONTEXTE-PROJET.md) | Le métier de la cliente, dont découle chaque choix ci-dessous |
+| [`schema.dbml`](schema.dbml) | Schéma complet, à coller dans https://dbdiagram.io/d pour obtenir le diagramme |
+| `database/migrations/` | Source de vérité une fois les migrations écrites. En cas d'écart, elles font foi et `schema.dbml` doit être mis à jour |
+| [`../CONTEXTE-PROJET.md`](../CONTEXTE-PROJET.md) | Le métier de la cliente, d'où viennent les choix ci-dessous |
 
 ---
 
 ## Vue d'ensemble
 
-Tout s'organise autour du **mariage** (`weddings`), comme dans le métier de la
-cliente : « 1 business, 1 client, 1 mariage ».
+Tout s'organise autour du mariage (`weddings`), comme dans le métier de la
+cliente, qui résume son activité par « 1 business, 1 client, 1 mariage ».
 
 ```
-users ─0..1── couples ──1..n── weddings ──n..1── venues
-                                  │
-                                  ├── wedding_services ──── payments
-                                  │         └────────────── quote_amendments
-                                  ├── documents, proposals, media_items, messages   (portail)
-                                  ├── appointments, tasks, timeline_items           (organisation)
-                                  ├── time_entries, expenses                        (rentabilité)
-                                  ├── wedding_vendor ──── vendors                   (équipe)
-                                  └── reviews (0..1)
+users -0..1- couples -1..n- weddings -n..1- venues
+                               |
+                               +-- wedding_services --- payments
+                               |          +------------ quote_amendments
+                               +-- documents, proposals, media_items, messages   (portail)
+                               +-- appointments, tasks, timeline_items           (organisation)
+                               +-- time_entries, expenses                        (rentabilité)
+                               +-- wedding_vendor --- vendors                    (équipe)
+                               +-- reviews (0..1)
 ```
 
 | Bloc | Tables | Rôle |
 | --- | --- | --- |
-| Comptes | `users`, `couples` | Qui se connecte, et les fiches clients |
-| Mariage | `weddings`, `timeline_items`, `appointments`, `tasks` | Le projet, son déroulé, ses rendez-vous, ses tâches |
-| Ventes | `services`, `wedding_services`, `quote_amendments`, `payments` | Prestations, devis, avenants, encaissements |
+| Comptes | `users`, `couples` | Comptes de connexion et fiches clients |
+| Mariage | `weddings`, `timeline_items`, `appointments`, `tasks` | Le projet et son organisation |
+| Ventes | `services`, `wedding_services`, `quote_amendments`, `payments` | Prestations vendues, devis, avenants et encaissements |
 | Annuaires | `venues`, `vendors`, `vendor_categories`, `wedding_vendor` | Lieux et prestataires réutilisables |
-| Portail | `documents`, `proposals`, `proposal_comments`, `media_items`, `messages`, `reviews`, `community_posts` | Ce que le couple voit et échange |
+| Portail | `documents`, `proposals`, `proposal_comments`, `media_items`, `messages`, `reviews`, `community_posts` | Ce que le couple consulte et échange avec Jessica |
 | Rentabilité | `time_entries`, `time_categories`, `expenses`, `expense_categories` | Temps passé et dépenses par mariage |
 | Paramètres | `settings` | Taux et seuils modifiables |
 
@@ -46,159 +46,165 @@ users ─0..1── couples ──1..n── weddings ──n..1── venues
 
 ## Conventions
 
-- Noms **en anglais** (Definition of Done), tables **au pluriel**, colonnes en `snake_case`.
-- Clé primaire `id` en bigint auto-incrémenté partout ; clés étrangères `<table>_id`.
-- `created_at` / `updated_at` sur toutes les tables.
+- Noms en anglais (Definition of Done), tables au pluriel, colonnes en `snake_case`.
+- Clé primaire `id` en bigint auto-incrémenté partout, clés étrangères nommées `<table>_id`.
+- `created_at` et `updated_at` sur toutes les tables.
 - Montants en `decimal(10,2)`, jamais en flottant.
-- Dates seules en `date`, instants en `timestamp`.
-- Un état qui a une date se stocke **par sa date** : `paid_at` plutôt qu'un booléen `is_paid`. On sait ainsi si c'est fait *et* quand, ce que la cliente demande pour les devis et les factures.
+- Dates seules en `date`, instants précis en `timestamp`.
+- Un état associé à une date est stocké par cette date, par exemple `paid_at` plutôt qu'un booléen `is_paid`. On sait ainsi si c'est fait et à quelle date, ce que la cliente demande pour les devis et les factures.
 
 ---
 
 ## Décisions de conception
 
-Chaque décision indique ce qui a été retenu, pourquoi, et ce qui a été écarté.
+Chaque décision précise ce qui a été retenu et pourquoi, puis l'option écartée
+quand il y en avait une.
 
-### D1. Une seule table de comptes, avec un rôle — *validée*
+### D1. Une seule table de comptes avec un rôle (validée)
 
-**Retenu** : `users` avec `role` = `admin` (Jessica) ou `couple`. Un seul
-système de connexion (guard `web`). Un middleware vérifie le rôle devant les
-routes du back-office.
+Retenu : `users` avec `role` valant `admin` (Jessica) ou `couple`, et un seul
+système de connexion (le guard `web` de Laravel). Un middleware vérifie le rôle
+devant les routes du back-office.
 
-**Pourquoi** : une seule administratrice face à ses clients ne justifie pas
-deux systèmes d'authentification. L'e-mail est unique sur toute l'application,
-ce qui correspond à la règle « un compte = un couple = un e-mail ».
+Pourquoi : une seule administratrice face à ses clients ne justifie pas deux
+systèmes d'authentification. L'e-mail est unique sur toute l'application, ce
+qui correspond à la règle « un compte = un couple = un e-mail ».
 
-**Écarté** : deux guards et deux tables (`manager` / `couple`) comme dans
-l'ancien code — plus complexe, sans bénéfice ici.
+Écarté : deux guards et deux tables (`manager` et `couple`) comme dans l'ancien
+code, plus complexe et sans bénéfice ici.
 
-### D2. La fiche client est distincte du compte de connexion — *validée*
+### D2. La fiche client est distincte du compte de connexion (validée)
 
-**Retenu** : `couples` contient **tous** les couples suivis ; `couples.user_id`
-reste vide tant que Jessica n'a pas ouvert l'accès au portail.
+Retenu : `couples` contient tous les couples suivis. `couples.user_id` reste
+vide tant que Jessica n'a pas ouvert l'accès au portail.
 
-**Pourquoi** : une fiche existe dès la première demande, alors qu'un compte
-n'est créé qu'à l'étape « accès à l'application », après la proposition. En
-2026, 21 demandes ont été perdues pour 12 validées : ces couples n'auront
-jamais de compte, mais leur fiche compte pour les statistiques.
+Pourquoi : une fiche existe dès la première demande, alors qu'un compte n'est
+créé qu'à l'étape « accès à l'application », après la proposition. En 2026,
+21 demandes ont été perdues pour 12 validées. Ces couples n'auront jamais de
+compte, mais leur fiche sert aux statistiques.
 
-**Écarté** : mettre les informations du couple dans `users` — il faudrait
+Écarté : mettre les informations du couple dans `users`. Il faudrait alors
 créer un compte de connexion à chaque demande reçue.
 
-### D3. Une demande et un mariage sont la même ligne — *validée*
+### D3. Une demande et un mariage sont la même ligne (validée)
 
-**Retenu** : une ligne `weddings` est créée au premier contact ; son `status`
-avance jusqu'à la clôture, ou passe à `cancelled` avec un motif.
+Retenu : une ligne `weddings` est créée au premier contact. Son `status` avance
+jusqu'à la clôture, ou passe à `cancelled` avec un motif.
 
-**Pourquoi** : c'est ainsi que la cliente travaille dans son Excel (une ligne
-« EN ATTENTE » qui devient « VALIDÉ » ou « ANNULÉ »). « Combien de demandes,
-combien de réservations » devient un simple comptage par statut.
+Pourquoi : la cliente travaille déjà ainsi dans son Excel, où une ligne « EN
+ATTENTE » devient « VALIDÉ » ou « ANNULÉ ». Compter les demandes et les
+réservations revient à compter les mariages par statut.
 
-**Écarté** : une table `requests` puis une table `weddings`, avec recopie des
-données à la signature — l'ancien schéma (`reservation` + `wedding`).
+Écarté : une table `requests` puis une table `weddings`, avec recopie des
+données à la signature, comme dans l'ancien schéma (`reservation` et `wedding`).
 
-### D4. Une ligne par prestation vendue — *validée*
+### D4. Une ligne par prestation vendue (validée)
 
-**Retenu** : `wedding_services` relie un mariage à une prestation du catalogue
+Retenu : `wedding_services` relie un mariage à une prestation du catalogue
 (`services`). Chaque ligne porte son devis, son contrat, ses paiements et ses
 avenants.
 
-**Pourquoi** : dans les fichiers de la cliente, un couple qui achète décoration
-et coordination a **deux devis, deux contrats, deux acomptes et deux soldes**,
-déclarés à l'URSSAF séparément.
+Pourquoi : dans les fichiers de la cliente, un couple qui achète décoration et
+coordination a un devis, un contrat, un acompte et un solde pour chacune, et ils
+sont déclarés séparément à l'URSSAF.
 
-**Écarté** : un devis unique par mariage.
+Écarté : un devis unique par mariage.
 
-### D5. Les statuts d'un mariage — *proposée*
+### D5. Les statuts d'un mariage (proposée)
 
-`inquiry` (nouvelle demande) → `quote_sent` (moodboard + devis envoyés) →
-`booked` (contrat signé) → `completed` (jour J passé) → `closed` (soldé,
-rentabilité calculée). À tout moment : `cancelled`.
+Dans l'ordre : `inquiry` (nouvelle demande), `quote_sent` (moodboard et devis
+envoyés), `booked` (contrat signé), `completed` (jour J passé) et `closed`
+(soldé, rentabilité calculée). Un mariage peut passer à `cancelled` à tout
+moment.
 
-Calqué sur le workflow validé par la cliente en réunion 2. À confirmer, en
-particulier la distinction entre `completed` et `closed`.
+Ces statuts suivent le workflow validé par la cliente en réunion 2. La
+différence entre `completed` et `closed` reste à confirmer.
 
-### D6. Les paiements ont leur propre table — *proposée*
+### D6. Les paiements ont leur propre table (proposée)
 
-**Retenu** : `payments`, une ligne par encaissement (`deposit`, `balance`,
-`amendment`), avec numéro de facture, lien vers la facture et date de paiement.
+Retenu : `payments`, avec une ligne par encaissement (`deposit`, `balance` ou
+`amendment`), son numéro de facture, le lien vers la facture et sa date de
+paiement.
 
-**Pourquoi** : la cliente veut, pour chaque document, le numéro, l'état payé ou
-non et la date. Un avenant ajoute un paiement sans modifier le devis. Le
-**trimestre URSSAF n'est pas stocké** : il se déduit de `paid_at`, ce qui évite
-toute incohérence.
+Pourquoi : la cliente veut connaître, pour chaque document, son numéro, s'il est
+payé et à quelle date. Un avenant ajoute un paiement sans toucher au devis. Le
+trimestre URSSAF n'est pas stocké : il se déduit de `paid_at`, ce qui évite
+d'avoir deux informations contradictoires.
 
-**Écarté** : des colonnes `deposit_amount`, `balance_amount`… dans
-`wedding_services` — figé à deux paiements, sans place pour les avenants.
+Écarté : des colonnes `deposit_amount`, `balance_amount`, etc. dans
+`wedding_services`. Ce découpage est limité à deux paiements et ne prévoit rien
+pour les avenants.
 
-### D7. Le contenu du portail est rattaché au mariage — *proposée*
+### D7. Le contenu du portail est rattaché au mariage (proposée)
 
-**Retenu** : `documents`, `proposals`, `media_items`, `messages`, `tasks` et
-`appointments` pointent vers `weddings`, pas vers `couples`.
+Retenu : `documents`, `proposals`, `media_items`, `messages`, `tasks` et
+`appointments` pointent vers `weddings`, et non vers `couples`.
 
-**Pourquoi** : l'espace du couple, c'est son mariage. Le jour où un couple
-revient pour un second événement, chaque projet garde ses propres documents.
+Pourquoi : l'espace du couple correspond à son mariage. Si un couple revient
+pour un second événement, chaque projet garde ses propres documents.
 
-### D8. Une nouvelle version de proposition = une nouvelle ligne — *proposée*
+### D8. Chaque version d'une proposition est une nouvelle ligne (proposée)
 
-**Retenu** : chaque version du carnet design ou du moodboard est une ligne de
-`proposals` (`version` = 1, 2, 3…), avec ses commentaires dans
-`proposal_comments`. Le fichier lui-même est un `documents`.
+Retenu : chaque version du carnet design ou du moodboard est une ligne de
+`proposals` (`version` vaut 1, 2, 3...), et ses commentaires sont dans
+`proposal_comments`. Le fichier lui-même est enregistré dans `documents`.
 
-**Pourquoi** : la cliente dépose un PDF ou des images, sans éditeur en ligne.
-Les CGV limitent à 3 révisions : l'application le contrôle en comptant les
-versions, à partir du paramètre `max_design_revisions`.
+Pourquoi : la cliente dépose un PDF ou des images, elle n'a pas besoin d'éditeur
+en ligne. Les CGV limitent le carnet à 3 révisions. L'application le vérifie en
+comptant les versions, d'après le paramètre `max_design_revisions`.
 
-### D9. Les CGV de la saison sont un document — *proposée*
+### D9. Les CGV de la saison sont un document (proposée)
 
-**Retenu** : un `documents` de catégorie `terms`, avec `requires_approval`.
-Le couple l'approuve par « Lu et approuvé » (`approved_at`).
+Retenu : un enregistrement de `documents` de catégorie `terms`, avec
+`requires_approval`. Le couple l'approuve en recopiant « Lu et approuvé »
+(`approved_at`).
 
-**Pourquoi** : les CGV changent chaque saison et Jessica les modifie elle-même.
-Déposer le nouveau PDF suffit, sans table dédiée. Ce n'est pas une signature
-électronique certifiée, et c'est assumé.
+Pourquoi : les CGV changent chaque saison et Jessica les modifie elle-même.
+Déposer le nouveau PDF suffit, une table dédiée n'apporterait rien. Ce n'est pas
+une signature électronique certifiée.
 
-### D10. Les taux et seuils sont des paramètres datés — *principe validé, forme proposée*
+### D10. Les taux et seuils sont des paramètres datés (principe validé, forme proposée)
 
-**Retenu** : `settings` (`key`, `value`, `valid_from`). Pour connaître un taux
-à une date, on prend la valeur la plus récente antérieure à cette date.
+Retenu : `settings` (`key`, `value`, `valid_from`). Pour connaître un taux à une
+date donnée, on prend la valeur la plus récente antérieure à cette date.
 
-**Pourquoi** : le taux URSSAF est passé de 10,6 % en 2024 à 21,2 % ensuite, et
-la cliente n'est pas encore sûre de passer à la TVA. L'historique 2024-2027
-doit se recalculer avec les valeurs de l'époque. Les montants figés à un
-instant donné (taux de TVA d'un devis) sont en revanche copiés dans la ligne
-concernée.
+Pourquoi : le taux URSSAF est passé de 10,6 % en 2024 à 21,2 % ensuite, et la
+cliente ne sait pas encore si elle passera à la TVA. L'historique 2024-2027 doit
+pouvoir se recalculer avec les valeurs de l'époque. Une valeur figée au moment
+d'un acte, comme le taux de TVA d'un devis, est en revanche recopiée dans la
+ligne concernée.
 
-### D11. Lieux et prestataires en annuaires — *validée*
+### D11. Lieux et prestataires en annuaires (validée)
 
-`venues` et `vendors` sont réutilisés d'un mariage à l'autre : plusieurs
-domaines reviennent chaque année dans ses fichiers. La photo d'un prestataire
-est celle de sa **catégorie** (`vendor_categories.photo_path`), comme demandé
-en réunion 3. `venues.travel_time_minutes` sert à la règle d'hébergement.
+`venues` et `vendors` servent d'un mariage à l'autre, car plusieurs domaines
+reviennent chaque année dans les fichiers de la cliente. La photo d'un
+prestataire est celle de sa catégorie (`vendor_categories.photo_path`), comme
+demandé en réunion 3. `venues.travel_time_minutes` sert à la règle
+d'hébergement.
 
-### D12. Temps et dépenses toujours rattachés à un mariage — *validée*
+### D12. Temps et dépenses toujours rattachés à un mariage (validée)
 
-`time_entries.wedding_id` et `expenses.wedding_id` sont obligatoires : seule
-l'activité liée aux mariages est suivie. C'est ce qui permet de calculer le
-taux horaire effectif de chaque mariage, l'indicateur central de la cliente.
+`time_entries.wedding_id` et `expenses.wedding_id` sont obligatoires, puisque
+seule l'activité liée aux mariages est suivie. Cela permet de calculer le taux
+horaire effectif de chaque mariage, l'indicateur principal de la cliente.
 
-### D13. La provenance est une étiquette — *validée*
+### D13. La provenance est une simple étiquette (validée)
 
-`weddings.lead_source` est un texte libre (« Site », « Insta »,
-« WP - &lt;agence&gt; »…), sans table de partenaires.
+`weddings.lead_source` est un texte libre (« Site », « Insta », « WP - nom de
+l'agence »...), sans table de partenaires.
 
-### D14. Catalogues modifiables par la cliente — *validée*
+### D14. Catalogues modifiables par la cliente (validée)
 
-`services`, `time_categories`, `expense_categories` et `vendor_categories`
-sont des tables et non des listes figées : Jessica doit pouvoir ajouter ses
-propres catégories. Une catégorie qui ne sert plus est désactivée
-(`is_active`), jamais supprimée, pour ne pas casser l'historique.
+`services`, `time_categories`, `expense_categories` et `vendor_categories` sont
+des tables et non des listes figées, car Jessica doit pouvoir ajouter ses propres
+catégories. Une catégorie qui ne sert plus est désactivée (`is_active`) au lieu
+d'être supprimée, pour ne pas casser l'historique.
 
 ---
 
-## Règles portées par l'application, pas par la base
+## Règles appliquées par le code
 
-Ces règles viennent des CGV et des réunions. La base stocke les paramètres ; le
+Ces règles viennent des CGV et des réunions. La base stocke les paramètres et le
 code les applique.
 
 | Règle | Paramètre (`settings.key`) |
@@ -209,7 +215,7 @@ code les applique.
 | Pénalité de retard de 10 % du solde par jour | `late_penalty_rate` |
 | Rétractation de 14 jours | `withdrawal_days` |
 | 3 révisions maximum du carnet design | `max_design_revisions` |
-| Points d'étape à M-6, M-3, M-1 | `design_milestones` |
+| Points d'étape à M-6, M-3 et M-1 | `design_milestones` |
 | Avis sollicité 30 jours après le mariage | `review_delay_days` |
 | Hébergement au-delà de 45 minutes de trajet | `accommodation_threshold_minutes` |
 | Taux de cotisations URSSAF | `urssaf_rate` |
@@ -222,8 +228,8 @@ code les applique.
 | Sujet | Raison |
 | --- | --- |
 | Lignes de détail d'un devis | En attente du devis d'exemple promis par la cliente |
-| Factures | Émises par un outil externe : on ne garde que le numéro et le lien |
-| Notifications | Aucune notification automatique, décision de la cliente |
+| Factures | Émises par un outil externe, seuls le numéro et le lien sont conservés |
+| Notifications | Aucune notification automatique, à la demande de la cliente |
 | Trimestre URSSAF | Déduit de la date de paiement (D6) |
 | Temps et dépenses hors mariage | Hors périmètre (D12) |
-| Rôles multiples côté gestion | Une seule administratrice ; à revoir si stagiaires ou renforts doivent se connecter |
+| Plusieurs rôles côté gestion | Une seule administratrice pour l'instant, à revoir si des stagiaires ou des renforts doivent se connecter |

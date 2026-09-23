@@ -1,6 +1,6 @@
 # CRM Event
 
-Application web de gestion pour La Dernière Touche — **Laravel + Inertia.js + React**.
+Application web de gestion pour La Dernière Touche, en Laravel, Inertia.js et React.
 
 ---
 
@@ -14,7 +14,7 @@ Application web de gestion pour La Dernière Touche — **Laravel + Inertia.js +
 | React | 19 |
 | Vite | 8 |
 | Tailwind CSS | 4 |
-| Node | ≥ 22.12 (exigé par Vite 8) |
+| Node | 22.12 minimum (exigé par Vite 8) |
 | Base de données | MariaDB (hébergée sur Alwaysdata, partagée par l'équipe) |
 
 ---
@@ -35,9 +35,9 @@ sudo apt install nodejs -y
 
 ### Windows
 
-- PHP 8.3 (Thread Safe) : https://windows.php.net/download/ → extraire dans `C:\php` → ajouter `C:\php` au PATH
+- PHP 8.3 (Thread Safe) : https://windows.php.net/download/, à extraire dans `C:\php`, puis ajouter `C:\php` au PATH
 - Composer : https://getcomposer.org/Composer-Setup.exe
-- Node.js LTS (≥ 22.12) : https://nodejs.org
+- Node.js LTS (22.12 minimum) : https://nodejs.org
 - Git : https://git-scm.com/download/win
 
 Dans `C:\php\php.ini`, décommenter (enlever le `;`) :
@@ -73,7 +73,7 @@ php artisan key:generate
 ```
 
 Dans `.env`, décommenter les lignes `DB_*` et y mettre les identifiants de la
-base Alwaysdata (à demander à l'équipe, **jamais à committer**) :
+base Alwaysdata (à demander à l'équipe, jamais à committer) :
 
 ```
 DB_CONNECTION=mysql
@@ -84,9 +84,9 @@ DB_USERNAME=...
 DB_PASSWORD=...
 ```
 
-La base est **commune à toute l'équipe** : elle est déjà migrée, il n'y a rien
-à lancer de plus. Ne jamais exécuter `php artisan migrate:fresh` sans prévenir
-les autres — cette commande vide la base pour tout le monde.
+La base est commune à toute l'équipe et déjà migrée, il n'y a donc rien à
+lancer de plus. Ne jamais exécuter `php artisan migrate:fresh` sans prévenir les
+autres, car cette commande vide la base pour tout le monde.
 
 ---
 
@@ -96,22 +96,21 @@ les autres — cette commande vide la base pour tout le monde.
 composer run dev
 ```
 
-Puis ouvrir **http://localhost:8000**.
+Puis ouvrir http://localhost:8000.
 
-Cette seule commande lance tout : le serveur PHP, Vite (rechargement
-automatique du front), la file de tâches et l'affichage des logs. `Ctrl+C`
-arrête l'ensemble.
+La commande lance le serveur PHP, Vite (rechargement automatique du front),
+la file de tâches et l'affichage des logs. `Ctrl+C` arrête le tout.
 
-Si le port 8000 ou 5173 est déjà pris, c'est qu'une instance tourne déjà :
+Si le port 8000 ou 5173 est déjà pris, une instance tourne déjà. Il faut
 l'arrêter avant d'en relancer une.
 
 ---
 
-## 4. (Optionnel) Assistant IA — Laravel Boost
+## 4. Laravel Boost (optionnel)
 
-Si vous codez avec un assistant IA (Claude Code, Cursor, Copilot, PhpStorm…),
-Laravel Boost lui donne la documentation des versions exactes du projet, les
-conventions Laravel et un accès en lecture au schéma de la base.
+Pour ceux qui codent avec un assistant IA (Claude Code, Cursor, Copilot,
+PhpStorm...). Laravel Boost donne à l'assistant la documentation correspondant
+aux versions du projet, ainsi qu'un accès en lecture au schéma de la base.
 
 Le paquet est déjà installé avec `composer install`. Il reste à le brancher sur
 votre outil, une seule fois par machine :
@@ -127,6 +126,6 @@ est propre à chaque machine et n'est pas versionné.
 
 ## Documentation
 
-- [`docs/CONTEXTE-PROJET.md`](docs/CONTEXTE-PROJET.md) — le métier de la
-  cliente, ses besoins et les décisions prises
-- [`docs/bdd/`](docs/bdd/) — le schéma de la base et ses choix de conception
+- [`docs/CONTEXTE-PROJET.md`](docs/CONTEXTE-PROJET.md) : le métier de la
+  cliente et les décisions prises
+- [`docs/bdd/`](docs/bdd/) : le schéma de la base et ses choix de conception
