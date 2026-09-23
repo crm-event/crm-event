@@ -1,41 +1,35 @@
-# Dépendances
-/node_modules
-/vendor
-
-# Build front (Vite) et assets générés
-/public/build
-/public/hot
-/public/storage
-
-# Runtime Laravel
-/storage/*.key
-/storage/pail
-/bootstrap/cache/*.php
-.phpunit.result.cache
-/.phpunit.cache
-
-# Environnement local
+*.log
+.DS_Store
 .env
 .env.backup
 .env.production
-!.env.example
-
-# IDE / outils locaux
-/.idea
-/.vscode
-/.nova
-/.zed
-/.cursor
-/.codex
-/.fleet
-.claude/settings.local.json
 .phpactor.json
-_ide_helper.php
+.phpunit.result.cache
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
 /auth.json
+/node_modules
+/public/build
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
 Homestead.json
 Homestead.yaml
-
-# Divers
-.DS_Store
 Thumbs.db
-*.log
+
+# Documents de travail locaux (fichiers de la cliente, comptes rendus, sauvegardes…)
+# Confidentiels : jamais versionnés.
+/documents
+
+# Contient encore des données réelles de la cliente (noms, montants).
+# À retirer de cette liste une fois le fichier anonymisé.
+/docs/CONTEXTE-PROJET.md

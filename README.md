@@ -3,22 +3,11 @@
 Application Laravel unique : **Laravel + Inertia.js + React**, une seule racine,
 un seul `composer.json`, un seul `package.json`.
 
-Deux espaces cohabitent dans la même application, derrière deux guards
-d'authentification distincts :
-
-| Espace | URL | Guard |
-| --- | --- | --- |
-| Back-office (coordinatrice) | `/gestion` | `manager` |
-| Portail (les mariés) | `/` | `couple` |
-
-Une session ouverte sur un espace ne donne aucun accès à l'autre.
-
 ---
 
 ## Versions
 
-Versions réellement utilisées (relevées dans `composer.lock` et
-`package-lock.json`) :
+Versions à utiliser :
 
 | Outil | Version |
 | --- | --- |
@@ -64,7 +53,7 @@ php artisan key:generate
 
 ```bash
 php artisan migrate
-php artisan db:seed   # optionnel : un compte de démonstration par espace
+php artisan db:seed   # optionnel
 ```
 
 ---
@@ -132,24 +121,12 @@ npm run dev
 
 Une seule adresse : **http://localhost:8000**
 
-- `http://localhost:8000/` → portail des mariés
-- `http://localhost:8000/gestion` → back-office
-
-Les deux écrans de connexion sont `/login` et `/gestion/login`.
-
-### Comptes de démonstration (après `php artisan db:seed`)
-
-| Espace | E-mail | Mot de passe |
-| --- | --- | --- |
-| Back-office | `manager@crm-event.test` | `password` |
-| Portail | `couple@crm-event.test` | `password` |
-
 ---
 
 ## Tests et style
 
 ```bash
-php artisan test        # suite PHPUnit (SQLite en mémoire)
+php artisan test        # suite PHPUnit
 vendor/bin/pint         # formatage PHP
 vendor/bin/pint --test  # vérification sans modification
 ```
@@ -160,32 +137,3 @@ Inertia :
 ```bash
 npm run build
 ```
-
----
-
-## Organisation du code
-
-```
-app/Http/Controllers/Gestion/   back-office (guard "manager")
-app/Http/Controllers/Portail/   portail      (guard "couple")
-app/Models/                     User, Manager, Couple, Wedding, …
-resources/js/Pages/Gestion/     pages Inertia du back-office
-resources/js/Pages/Portail/     pages Inertia du portail
-routes/web.php                  toutes les routes
-database/migrations/            schéma métier
-```
-
-### Modèle d'authentification
-
-La table `user` porte les identifiants (`email`, `password_hash`). Les tables
-`manager` et `couple` en sont des spécialisations qui partagent la même clé
-primaire. Les modèles `Manager` et `Couple` lisent la table `user` mais sont
-restreints à leur population par un global scope : c'est ce qui rend la
-séparation entre les deux espaces structurelle plutôt qu'un simple rôle.
-
----
-
-## Configuration IDE (optionnel)
-
-- **Interpréteur PHP** : `Settings → PHP` → faire pointer l'interpréteur vers le PHP 8.3 installé (doit correspondre à la sortie de `php -v`).
-- **Interpréteur Node.js** : `Settings → Languages & Frameworks → Node.js`.

@@ -1,33 +1,27 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "crm-event/crm-event-gestion",
+    "name": "laravel/laravel",
     "type": "project",
-    "description": "CRM de gestion d'événements (Laravel + Inertia.js + React).",
-    "keywords": [
-        "laravel",
-        "framework"
-    ],
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^13.17",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "larastan/larastan": "^3.12",
         "laravel/breeze": "^2.4",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "php-parallel-lint/php-parallel-lint": "^1.4",
-        "phpdocumentor/shim": "^3.10",
-        "phpunit/phpunit": "^12.5.12",
-        "squizlabs/php_codesniffer": "^4.0"
+        "phpunit/phpunit": "^12.5.12"
     },
     "autoload": {
         "psr-4": {
@@ -44,14 +38,15 @@
     "scripts": {
         "setup": [
             "composer install",
-            "npm install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate --force"
+            "@php artisan migrate --force",
+            "npm install --ignore-scripts",
+            "npm run build"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npm run dev"
+            "@php artisan dev"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
@@ -87,8 +82,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true,
-            "phpdocumentor/shim": true
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "stable",

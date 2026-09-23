@@ -7,14 +7,23 @@ use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    /**
+     * The root template that is loaded on the first page visit.
+     *
+     * @var string
+     */
     protected $rootView = 'app';
 
     /**
-     * Props partagées avec toutes les pages.
-     *
-     * Les deux guards sont exposés séparément : une page du back-office lit
-     * `auth.manager`, une page du portail lit `auth.couple`. Aucune des deux
-     * ne peut voir l'utilisateur de l'autre espace.
+     * Determine the current asset version.
+     */
+    public function version(Request $request): ?string
+    {
+        return parent::version($request);
+    }
+
+    /**
+     * Define the props that are shared by default.
      *
      * @return array<string, mixed>
      */
@@ -23,11 +32,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'manager' => $request->user('manager'),
-                'couple' => $request->user('couple'),
-            ],
-            'flash' => [
-                'status' => fn () => $request->session()->get('status'),
+                'user' => $request->user(),
             ],
         ];
     }

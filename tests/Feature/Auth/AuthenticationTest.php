@@ -2,8 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\Couple;
-use App\Models\Manager;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -11,71 +10,45 @@ class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_gestion_login_screen_can_be_rendered(): void
+    public function test_login_screen_can_be_rendered(): void
     {
-        $this->get(route('gestion.login'))->assertOk();
+        $response = $this->get('/login');
+
+        $response->assertStatus(200);
     }
 
-    public function test_portail_login_screen_can_be_rendered(): void
+    public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $this->get(route('portail.login'))->assertOk();
-    }
+        $user = User::factory()->create();
 
-    public function test_manager_can_authenticate(): void
-    {
-        $manager = Manager::factory()->create();
-
-        $this->post(route('gestion.login'), [
-            'email' => $manager->email,
+        $response = $this->post('/login', [
+            'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect(route('gestion.dashboard'));
+        ]);
 
-        $this->assertAuthenticatedAs($manager, 'manager');
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 
-    public function test_couple_can_authenticate(): void
+    public function test_users_can_not_authenticate_with_invalid_password(): void
     {
-        $couple = Couple::factory()->create();
+        $user = User::factory()->create();
 
-        $this->post(route('portail.login'), [
-            'email' => $couple->email,
-            'password' => 'password',
-        ])->assertRedirect(route('portail.home'));
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ]);
 
-        $this->assertAuthenticatedAs($couple, 'couple');
+        $this->assertGuest();
     }
 
-    public function test_manager_cannot_authenticate_with_wrong_password(): void
+    public function test_users_can_logout(): void
     {
-        $manager = Manager::factory()->create();
+        $user = User::factory()->create();
 
-        $this->post(route('gestion.login'), [
-            'email' => $manager->email,
-            'password' => 'mauvais-mot-de-passe',
-        ])->assertSessionHasErrors('email');
+        $response = $this->actingAs($user)->post('/logout');
 
-        $this->assertGuest('manager');
-    }
-
-    public function test_manager_can_logout(): void
-    {
-        $manager = Manager::factory()->create();
-
-        $this->actingAs($manager, 'manager')
-            ->post(route('gestion.logout'))
-            ->assertRedirect(route('gestion.login'));
-
-        $this->assertGuest('manager');
-    }
-
-    public function test_couple_can_logout(): void
-    {
-        $couple = Couple::factory()->create();
-
-        $this->actingAs($couple, 'couple')
-            ->post(route('portail.logout'))
-            ->assertRedirect(route('portail.login'));
-
-        $this->assertGuest('couple');
+        $this->assertGuest();
+        $response->assertRedirect('/');
     }
 }
