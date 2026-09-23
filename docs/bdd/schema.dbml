@@ -1,0 +1,408 @@
+// CRM Event — La Dernière Touche
+// Proposition de schéma, avant écriture des migrations.
+// Visualiser : copier tout ce fichier dans https://dbdiagram.io/d
+//
+// Conventions : noms en anglais, tables au pluriel, clés `id` bigint,
+// `created_at` / `updated_at` sur chaque table (omis ci-dessous pour alléger).
+// Tables d'infrastructure Laravel non représentées : password_reset_tokens,
+// sessions, cache, cache_locks, jobs, job_batches, failed_jobs, migrations.
+
+Project crm_event {
+  database_type: 'MySQL'
+  Note: 'Un mariage = une ligne de weddings, de la première demande à la clôture.'
+}
+
+// ─────────────────────────────────────────── Comptes et clients
+
+Table users {
+  id bigint [pk, increment]
+  name varchar [not null]
+  email varchar [not null, unique, note: 'identifiant de connexion']
+  email_verified_at timestamp
+  password varchar [not null]
+  role user_role [not null]
+  last_login_at timestamp [note: 'null = jamais connecté (en attente de 1re connexion)']
+  suspended_at timestamp [note: 'null = compte actif']
+  remember_token varchar
+  Note: 'Uniquement les personnes qui se connectent : Jessica, et les couples dont l accès est ouvert.'
+}
+
+Enum user_role {
+  admin [note: 'Jessica']
+  couple
+}
+
+Table couples {
+  id bigint [pk, increment]
+  user_id bigint [unique, ref: - users.id, note: 'null tant que l accès au portail n est pas ouvert']
+  partner1_first_name varchar [not null]
+  partner1_last_name varchar
+  partner2_first_name varchar
+  partner2_last_name varchar
+  email varchar [note: 'e-mail de contact, connu dès la demande']
+  phone varchar
+  address varchar
+  postal_code varchar
+  city varchar
+  preferred_language varchar(5) [default: 'fr', note: 'couples internationaux']
+  notes text
+  Note: 'Fiche client : tous les couples suivis, y compris ceux dont la demande a été perdue.'
+}
+
+// ─────────────────────────────────────────── Le mariage, de la demande à la clôture
+
+Table weddings {
+  id bigint [pk, increment]
+  couple_id bigint [not null, ref: > couples.id]
+  venue_id bigint [ref: > venues.id, note: 'null si le lieu n est pas encore connu']
+  status wedding_status [not null, default: 'inquiry']
+  wedding_date date
+  first_contact_at date [note: 'colonne « Prise de contact » de son Excel']
+  lead_source varchar [note: 'provenance, simple étiquette : Site, Insta, WP - CandYou…']
+  guest_count int
+  estimated_budget decimal(10,2)
+  cancellation_reason varchar [note: 'motif si status = cancelled']
+  notes text
+  Note: 'Une demande et un mariage sont la même ligne : le statut avance.'
+}
+
+Enum wedding_status {
+  inquiry [note: 'nouvelle demande']
+  quote_sent [note: 'moodboard + devis envoyés']
+  booked [note: 'contrat signé']
+  completed [note: 'jour J passé']
+  closed [note: 'soldé, rentabilité calculée']
+  cancelled [note: 'demande perdue ou annulée']
+}
+
+// ─────────────────────────────────────────── Prestations, devis et paiements
+
+Table services {
+  id bigint [pk, increment]
+  name varchar [not null, note: 'Wedding design, Coordination, Officiante…']
+  is_active boolean [not null, default: true]
+  Note: 'Catalogue, modifiable par Jessica.'
+}
+
+Table wedding_services {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  service_id bigint [not null, ref: > services.id]
+  amount decimal(10,2) [note: 'total de la prestation']
+  vat_rate decimal(5,2) [not null, default: 0, note: 'figé au moment du devis']
+  quote_number varchar [unique]
+  quote_sent_at date
+  quote_valid_until date
+  quote_accepted_at date
+  contract_signed_at date
+  security_deposit_amount decimal(10,2) [note: 'caution, 10 % selon les CGV']
+  Note: 'Une ligne par prestation vendue : chacune a son devis, son contrat et ses paiements.'
+}
+
+Table quote_amendments {
+  id bigint [pk, increment]
+  wedding_service_id bigint [not null, ref: > wedding_services.id]
+  description text [not null]
+  amount decimal(10,2) [not null, note: 'montant ajouté au devis']
+  signed_at date
+  Note: 'Avenants : un devis signé ne se modifie plus.'
+}
+
+Table payments {
+  id bigint [pk, increment]
+  wedding_service_id bigint [not null, ref: > wedding_services.id]
+  type payment_type [not null]
+  amount decimal(10,2) [not null]
+  due_date date [note: 'acompte : signature ; solde : M-1']
+  invoice_number varchar [unique]
+  invoice_url varchar [note: 'lien vers la facture, émise dans un outil externe']
+  invoiced_at date
+  paid_at date [note: 'null = non payé ; le trimestre URSSAF s en déduit']
+}
+
+Enum payment_type {
+  deposit [note: 'acompte']
+  balance [note: 'solde']
+  amendment [note: 'avenant']
+}
+
+// ─────────────────────────────────────────── Annuaires
+
+Table venues {
+  id bigint [pk, increment]
+  name varchar [not null]
+  address varchar
+  postal_code varchar
+  city varchar
+  travel_time_minutes int [note: 'hébergement au devis au-delà du seuil (45 min)']
+  access_notes text
+  conditions text
+  contact_name varchar
+  contact_phone varchar
+  contact_email varchar
+  Note: 'Annuaire des lieux, réutilisable d un mariage à l autre.'
+}
+
+Table vendor_categories {
+  id bigint [pk, increment]
+  name varchar [not null, note: 'Traiteur, Photographe, DJ, Loueur…']
+  photo_path varchar [note: 'photo commune à la catégorie']
+}
+
+Table vendors {
+  id bigint [pk, increment]
+  vendor_category_id bigint [not null, ref: > vendor_categories.id]
+  name varchar [not null]
+  contact_name varchar
+  email varchar
+  phone varchar
+  website varchar
+  notes text
+  Note: 'Annuaire des prestataires partenaires.'
+}
+
+Table wedding_vendor {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  vendor_id bigint [not null, ref: > vendors.id]
+  notes text
+  indexes {
+    (wedding_id, vendor_id) [unique]
+  }
+  Note: 'L équipe d un mariage.'
+}
+
+// ─────────────────────────────────────────── Organisation du mariage
+
+Table timeline_items {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  starts_at time
+  title varchar [not null, note: 'Cérémonie, Dîner, Speeches, Soirée…']
+  notes text
+  sort_order int [not null, default: 0]
+  Note: 'Déroulé du jour J.'
+}
+
+Table appointments {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  type appointment_type [not null]
+  title varchar [not null, note: 'ex. Point design M-6']
+  starts_at datetime [not null]
+  mode appointment_mode
+  location varchar [note: 'adresse ou lien de visio']
+  notes text
+  Note: 'Créés à la main par Jessica, jamais automatiques.'
+}
+
+Enum appointment_type {
+  discovery [note: 'premier rendez-vous']
+  milestone [note: 'points M-6, M-3, M-1']
+  technical_visit
+  other
+}
+
+Enum appointment_mode {
+  in_person
+  video
+  phone
+}
+
+Table tasks {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  title varchar [not null]
+  due_date date
+  status task_status [not null, default: 'todo']
+  visible_to_couple boolean [not null, default: false]
+  completed_at timestamp
+  deleted_at timestamp [note: 'suppression douce']
+}
+
+Enum task_status {
+  todo
+  in_progress
+  done
+}
+
+// ─────────────────────────────────────────── Portail client
+
+Table documents {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  uploaded_by bigint [not null, ref: > users.id]
+  category varchar [not null, note: 'contract, terms (CGV de la saison), quote, meeting_summary, other']
+  title varchar [not null]
+  message text [note: 'un mot pour le couple']
+  file_path varchar [not null]
+  mime_type varchar
+  size_bytes int
+  requires_approval boolean [not null, default: false, note: '« Lu et approuvé » demandé']
+  viewed_at timestamp
+  approved_at timestamp
+}
+
+Table proposals {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  document_id bigint [ref: > documents.id, note: 'le PDF ou l image déposé']
+  type proposal_type [not null]
+  title varchar [not null]
+  version int [not null, default: 1, note: 'une nouvelle version = une nouvelle ligne ; 3 révisions max']
+  description text
+  approved_at timestamp
+  Note: 'Carnet design et moodboard, soumis au couple pour avis.'
+}
+
+Enum proposal_type {
+  design_book [note: 'carnet design']
+  moodboard
+}
+
+Table proposal_comments {
+  id bigint [pk, increment]
+  proposal_id bigint [not null, ref: > proposals.id]
+  user_id bigint [not null, ref: > users.id]
+  body text [not null]
+}
+
+Table media_items {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  uploaded_by bigint [not null, ref: > users.id]
+  collection media_collection [not null]
+  title varchar [not null]
+  alt_text varchar [note: 'description de l image']
+  file_path varchar [not null]
+  mime_type varchar
+  size_bytes int
+  Note: 'Inspirations, images et moodboards.'
+}
+
+Enum media_collection {
+  images
+  moodboards
+}
+
+Table messages {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id, note: 'un fil par mariage']
+  sender_id bigint [not null, ref: > users.id]
+  body text
+  voice_note_path varchar [note: 'message vocal']
+  read_at timestamp
+}
+
+Table reviews {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, unique, ref: - weddings.id]
+  requested_at timestamp [note: 'invitation affichée, 30 jours après le mariage']
+  rating tinyint [note: '1 à 5']
+  would_recommend boolean
+  body text
+  submitted_at timestamp
+}
+
+Table community_posts {
+  id bigint [pk, increment]
+  user_id bigint [not null, ref: > users.id]
+  parent_id bigint [ref: > community_posts.id, note: 'null = sujet ; sinon réponse']
+  body text [not null]
+  Note: 'Espace communautaire entre anciens mariés.'
+}
+
+// ─────────────────────────────────────────── Rentabilité : temps et dépenses
+
+Table time_categories {
+  id bigint [pk, increment]
+  name varchar [not null, note: 'Moodboard/devis, Màj carnet, Installation lieu…']
+  is_active boolean [not null, default: true]
+}
+
+Table time_entries {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  time_category_id bigint [not null, ref: > time_categories.id]
+  worked_on date [not null]
+  duration_minutes int [not null]
+  description varchar
+}
+
+Table expense_categories {
+  id bigint [pk, increment]
+  name varchar [not null, note: 'Décoration, Papeterie, Fleurs, Frais de déplacement…']
+  is_active boolean [not null, default: true]
+}
+
+Table expenses {
+  id bigint [pk, increment]
+  wedding_id bigint [not null, ref: > weddings.id]
+  expense_category_id bigint [not null, ref: > expense_categories.id]
+  spent_on date [not null]
+  label varchar [not null]
+  quantity int [not null, default: 1]
+  amount decimal(10,2) [not null, note: 'montant total payé']
+  shop varchar
+  receipt_path varchar [note: 'photo du justificatif']
+  billed_to_client_amount decimal(10,2)
+  returned_at date
+  refunded_amount decimal(10,2)
+  notes text
+}
+
+// ─────────────────────────────────────────── Paramètres
+
+Table settings {
+  id bigint [pk, increment]
+  key varchar [not null, note: 'urssaf_rate, vat_threshold, deposit_rate, balance_due_days, max_design_revisions, review_delay_days…']
+  value varchar [not null]
+  valid_from date [not null]
+  indexes {
+    (key, valid_from) [unique]
+  }
+  Note: 'Taux et seuils datés : l historique 2024-2027 se recalcule avec les valeurs de l époque.'
+}
+
+TableGroup comptes {
+  users
+  couples
+}
+
+TableGroup mariage {
+  weddings
+  timeline_items
+  appointments
+  tasks
+}
+
+TableGroup ventes {
+  services
+  wedding_services
+  quote_amendments
+  payments
+}
+
+TableGroup annuaires {
+  venues
+  vendor_categories
+  vendors
+  wedding_vendor
+}
+
+TableGroup portail {
+  documents
+  proposals
+  proposal_comments
+  media_items
+  messages
+  reviews
+  community_posts
+}
+
+TableGroup rentabilite {
+  time_categories
+  time_entries
+  expense_categories
+  expenses
+}

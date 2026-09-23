@@ -1,30 +1,27 @@
 # CRM Event
 
-Application Laravel unique : **Laravel + Inertia.js + React**, une seule racine,
-un seul `composer.json`, un seul `package.json`.
+Application web de gestion pour La Dernière Touche — **Laravel + Inertia.js + React**.
 
 ---
 
 ## Versions
 
-Versions à utiliser :
-
 | Outil | Version |
 | --- | --- |
-| PHP | 8.3 (contrainte `^8.3`) |
-| Laravel | 13.x |
-| Inertia (Laravel) | 2.x |
-| Inertia (React) | 2.x |
+| PHP | 8.3 |
+| Laravel | 13 |
+| Inertia (Laravel et React) | 2 |
 | React | 19 |
 | Vite | 8 |
 | Tailwind CSS | 4 |
 | Node | ≥ 22.12 (exigé par Vite 8) |
+| Base de données | MariaDB (hébergée sur Alwaysdata, partagée par l'équipe) |
 
 ---
 
-## Linux
+## 1. Prérequis
 
-### Prérequis
+### Linux
 
 ```bash
 sudo apt update
@@ -34,37 +31,13 @@ sudo apt install php8.3 php8.3-cli php8.3-mbstring php8.3-xml php8.3-curl php8.3
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install nodejs -y
-node -v
 ```
 
-### Récupération du projet
-
-```bash
-git clone git@github.com:crm-event/crm-event-gestion.git
-cd crm-event-gestion
-composer install
-npm install
-cp .env.example .env
-php artisan key:generate
-```
-
-Éditer `.env` : renseigner `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`,
-`DB_PASSWORD`.
-
-```bash
-php artisan migrate
-php artisan db:seed   # optionnel
-```
-
----
-
-## Windows
-
-### Prérequis (installation manuelle)
+### Windows
 
 - PHP 8.3 (Thread Safe) : https://windows.php.net/download/ → extraire dans `C:\php` → ajouter `C:\php` au PATH
 - Composer : https://getcomposer.org/Composer-Setup.exe
-- Node.js LTS (Vite 8 exige Node `>=22.12.0`) : https://nodejs.org
+- Node.js LTS (≥ 22.12) : https://nodejs.org
 - Git : https://git-scm.com/download/win
 
 Dans `C:\php\php.ini`, décommenter (enlever le `;`) :
@@ -77,63 +50,83 @@ extension=openssl
 extension=pdo_mysql
 ```
 
-Vérification (PowerShell) :
+### Vérification
 
-```powershell
-php -v
+```bash
+php -v        # 8.3.x
 composer -V
-node -v
+node -v       # v22.12 ou plus
 npm -v
-git --version
 ```
 
-### Récupération du projet
+---
 
-```powershell
+## 2. Installation
+
+```bash
 git clone git@github.com:crm-event/crm-event-gestion.git
 cd crm-event-gestion
 composer install
 npm install
-copy .env.example .env
+cp .env.example .env        # Windows : copy .env.example .env
 php artisan key:generate
 ```
 
-Éditer `.env` comme ci-dessus, puis :
+Dans `.env`, décommenter les lignes `DB_*` et y mettre les identifiants de la
+base Alwaysdata (à demander à l'équipe, **jamais à committer**) :
 
-```powershell
-php artisan migrate
-php artisan db:seed
 ```
+DB_CONNECTION=mysql
+DB_HOST=...
+DB_PORT=3306
+DB_DATABASE=...
+DB_USERNAME=...
+DB_PASSWORD=...
+```
+
+La base est **commune à toute l'équipe** : elle est déjà migrée, il n'y a rien
+à lancer de plus. Ne jamais exécuter `php artisan migrate:fresh` sans prévenir
+les autres — cette commande vide la base pour tout le monde.
 
 ---
 
-## Lancer le projet
+## 3. Lancer le projet
 
-Deux terminaux, depuis la racine :
-
-```
-php artisan serve
+```bash
+composer run dev
 ```
 
-```
-npm run dev
-```
+Puis ouvrir **http://localhost:8000**.
 
-Une seule adresse : **http://localhost:8000**
+Cette seule commande lance tout : le serveur PHP, Vite (rechargement
+automatique du front), la file de tâches et l'affichage des logs. `Ctrl+C`
+arrête l'ensemble.
+
+Si le port 8000 ou 5173 est déjà pris, c'est qu'une instance tourne déjà :
+l'arrêter avant d'en relancer une.
 
 ---
 
-## Tests et style
+## 4. (Optionnel) Assistant IA — Laravel Boost
+
+Si vous codez avec un assistant IA (Claude Code, Cursor, Copilot, PhpStorm…),
+Laravel Boost lui donne la documentation des versions exactes du projet, les
+conventions Laravel et un accès en lecture au schéma de la base.
+
+Le paquet est déjà installé avec `composer install`. Il reste à le brancher sur
+votre outil, une seule fois par machine :
 
 ```bash
-php artisan test        # suite PHPUnit
-vendor/bin/pint         # formatage PHP
-vendor/bin/pint --test  # vérification sans modification
+php artisan boost:install
 ```
 
-Le build front doit exister avant de lancer les tests qui rendent une page
-Inertia :
+Choisir son outil quand la commande le demande. Le fichier `.mcp.json` généré
+est propre à chaque machine et n'est pas versionné.
 
-```bash
-npm run build
-```
+---
+
+## Documentation
+
+- [`docs/CONTEXTE-PROJET.md`](docs/CONTEXTE-PROJET.md) — le métier de la
+  cliente, ses besoins et les décisions prises
+- [`docs/bdd/`](docs/bdd/) — le schéma de la base et ses choix de conception
