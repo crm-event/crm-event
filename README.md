@@ -64,8 +64,8 @@ npm -v
 ## 2. Installation
 
 ```bash
-git clone git@github.com:crm-event/crm-event-gestion.git
-cd crm-event-gestion
+git clone git@github.com:crm-event/crm-event.git
+cd crm-event
 composer install
 npm install
 cp .env.example .env        # Windows : copy .env.example .env
@@ -121,6 +121,57 @@ php artisan boost:install
 
 Choisir son outil quand la commande le demande. Le fichier `.mcp.json` généré
 est propre à chaque machine et n'est pas versionné.
+
+Quand le paquet `laravel/boost` est mis à jour, relancer
+`php artisan boost:update` pour rafraîchir les consignes.
+
+---
+
+## 5. Au quotidien
+
+### Après chaque `git pull`
+
+```bash
+composer install
+npm install
+```
+
+Ces commandes installent exactement les versions enregistrées dans
+`composer.lock` et `package-lock.json`. Il n'y a rien à faire sur la base, qui
+est partagée.
+
+### Modifier la base de données
+
+- Toujours créer une nouvelle migration avec `php artisan make:migration`.
+- Ne jamais modifier une migration déjà poussée. La base partagée l'a déjà
+  appliquée, la modification ne serait donc jamais exécutée et le code ne
+  correspondrait plus à la base.
+- La personne qui écrit la migration la lance une fois avec
+  `php artisan migrate`, puis prévient l'équipe, car la base change pour tout le
+  monde au même moment.
+
+### Ajouter une dépendance
+
+En parler à l'équipe d'abord. Ensuite `composer require <paquet>` ou
+`npm install <paquet>`, et committer ensemble le fichier de dépendances et son
+fichier `.lock` (`composer.json` avec `composer.lock`, `package.json` avec
+`package-lock.json`).
+
+### Si une modification du `.env` n'est pas prise en compte
+
+```bash
+php artisan config:clear
+```
+
+### À ne jamais faire
+
+| Commande ou action | Raison |
+| --- | --- |
+| `composer update`, `npm update` | Met à jour toutes les dépendances d'un coup et change les versions pour toute l'équipe. À faire seulement après accord, par une seule personne. |
+| `php artisan migrate:fresh`, `migrate:reset`, `migrate:rollback`, `db:wipe` | Vide ou défait la base partagée pour tout le monde. |
+| `php artisan db:seed` | Ajoute des données fictives dans la base de toute l'équipe. |
+| Modifier les lignes `DB_*` de `phpunit.xml` | Les tests tournent sur une base SQLite en mémoire. Branchés sur Alwaysdata, ils videraient la base partagée à chaque lancement. |
+| Mettre de vrais identifiants dans `.env.example` | Ce fichier est versionné et part sur GitHub. Les identifiants vont uniquement dans `.env`. |
 
 ---
 
