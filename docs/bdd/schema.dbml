@@ -1,11 +1,15 @@
 // CRM Event - La Dernière Touche
-// Proposition de schéma, avant écriture des migrations.
+// Schéma validé, reflet des migrations (database/migrations fait foi en cas d'écart).
 // Visualiser : copier tout ce fichier dans https://dbdiagram.io/d
 //
 // Conventions : noms en anglais, tables au pluriel, clés `id` bigint,
 // created_at et updated_at sur chaque table (omis ci-dessous pour alléger).
 // Tables d'infrastructure Laravel non représentées : password_reset_tokens,
 // sessions, cache, cache_locks, jobs, job_batches, failed_jobs, migrations.
+//
+// Les types Enum sont stockés en varchar : la liste des valeurs est tenue par le code.
+// Suppression : restrict sur les données financières et les catalogues, cascade sur le
+// contenu propre à un mariage, set null sur les auteurs (compte supprimé, contenu gardé).
 
 Project crm_event {
   database_type: 'MySQL'
@@ -20,7 +24,7 @@ Table users {
   email varchar [not null, unique, note: 'identifiant de connexion']
   email_verified_at timestamp
   password varchar [not null]
-  role user_role [not null]
+  role user_role [not null, default: 'couple']
   last_login_at timestamp [note: 'null = jamais connecté (en attente de 1re connexion)']
   suspended_at timestamp [note: 'null = compte actif']
   remember_token varchar
@@ -63,6 +67,10 @@ Table weddings {
   estimated_budget decimal(10,2)
   cancellation_reason varchar [note: 'motif si status = cancelled']
   notes text
+  indexes {
+    status
+    wedding_date
+  }
   Note: 'Une demande et un mariage sont la même ligne, dont le statut avance.'
 }
 
@@ -115,7 +123,7 @@ Table payments {
   amount decimal(10,2) [not null]
   due_date date [note: 'acompte : signature ; solde : M-1']
   invoice_number varchar [unique]
-  invoice_url varchar [note: 'lien vers la facture, émise dans un outil externe']
+  invoice_url varchar(2048) [note: 'lien vers la facture, émise dans un outil externe']
   invoiced_at date
   paid_at date [note: 'null = non payé, le trimestre URSSAF s\'en déduit']
 }
@@ -147,6 +155,7 @@ Table vendor_categories {
   id bigint [pk, increment]
   name varchar [not null, note: 'Traiteur, Photographe, DJ, Loueur...']
   photo_path varchar [note: 'photo commune à la catégorie']
+  is_active boolean [not null, default: true]
 }
 
 Table vendors {
@@ -231,7 +240,7 @@ Enum task_status {
 Table documents {
   id bigint [pk, increment]
   wedding_id bigint [not null, ref: > weddings.id]
-  uploaded_by bigint [not null, ref: > users.id]
+  uploaded_by bigint [ref: > users.id, note: 'null si le compte a été supprimé']
   category varchar [not null, note: 'contract, terms (CGV de la saison), quote, meeting_summary, other']
   title varchar [not null]
   message text [note: 'un mot pour le couple']
@@ -263,14 +272,14 @@ Enum proposal_type {
 Table proposal_comments {
   id bigint [pk, increment]
   proposal_id bigint [not null, ref: > proposals.id]
-  user_id bigint [not null, ref: > users.id]
+  user_id bigint [ref: > users.id, note: 'null si le compte a été supprimé']
   body text [not null]
 }
 
 Table media_items {
   id bigint [pk, increment]
   wedding_id bigint [not null, ref: > weddings.id]
-  uploaded_by bigint [not null, ref: > users.id]
+  uploaded_by bigint [ref: > users.id, note: 'null si le compte a été supprimé']
   collection media_collection [not null]
   title varchar [not null]
   alt_text varchar [note: 'description de l\'image']
@@ -288,7 +297,7 @@ Enum media_collection {
 Table messages {
   id bigint [pk, increment]
   wedding_id bigint [not null, ref: > weddings.id, note: 'un fil par mariage']
-  sender_id bigint [not null, ref: > users.id]
+  sender_id bigint [ref: > users.id, note: 'null si le compte a été supprimé']
   body text
   voice_note_path varchar [note: 'message vocal']
   read_at timestamp
@@ -306,7 +315,7 @@ Table reviews {
 
 Table community_posts {
   id bigint [pk, increment]
-  user_id bigint [not null, ref: > users.id]
+  user_id bigint [ref: > users.id, note: 'null si le compte a été supprimé']
   parent_id bigint [ref: > community_posts.id, note: 'null pour un sujet, sinon id du message auquel on répond']
   body text [not null]
   Note: 'Espace communautaire entre anciens mariés.'

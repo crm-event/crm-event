@@ -1,8 +1,7 @@
 # Base de données : modèle et choix de conception
 
-> Statut : proposition, à relire et valider par les deux groupes avant
-> l'écriture des migrations. Les décisions marquées « proposée » ont été prises
-> par un seul membre de l'équipe et doivent être confirmées.
+> Statut : validé par les deux groupes le 24 septembre 2026. Les migrations
+> correspondantes sont dans `database/migrations/`.
 
 Ce document explique pourquoi la base est construite ainsi. Le détail des
 colonnes se trouve dans le schéma.
@@ -51,6 +50,8 @@ users -0..1- couples -1..n- weddings -n..1- venues
 - `created_at` et `updated_at` sur toutes les tables.
 - Montants en `decimal(10,2)`, jamais en flottant.
 - Dates seules en `date`, instants précis en `timestamp`.
+- Statuts et types (`status`, `type`, `role`...) en `varchar`, la liste des valeurs possibles étant tenue par le code. Ajouter une valeur ne demande donc pas de migration.
+- Suppressions : `restrict` sur les données financières et les catalogues (un mariage qui a des paiements ne peut pas être supprimé par erreur), `cascade` sur le contenu propre à un mariage (déroulé, tâches, documents, messages...), `set null` sur les auteurs d'un contenu, pour qu'un compte puisse être supprimé (RGPD) sans effacer les échanges.
 - Un état associé à une date est stocké par cette date, par exemple `paid_at` plutôt qu'un booléen `is_paid`. On sait ainsi si c'est fait et à quelle date, ce que la cliente demande pour les devis et les factures.
 
 ---
@@ -110,7 +111,7 @@ sont déclarés séparément à l'URSSAF.
 
 Écarté : un devis unique par mariage.
 
-### D5. Les statuts d'un mariage (proposée)
+### D5. Les statuts d'un mariage (validée)
 
 Dans l'ordre : `inquiry` (nouvelle demande), `quote_sent` (moodboard et devis
 envoyés), `booked` (contrat signé), `completed` (jour J passé) et `closed`
@@ -120,7 +121,7 @@ moment.
 Ces statuts suivent le workflow validé par la cliente en réunion 2. La
 différence entre `completed` et `closed` reste à confirmer.
 
-### D6. Les paiements ont leur propre table (proposée)
+### D6. Les paiements ont leur propre table (validée)
 
 Retenu : `payments`, avec une ligne par encaissement (`deposit`, `balance` ou
 `amendment`), son numéro de facture, le lien vers la facture et sa date de
@@ -135,7 +136,7 @@ d'avoir deux informations contradictoires.
 `wedding_services`. Ce découpage est limité à deux paiements et ne prévoit rien
 pour les avenants.
 
-### D7. Le contenu du portail est rattaché au mariage (proposée)
+### D7. Le contenu du portail est rattaché au mariage (validée)
 
 Retenu : `documents`, `proposals`, `media_items`, `messages`, `tasks` et
 `appointments` pointent vers `weddings`, et non vers `couples`.
@@ -143,7 +144,7 @@ Retenu : `documents`, `proposals`, `media_items`, `messages`, `tasks` et
 Pourquoi : l'espace du couple correspond à son mariage. Si un couple revient
 pour un second événement, chaque projet garde ses propres documents.
 
-### D8. Chaque version d'une proposition est une nouvelle ligne (proposée)
+### D8. Chaque version d'une proposition est une nouvelle ligne (validée)
 
 Retenu : chaque version du carnet design ou du moodboard est une ligne de
 `proposals` (`version` vaut 1, 2, 3...), et ses commentaires sont dans
@@ -153,7 +154,7 @@ Pourquoi : la cliente dépose un PDF ou des images, elle n'a pas besoin d'édite
 en ligne. Les CGV limitent le carnet à 3 révisions. L'application le vérifie en
 comptant les versions, d'après le paramètre `max_design_revisions`.
 
-### D9. Les CGV de la saison sont un document (proposée)
+### D9. Les CGV de la saison sont un document (validée)
 
 Retenu : un enregistrement de `documents` de catégorie `terms`, avec
 `requires_approval`. Le couple l'approuve en recopiant « Lu et approuvé »
@@ -163,7 +164,7 @@ Pourquoi : les CGV changent chaque saison et Jessica les modifie elle-même.
 Déposer le nouveau PDF suffit, une table dédiée n'apporterait rien. Ce n'est pas
 une signature électronique certifiée.
 
-### D10. Les taux et seuils sont des paramètres datés (principe validé, forme proposée)
+### D10. Les taux et seuils sont des paramètres datés (validée)
 
 Retenu : `settings` (`key`, `value`, `valid_from`). Pour connaître un taux à une
 date donnée, on prend la valeur la plus récente antérieure à cette date.
