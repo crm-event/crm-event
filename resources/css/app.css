@@ -8,6 +8,26 @@
   --font-sans:
     Figtree, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  /*
+    Charte graphique « La Dernière Touche », fournie par la cliente.
+    Elle ne compte que cinq couleurs : les pages destinées aux couples ne
+    doivent pas en introduire d'autres. Le blanc et le noir de Tailwind
+    complètent la liste.
+  */
+  --color-ivory: #f8f6f2; /* fond principal */
+  --color-blush: #f1e9e3; /* fond secondaire, encarts */
+  --color-sage: #72746a; /* unique couleur d'accent */
+  --color-ink: #000000; /* textes et aplats sombres */
+
+  /*
+    Baskerville Display PT (charte) est une police payante ; Libre Baskerville
+    en est l'équivalent libre le plus proche. Elle est chargée dans app.blade.php.
+  */
+  --font-display: 'Libre Baskerville', Baskerville, 'Times New Roman', serif;
+
+  /* Interlettrage des micro-titres en capitales de la charte. */
+  --tracking-brand: 0.28em;
 }
 
 /*
