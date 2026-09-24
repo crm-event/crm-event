@@ -1,18 +1,12 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+// Page d'accueil publique : le premier écran d'un visiteur, avant toute
+// connexion. Voir resources/js/Pages/Landing.jsx.
+Route::get('/', fn () => Inertia::render('Landing'))->name('accueil');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
