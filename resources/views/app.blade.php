@@ -10,6 +10,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600|libre-baskerville:400,400i,700&display=swap" rel="stylesheet" />
 
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&display=block" rel="stylesheet" />
+
         <!-- Scripts -->
         @routes
         @viteReactRefresh
