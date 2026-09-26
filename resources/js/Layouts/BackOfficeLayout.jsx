@@ -15,7 +15,7 @@ const NAVIGATION = [
     { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
     { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread' },
     { cle: 'mariages', libelle: 'Mariages', icone: 'favorite' },
-    { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today' },
+    { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today', route: 'calendrier' },
     { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long' },
     { cle: 'depenses', libelle: 'Dépenses', icone: 'payments' },
     { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
