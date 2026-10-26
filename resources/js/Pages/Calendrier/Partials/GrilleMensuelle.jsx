@@ -1,12 +1,6 @@
 import Icone from '@/Components/Icone';
 import { anneauFocus } from '@/charte';
 import { construireCases } from '@/calendrier';
-import {
-    ANNEE,
-    AUJOURD_HUI,
-    JOURS,
-    MOIS,
-} from '@/Pages/Calendrier/donnees';
 
 /**
  * Grille du mois avec les événements de chaque jour. Les cartes qui portent une
@@ -23,10 +17,6 @@ const JOURS_SEMAINE = [
 ];
 const INDEX_SAMEDI = 5;
 
-const MOIS_SUIVANT = new Date(ANNEE, MOIS, 1)
-    .toLocaleDateString('fr-FR', { month: 'long' })
-    .replace(/^./, (lettre) => lettre.toUpperCase());
-
 const classesCarte = `${anneauFocus} w-full rounded-md border p-2 text-left transition-all hover:border-sage`;
 
 function Point({ classes }) {
@@ -38,16 +28,16 @@ function CarteJourJ({ evenement, onOuvrir }) {
         <>
             <button
                 type="button"
-                onClick={() => onOuvrir(evenement.detail)}
+                onClick={() => onOuvrir(evenement)}
                 className={`${anneauFocus} w-full rounded-md bg-ink p-2.5 text-left text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-ink/90`}
             >
                 <div className="mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-widest text-blush">
                         <Icone nom="star" className="text-[13px] text-blush" />
-                        Grand Mariage
+                    {evenement.statut === 'en-attente' ? 'Date souhaitée' : 'Mariage confirmé'}
                     </span>
                     <span className="text-[11px] font-medium text-blush">
-                        {evenement.heure}
+                        {evenement.heure ?? ''}
                     </span>
                 </div>
                 <div className="font-display text-[14px] leading-tight text-white">
@@ -57,12 +47,6 @@ function CarteJourJ({ evenement, onOuvrir }) {
                     {evenement.lieu}
                 </p>
             </button>
-            <div className="mt-2 flex items-center justify-between border-t border-ink/10 pt-1.5 text-[10px] text-sage">
-                <span>{evenement.invites} invités</span>
-                <span className="uppercase">
-                    {evenement.prestataires} Prestataires
-                </span>
-            </div>
         </>
     );
 }
@@ -76,7 +60,7 @@ function CarteDetaillee({ evenement, onOuvrir }) {
     return (
         <button
             type="button"
-            onClick={() => onOuvrir(evenement.detail)}
+            onClick={() => onOuvrir(evenement)}
             className={`${classesCarte} ${fond}`}
         >
             <div className="mb-1 flex items-center gap-1.5">
@@ -103,36 +87,36 @@ function Evenement({ evenement, onOuvrir }) {
     switch (evenement.type) {
         case 'rdv':
             return (
-                <div className="flex items-center gap-1.5 rounded border border-subtle bg-white px-2 py-1">
+                <button type="button" onClick={() => onOuvrir(evenement)} className={`${anneauFocus} flex w-full items-center gap-1.5 rounded border border-subtle bg-white px-2 py-1 text-left hover:border-sage`}>
                     <Point classes="h-1.5 w-1.5 border border-ink" />
                     <span className="truncate text-[11px] text-ink">
-                        {evenement.libelle}
+                    {evenement.libelle ?? evenement.titre}
                     </span>
-                </div>
+                </button>
             );
         case 'jalon':
             return (
-                <div className="flex items-center gap-1.5 rounded border border-hairline bg-ivory px-2 py-1 text-sage">
+                <button type="button" onClick={() => onOuvrir(evenement)} className={`${anneauFocus} flex w-full items-center gap-1.5 rounded border border-hairline bg-ivory px-2 py-1 text-left text-sage hover:border-sage`}>
                     <Point classes="h-1.5 w-1.5 bg-sage" />
                     <span className="truncate text-[11px]">
                         {evenement.libelle}
                     </span>
-                </div>
+                </button>
             );
         case 'urgent':
             return (
-                <div className="rounded border border-hairline bg-white p-1.5 shadow-2xs">
+                <button type="button" onClick={() => onOuvrir(evenement)} className={`${anneauFocus} w-full rounded border border-hairline bg-white p-1.5 text-left shadow-2xs hover:border-sage`}>
                     <span className="block text-[9px] uppercase text-warning">
                         {evenement.categorie}
                     </span>
                     <span className="text-[11px] font-medium text-ink">
                         {evenement.libelle}
                     </span>
-                </div>
+                </button>
             );
         case 'repetition':
             return (
-                <div className="rounded border border-hairline bg-ivory p-1.5 text-ink">
+                <button type="button" onClick={() => onOuvrir(evenement)} className={`${anneauFocus} w-full rounded border border-hairline bg-ivory p-1.5 text-left text-ink hover:border-sage`}>
                     <div className="flex items-center gap-1.5">
                         <Point classes="h-2 w-2 bg-sage" />
                         <span className="truncate text-[11px] font-medium">
@@ -142,16 +126,16 @@ function Evenement({ evenement, onOuvrir }) {
                     <span className="mt-0.5 block text-[10px] font-medium text-sage">
                         {evenement.pied}
                     </span>
-                </div>
+                </button>
             );
         case 'note':
             return (
-                <div className="rounded border border-hairline bg-ivory px-2 py-1 text-sage">
+                <button type="button" onClick={() => onOuvrir(evenement)} className={`${anneauFocus} w-full rounded border border-hairline bg-ivory px-2 py-1 text-left text-sage hover:border-sage`}>
                     <span className="block truncate text-[11px]">
                         {evenement.libelle}
                     </span>
                     <span className="text-[10px]">{evenement.pied}</span>
-                </div>
+                </button>
             );
         case 'carte':
             return <CarteDetaillee evenement={evenement} onOuvrir={onOuvrir} />;
@@ -162,10 +146,15 @@ function Evenement({ evenement, onOuvrir }) {
     }
 }
 
-function Case({ jour, horsMois, index, derniereLigne, onOuvrir }) {
-    const donnees = horsMois ? undefined : JOURS[jour];
+function Case({ jour, mois, annee, horsMois, index, derniereLigne, jours, onOuvrir }) {
+    const donnees = horsMois ? undefined : jours[jour];
     const evenements = donnees?.evenements ?? [];
-    const estAujourdHui = !horsMois && jour === AUJOURD_HUI;
+    const maintenant = new Date();
+    const estAujourdHui =
+        !horsMois &&
+        jour === maintenant.getDate() &&
+        mois === maintenant.getMonth() + 1 &&
+        annee === maintenant.getFullYear();
     const estJourJ = evenements.some(({ type }) => type === 'jour-j');
     const estSamedi = index % 7 === INDEX_SAMEDI;
     const numero = String(jour).padStart(2, '0');
@@ -209,7 +198,7 @@ function Case({ jour, horsMois, index, derniereLigne, onOuvrir }) {
                         }
                     >
                         {numero}
-                        {horsMois && jour === 1 && ` ${MOIS_SUIVANT}`}
+                        {horsMois && jour === 1 && ` ${new Date(annee, mois - 1, 1).toLocaleDateString('fr-FR', { month: 'short' })}`}
                     </span>
                 )}
 
@@ -246,8 +235,8 @@ function Case({ jour, horsMois, index, derniereLigne, onOuvrir }) {
     );
 }
 
-export default function GrilleMensuelle({ onOuvrir }) {
-    const cases = construireCases(ANNEE, MOIS);
+export default function GrilleMensuelle({ annee, mois, jours, onOuvrir }) {
+    const cases = construireCases(annee, mois);
 
     return (
         <div className="overflow-x-auto rounded-lg border border-hairline bg-white shadow-sm">
@@ -272,6 +261,7 @@ export default function GrilleMensuelle({ onOuvrir }) {
                             {...caseJour}
                             index={index}
                             derniereLigne={index >= cases.length - 7}
+                            jours={jours}
                             onOuvrir={onOuvrir}
                         />
                     ))}

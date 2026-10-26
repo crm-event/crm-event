@@ -1,214 +1,146 @@
 /**
- * Données de la maquette « Calendrier » (avril 2025), en attendant les vraies
- * données. Chaque événement a un `type` qui décide de son rendu dans la grille :
- * `rdv` (rendez-vous, repérage), `jalon`, `urgent`, `repetition`, `note`,
- * `carte` (jalon détaillé) ou `jour-j` (mariage). Ceux qui portent un
- * `detail` ouvrent la fiche régie correspondante.
+ * Données de calendrier reprises du suivi des demandes 2026.
+ * Les jalons M-6, M-3 et M-1 sont calculés à partir des dates confirmées.
+ * Les demandes en attente restent visuellement distinctes des mariages signés.
  */
-export const ANNEE = 2025;
-export const MOIS = 4;
+export const ANNEE = 2026;
+export const MOIS = 6;
 export const AUJOURD_HUI = 15;
 
-export const JOURS = {
-    1: {
-        etiquette: 'Avr',
-        evenements: [{ type: 'rdv', libelle: 'Visite technique — Villa Ephrussi' }],
-    },
-    5: {
-        evenements: [{ type: 'jalon', libelle: 'M-3 Moodboard Design' }],
-    },
-    8: {
-        evenements: [{ type: 'rdv', libelle: 'Call Floral Stylist (Mathilde)' }],
-    },
-    10: {
-        evenements: [{ type: 'jalon', libelle: 'M-6 Choix scénographie' }],
-    },
-    15: {
-        evenements: [
-            {
-                type: 'urgent',
-                categorie: 'Validation Urgente',
-                libelle: 'BAP Mobilier — Fonscolombe',
-            },
-        ],
-    },
-    17: {
-        evenements: [{ type: 'jalon', libelle: 'Livraison Papeterie dorée' }],
-    },
-    18: {
-        etiquette: 'J-1',
-        evenements: [
-            {
-                type: 'repetition',
-                libelle: 'Répétition & Dîner d’accueil',
-                pied: '18:00 — Éléonore & Arthur',
-            },
-        ],
-    },
-    19: {
-        evenements: [
-            {
-                type: 'jour-j',
-                detail: 'fonscolombe',
-                heure: '14:30',
-                couple: 'Éléonore & Arthur',
-                lieu: 'Château de Fonscolombe',
-                invites: 180,
-                prestataires: 12,
-            },
-        ],
-    },
-    20: {
-        evenements: [
-            {
-                type: 'note',
-                libelle: 'Brunch informel lendemain',
-                pied: '12:00 — Fonscolombe',
-            },
-        ],
-    },
-    21: {
-        evenements: [{ type: 'rdv', libelle: 'Débrief & Clôture régie' }],
-    },
-    25: {
-        etiquette: 'J-1',
-        evenements: [
-            {
-                type: 'carte',
-                detail: 'repetition-gordes',
-                fond: 'ivoire',
-                categorie: 'Répétition Cérémonie',
-                titre: 'Sophie & Julien',
-                gauche: 'Bastide de Gordes',
-                droite: '17:00',
-            },
-        ],
-    },
-    26: {
-        evenements: [
-            {
-                type: 'jour-j',
-                detail: 'gordes',
-                heure: '16:00',
-                couple: 'Victoire & David',
-                lieu: 'Bastide de Gordes (Luberon)',
-                invites: 130,
-                prestataires: 9,
-            },
-        ],
-    },
-    28: {
-        etiquette: 'Échéance',
-        alerte: true,
-        evenements: [
-            {
-                type: 'carte',
-                detail: 'solde-clemence',
-                fond: 'blanc',
-                categorie: 'M-1 Solde Honoraires',
-                titre: 'Clémence & Alexandre',
-                gauche: 'Échéance 4 200 €',
-                fleche: true,
-            },
-        ],
-    },
-    30: {
-        etiquette: 'Jalon M-3',
-        evenements: [
-            {
-                type: 'carte',
-                detail: 'degustation-camille',
-                fond: 'ivoire',
-                categorie: 'Dégustation Traiteur',
-                titre: 'Camille & Thomas',
-                gauche: 'Maison Helen (Avignon) • 12:30',
-            },
-        ],
-    },
-};
+const MARIAGES = [
+    { id: 'solene-florian', couple: 'Solène & Florian', date: '2026-06-27', lieu: 'Domaine de Sulauze', prestation: 'Décoration + Officiante', total: 5420.5, solde: 3794.35 },
+    { id: 'oriane-andreas', couple: 'Oriane & Andreas', date: '2026-09-12', lieu: 'Prieuré de Badasset', prestation: 'Décoration + Coordination', total: 2040, solde: 1428 },
+    { id: 'noemi-nicolai', couple: 'Noemi & Nicolai', date: '2026-08-01', lieu: 'Notre Dame des Prés', prestation: 'Décoration', total: 4592.5, solde: 3214.74 },
+    { id: 'laura-baptiste', couple: 'Laura & Baptiste', date: '2026-06-20', lieu: 'Mas des Costes', prestation: 'Décoration', total: 3216.5, solde: 2251.55 },
+    { id: 'ninon-evan', couple: 'Ninon & Evan', date: '2026-05-23', lieu: 'Mas de la Rose', prestation: 'Décoration', total: 3097.5, solde: 2168.25, noteSolde: 'Calculé : 3 097,50 € − 929,25 € d’acompte. La cellule Solde du tableau indique 3 349,40 €, montant incohérent à vérifier.' },
+    { id: 'cindy-louis', couple: 'Cindy & Louis', date: '2026-06-13', lieu: 'Mas de la Rose', prestation: 'Décoration', total: 3327.5, solde: 2329.25 },
+    { id: 'alicia-anthony', couple: 'Alicia & Anthony', date: '2026-04-04', lieu: 'Domaine de Sarson', prestation: 'Décoration', total: 3332.6, solde: 1540.6 },
+    { id: 'aylin-axel', couple: 'Aylin & Axel', date: '2026-08-25', lieu: 'Domaine de Brès', prestation: 'Décoration', total: 2845, solde: 1991.5 },
+    { id: 'juliette-andreas', couple: 'Juliette & Andreas', date: '2026-08-29', lieu: 'Mas de la Fouque', prestation: 'Décoration', total: 5365.08, solde: 3756.06 },
+    { id: 'yamina-robin', couple: 'Yamina & Robin', date: '2027-05-27', lieu: 'Mas de Mauléon', prestation: 'Décoration', total: 5081.8, solde: 3557.26 },
+];
 
-export const FICHES = {
-    fonscolombe: {
-        badge: 'Fiche Régie — Jour J',
-        titre: 'Éléonore & Arthur',
-        sousTitre: 'Mariage Haute Couture • Samedi 19 Avril 2025',
-        lieu: 'Château de Fonscolombe',
-        adresse: 'Route de Saint-Canat, 13610 Le Puy-Sainte-Réparade',
+const DEMANDES_EN_ATTENTE = [
+    { id: 'jekaterina-lauri', couple: 'Jekaterina & Lauri', date: '2026-09-23', lieu: 'Château Tour Vaucros', prestation: 'Décoration' },
+    { id: 'clara-robin', couple: 'Clara & Robin', date: '2027-09-08', lieu: 'Grand Lauron', prestation: 'Coordination' },
+    { id: 'demande-a-confirmer', couple: 'Couple à confirmer', date: '2027-04-24', lieu: 'Domaine de Valbonne', prestation: 'Décoration' },
+];
+
+function dateAvecDecalage(dateIso, mois) {
+    const date = new Date(`${dateIso}T12:00:00`);
+    date.setMonth(date.getMonth() + mois);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+const evenementsMariages = MARIAGES.flatMap((mariage) => {
+    const jalons = [
+        { mois: -6, titre: 'M-6 · Point de préparation' },
+        { mois: -3, titre: 'M-3 · Rendez-vous de préparation' },
+        { mois: -1, titre: 'M-1 · Validation finale' },
+    ].map(({ mois, titre }) => ({
+        id: `${mariage.id}-m${Math.abs(mois)}`,
+        detail: `${mariage.id}-m${Math.abs(mois)}`,
+        type: 'jalon',
+        date: dateAvecDecalage(mariage.date, mois),
+        couple: mariage.couple,
+        titre,
+        lieu: mariage.lieu,
+        notes: `Jalon ${titre.slice(0, 2)} lié au mariage du ${new Date(`${mariage.date}T12:00:00`).toLocaleDateString('fr-FR')}. À planifier avec le couple.`,
+    }));
+
+    const solde = {
+        id: `${mariage.id}-solde`,
+        detail: `${mariage.id}-solde`,
+        type: 'urgent',
+        date: dateAvecDecalage(mariage.date, -1),
+        couple: mariage.couple,
+        categorie: 'Échéance contractuelle · M-1',
+        libelle: `Solde à régler · ${mariage.solde.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}`,
+        lieu: mariage.lieu,
+        notes: 'Échéance calculée un mois avant le mariage, conformément aux CGV. Vérifier la facture et le règlement.',
+    };
+
+    return [
+        ...jalons,
+        solde,
+        {
+            id: mariage.id,
+            detail: mariage.id,
+            type: 'jour-j',
+            date: mariage.date,
+            couple: mariage.couple,
+            lieu: mariage.lieu,
+            prestation: mariage.prestation,
+            total: mariage.total,
+            solde: mariage.solde,
+        },
+    ];
+});
+
+const evenementsEnAttente = DEMANDES_EN_ATTENTE.map((demande) => ({
+    ...demande,
+    detail: demande.id,
+    type: 'carte',
+    statut: 'en-attente',
+    categorie: 'Demande en attente · non confirmée',
+    titre: demande.couple,
+    gauche: demande.lieu,
+    fond: 'blanc',
+}));
+
+export const EVENEMENTS = [...evenementsMariages, ...evenementsEnAttente];
+
+export const FICHES = Object.fromEntries([
+    ...MARIAGES.map((mariage) => [mariage.id, {
+        badge: 'Mariage confirmé · Jour J',
+        titre: mariage.couple,
+        sousTitre: new Date(`${mariage.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+        lieu: mariage.lieu,
+        adresse: mariage.prestation,
         chiffres: [
-            { libelle: 'Invités attendus', valeur: '180 personnes', note: 'Régimes spéciaux : 14' },
-            { libelle: 'Prestataires sur site', valeur: '12 équipes', note: 'Repas staff commandés' },
+            { libelle: 'Prestation', valeur: mariage.prestation, note: 'Suivi des demandes' },
+            { libelle: 'Montant du devis', valeur: mariage.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }), note: 'Montant indiqué au suivi' },
         ],
-        deroule: [
-            { heure: '10:00', titre: 'Arrivée Régie & Fleuriste', description: 'Montage de l’arche florale dans la cour d’honneur.' },
-            { heure: '14:00', titre: 'Navettes & Accueil invités', description: 'Citronnade artisanale et ombrelles en lin distribuées.' },
-            { heure: '15:30', titre: 'Cérémonie Laïque', description: 'Parc Sud, quatuor à cordes et officiante de cérémonie.' },
-            { heure: '17:30', titre: 'Cocktail & Photos de couple', description: 'Terrasse des cyprès au coucher du soleil.' },
-            { heure: '20:00', titre: 'Dîner & Discours', description: 'Orangerie, mise en lumière d’ambiance et service 4 temps.' },
-        ],
-    },
-    gordes: {
-        badge: 'Fiche Régie — Jour J',
-        titre: 'Victoire & David',
-        sousTitre: 'Célébration Luberon • Samedi 26 Avril 2025',
-        lieu: 'Bastide de Gordes',
-        adresse: 'Le Village, 84220 Gordes',
-        chiffres: [
-            { libelle: 'Invités attendus', valeur: '130 personnes', note: 'Régimes spéciaux : 9' },
-            { libelle: 'Prestataires sur site', valeur: '9 équipes', note: 'Repas staff commandés' },
-        ],
-        deroule: [
-            { heure: '11:00', titre: 'Installation Son & Mobilier', description: 'Esplanade vue sur la vallée du Luberon.' },
-            { heure: '16:00', titre: 'Cérémonie d’engagement', description: 'Échange des vœux face aux falaises dorées.' },
-            { heure: '18:00', titre: 'Cocktail champêtre & Bar à champagne', description: 'Jardins suspendus en terrasses.' },
-            { heure: '20:30', titre: 'Banquet sous le ciel étoilé', description: 'Grandes tablées en bois brut et guirlandes guinguette chic.' },
-        ],
-    },
-    'repetition-gordes': {
-        badge: 'Jalon Opérationnel — J-1',
-        titre: 'Répétition Cérémonie — Sophie & Julien',
-        sousTitre: 'Vérification timing cortège • Vendredi 25 Avril 2025',
-        lieu: 'Bastide de Gordes',
-        adresse: 'Le Village, 84220 Gordes',
-        chiffres: [
-            { libelle: 'Participants', valeur: '18 proches (Cortège)', note: 'Témoins et parents' },
-            { libelle: 'Intervenants', valeur: 'Officiant & Jessica', note: 'Régie son sur place' },
-        ],
-        deroule: [
-            { heure: '16:45', titre: 'Arrivée des mariés & témoins', description: 'Prise de repères au belvédère.' },
-            { heure: '17:00', titre: 'Répétition des entrées musicales', description: 'Calibrage des micros sans fil.' },
-            { heure: '18:30', titre: 'Clôture & Remise des livrets', description: 'Départ pour le dîner intime.' },
-        ],
-    },
-    'solde-clemence': {
-        badge: 'Échéance Contractuelle — M-1',
-        titre: 'Solde honoraires — Clémence & Alexandre',
-        sousTitre: 'Appel de fonds • Lundi 28 Avril 2025',
-        lieu: 'Domaine de Canaille',
-        adresse: 'Route de Gordes, 84220 Roussillon',
-        chiffres: [
-            { libelle: 'Jour J du mariage', valeur: '3 mai 2025', note: 'Domaine de Canaille' },
-            { libelle: 'Solde à encaisser', valeur: '4 200 €', note: 'Facture de solde M-1' },
-        ],
-        deroule: [
-            { heure: '09:00', titre: 'Envoi de la facture de solde', description: 'Facture PDF et rappel des modalités de virement.' },
-            { heure: '14:00', titre: 'Relance téléphonique', description: 'Point avec les mariés sur le calage traiteur.' },
-            { heure: '18:00', titre: 'Rapprochement bancaire', description: 'Vérification de l’encaissement du virement.' },
-        ],
-    },
-    'degustation-camille': {
-        badge: 'Jalon Opérationnel — M-3',
-        titre: 'Dégustation Traiteur — Camille & Thomas',
-        sousTitre: 'Test du menu 4 plats • Mercredi 30 Avril 2025',
-        lieu: 'Maison Helen',
-        adresse: 'Avignon',
-        chiffres: [
-            { libelle: 'Participants', valeur: '2 mariés + 2 témoins', note: 'Dégustation à 4 personnes' },
-            { libelle: 'Traiteur', valeur: 'Maison Helen', note: 'Avignon' },
-        ],
-        deroule: [
-            { heure: '12:30', titre: 'Accueil par le chef', description: 'Présentation de la carte de saison.' },
-            { heure: '13:00', titre: 'Dégustation des 4 plats', description: 'Accords mets et vins de Provence.' },
-            { heure: '14:30', titre: 'Arbitrage du menu', description: 'Validation du menu et des régimes spéciaux.' },
-        ],
-    },
-};
+        deroule: [{ heure: 'Horaire à définir', titre: 'Préparation du Jour J', description: 'Les horaires et le déroulé détaillé ne sont pas renseignés dans les documents fournis.' }],
+    }]),
+    ...MARIAGES.flatMap((mariage) => [
+        ...[-6, -3, -1].map((mois) => {
+            const numero = Math.abs(mois);
+            const date = dateAvecDecalage(mariage.date, mois);
+            const titre = `M-${numero} · ${numero === 6 ? 'Point de préparation' : numero === 3 ? 'Rendez-vous de préparation' : 'Validation finale'}`;
+            return [`${mariage.id}-m${numero}`, {
+                badge: `Jalon contractuel · M-${numero}`,
+                titre: mariage.couple,
+                sousTitre: `${titre} · ${new Date(`${date}T12:00:00`).toLocaleDateString('fr-FR')}`,
+                lieu: mariage.lieu,
+                adresse: 'Rendez-vous à planifier avec le couple.',
+                chiffres: [
+                    { libelle: 'Échéance', valeur: `M-${numero}`, note: 'Calculée depuis la date du mariage' },
+                    { libelle: 'Mariage prévu', valeur: new Date(`${mariage.date}T12:00:00`).toLocaleDateString('fr-FR'), note: mariage.lieu },
+                ],
+                deroule: [{ heure: 'Horaire à définir', titre, description: 'Le créneau exact n’est pas indiqué dans les documents fournis.' }],
+            }];
+        }),
+        [`${mariage.id}-solde`, {
+            badge: 'Échéance contractuelle · M-1',
+            titre: `Solde · ${mariage.couple}`,
+            sousTitre: `À régler avant le ${new Date(`${dateAvecDecalage(mariage.date, -1)}T12:00:00`).toLocaleDateString('fr-FR')}`,
+            lieu: mariage.lieu,
+            adresse: 'Échéance calculée depuis la date du mariage.',
+            chiffres: [
+                { libelle: 'Solde estimé', valeur: mariage.solde.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }), note: mariage.noteSolde ? 'Calculé depuis le devis et l’acompte' : 'Montant du tableau de suivi' },
+                { libelle: 'Mariage prévu', valeur: new Date(`${mariage.date}T12:00:00`).toLocaleDateString('fr-FR'), note: mariage.lieu },
+            ],
+            deroule: [{ heure: 'À vérifier', titre: 'Échéance de règlement du solde', description: [mariage.noteSolde, 'Les CGV prévoient le règlement du solde au plus tard un mois avant le mariage.'].filter(Boolean).join(' ') }],
+        }],
+    ]),
+    ...DEMANDES_EN_ATTENTE.map((demande) => [demande.id, {
+        badge: 'Demande en attente · date non confirmée',
+        titre: demande.couple,
+        sousTitre: `Date demandée · ${new Date(`${demande.date}T12:00:00`).toLocaleDateString('fr-FR')}`,
+        lieu: demande.lieu,
+        adresse: demande.prestation,
+        chiffres: [{ libelle: 'Statut', valeur: 'En attente', note: 'Ne pas traiter comme réservation confirmée' }],
+        deroule: [{ heure: 'À confirmer', titre: 'Date souhaitée', description: 'Cette demande reste en attente dans le tableau de suivi.' }],
+    }]),
+]);

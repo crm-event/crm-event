@@ -6,21 +6,17 @@
 export function construireCases(annee, mois) {
     const nombreDeJours = new Date(annee, mois, 0).getDate();
     const decalage = (new Date(annee, mois - 1, 1).getDay() + 6) % 7;
-    const jourPrecedent = new Date(annee, mois - 1, 0).getDate();
     const total = Math.ceil((decalage + nombreDeJours) / 7) * 7;
 
     return Array.from({ length: total }, (_, index) => {
-        const jour = index - decalage + 1;
+        const date = new Date(annee, mois - 1, index - decalage + 1);
 
-        if (jour < 1) {
-            return { jour: jourPrecedent + jour, horsMois: true };
-        }
-
-        if (jour > nombreDeJours) {
-            return { jour: jour - nombreDeJours, horsMois: true };
-        }
-
-        return { jour, horsMois: false };
+        return {
+            jour: date.getDate(),
+            mois: date.getMonth() + 1,
+            annee: date.getFullYear(),
+            horsMois: date.getMonth() + 1 !== mois,
+        };
     });
 }
 

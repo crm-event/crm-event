@@ -150,14 +150,17 @@ export default function TiroirFiche({ fiche, ouvert, onFermer }) {
                 <div className="mt-6 flex items-center gap-3 border-t border-hairline pt-6">
                     <button
                         type="button"
+                        disabled
+                        title="La fiche Mariage sera disponible avec la page Mariages."
                         className={`${anneauFocus} flex-1 rounded-md bg-ink py-2.5 text-center text-label text-white transition-opacity hover:opacity-80`}
                     >
-                        Ouvrir le dossier mariage
+                        Dossier mariage à venir
                     </button>
                     <button
                         type="button"
                         title="Imprimer le conducteur"
                         aria-label="Imprimer le conducteur"
+                        onClick={() => window.print()}
                         className={`${anneauFocus} rounded-md border border-hairline px-3.5 py-2.5 text-ink transition-colors hover:bg-ivory`}
                     >
                         <Icone nom="print" className="text-[18px]" />

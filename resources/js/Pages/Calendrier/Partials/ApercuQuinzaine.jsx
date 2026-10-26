@@ -5,30 +5,6 @@ import { anneauFocus } from '@/charte';
  * Les trois encarts sous le calendrier : Jour J imminent, jalons et soldes du
  * mois, notes logistiques.
  */
-const HORAIRES_JOUR_J = [
-    { libelle: 'Briefing équipe régie :', heure: 'Samedi 10:00' },
-    { libelle: 'Cérémonie Parc Sud :', heure: '15:30' },
-    { libelle: 'Dîner aux chandelles :', heure: '20:00' },
-];
-
-const JALONS = [
-    {
-        couple: 'Clémence & Alexandre',
-        detail: 'Appel de fonds solde (M-1) — 4 200 €',
-        date: '28 Avr.',
-    },
-    {
-        couple: 'Camille & Thomas',
-        detail: 'Test menu de mariage 4 plats traiteur',
-        date: '30 Avr.',
-    },
-    {
-        couple: 'Juliette & Marc',
-        detail: 'Avenant scénographie lumineuse',
-        date: '05 Mai',
-    },
-];
-
 const classesCarte = 'rounded-lg border border-hairline bg-white p-6';
 
 function EnTeteCarte({ pastille, titre, etiquette, classesEtiquette }) {
@@ -45,31 +21,35 @@ function EnTeteCarte({ pastille, titre, etiquette, classesEtiquette }) {
     );
 }
 
-export default function ApercuQuinzaine() {
+export default function ApercuQuinzaine({ evenements }) {
+    const mariage = evenements.find(({ type }) => type === 'jour-j');
+    const demandeEnAttente = evenements.find(({ statut }) => statut === 'en-attente');
+    const jalons = evenements
+        .filter(({ type, statut }) => !['jour-j', 'rdv', 'note'].includes(type) && statut !== 'en-attente')
+        .slice(0, 3);
+    const notes = evenements.filter(({ type }) => type === 'note');
+
     return (
         <section className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className={classesCarte}>
                 <EnTeteCarte
                     pastille="bg-ink"
-                    titre="Jour J Imminent : Fonscolombe"
-                    etiquette="J-4"
+                    titre={mariage ? `Jour J : ${mariage.couple}` : demandeEnAttente ? 'Date souhaitée' : 'Jour J du mois'}
+                    etiquette={mariage ? 'Confirmé' : demandeEnAttente ? 'En attente' : 'Aucun'}
                     classesEtiquette="text-warning"
                 />
                 <p className="mb-4 text-body leading-relaxed text-sage">
-                    Installation technique sous barnum cristal dès vendredi
-                    14:00. Coordination de 12 prestataires confirmée avec
-                    l’intendant du domaine.
+                    {mariage
+                        ? `${mariage.lieu} · ${mariage.prestation}.`
+                        : demandeEnAttente
+                          ? `${demandeEnAttente.couple} · ${demandeEnAttente.lieu}. Cette date n’est pas confirmée.`
+                          : 'Aucun mariage confirmé dans ce mois.'}
                 </p>
                 <div className="space-y-2 border-t border-hairline pt-4">
-                    {HORAIRES_JOUR_J.map(({ libelle, heure }) => (
-                        <div
-                            key={libelle}
-                            className="flex items-center justify-between text-body-sm"
-                        >
-                            <span className="text-sage">{libelle}</span>
-                            <span className="font-medium text-ink">{heure}</span>
-                        </div>
-                    ))}
+                    <div className="flex items-center justify-between text-body-sm">
+                        <span className="text-sage">Date du mariage</span>
+                        <span className="font-medium text-ink">{mariage || demandeEnAttente ? new Date(`${(mariage ?? demandeEnAttente).date}T12:00:00`).toLocaleDateString('fr-FR') : '—'}</span>
+                    </div>
                 </div>
             </div>
 
@@ -81,28 +61,25 @@ export default function ApercuQuinzaine() {
                     classesEtiquette="text-sage"
                 />
                 <ul className="space-y-3">
-                    {JALONS.map(({ couple, detail, date }, index) => (
+                    {jalons.map((jalon, index) => (
                         <li
-                            key={couple}
+                            key={jalon.id}
                             className={`flex items-start justify-between gap-2 ${
-                                index < JALONS.length - 1
+                                index < jalons.length - 1
                                     ? 'border-b border-hairline/60 pb-2'
                                     : ''
                             }`}
                         >
                             <div>
-                                <span className="block text-body font-medium text-ink">
-                                    {couple}
-                                </span>
+                                <span className="block text-body font-medium text-ink">{jalon.couple ?? jalon.titre ?? jalon.libelle ?? jalon.categorie}</span>
                                 <span className="text-[11px] text-sage">
-                                    {detail}
+                                    {jalon.notes ?? jalon.gauche ?? jalon.libelle ?? 'Jalon opérationnel'}
                                 </span>
                             </div>
-                            <span className="shrink-0 font-display text-label text-ink">
-                                {date}
-                            </span>
+                            <span className="shrink-0 font-display text-label text-ink">{new Date(`${jalon.date}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                         </li>
                     ))}
+                    {jalons.length === 0 && <li className="text-body-sm text-sage">Aucun jalon ce mois-ci.</li>}
                 </ul>
             </div>
 
@@ -115,10 +92,7 @@ export default function ApercuQuinzaine() {
                         classesEtiquette="text-sage"
                     />
                     <p className="text-body leading-relaxed text-sage">
-                        Prévisions ensoleillées (23°C) pour le week-end du 19
-                        avril. Accès semi-remorques traiteur autorisé par le
-                        portail nord du Domaine de Fonscolombe dès vendredi
-                        matin.
+                        {notes.length ? notes.map(({ libelle, pied }) => [libelle, pied].filter(Boolean).join(' · ')).join(' — ') : 'Aucune note logistique renseignée pour ce mois.'}
                     </p>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-hairline pt-4">
@@ -127,6 +101,7 @@ export default function ApercuQuinzaine() {
                     </span>
                     <button
                         type="button"
+                        onClick={() => window.print()}
                         className={`${anneauFocus} inline-flex items-center gap-1 text-caps uppercase text-ink hover:underline`}
                     >
                         <span>Exporter le déroulé</span>
