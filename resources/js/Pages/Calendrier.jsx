@@ -3,7 +3,6 @@ import ApercuQuinzaine from '@/Pages/Calendrier/Partials/ApercuQuinzaine';
 import EnteteCalendrier from '@/Pages/Calendrier/Partials/EnteteCalendrier';
 import FormulaireJalon from '@/Pages/Calendrier/Partials/FormulaireJalon';
 import GrilleMensuelle from '@/Pages/Calendrier/Partials/GrilleMensuelle';
-import LegendeCalendrier from '@/Pages/Calendrier/Partials/LegendeCalendrier';
 import MetriquesMois from '@/Pages/Calendrier/Partials/MetriquesMois';
 import TiroirFiche from '@/Pages/Calendrier/Partials/TiroirFiche';
 import VueChronologique from '@/Pages/Calendrier/Partials/VueChronologique';
@@ -169,7 +168,6 @@ export default function Calendrier() {
                     mois={mois}
                     jourRepere={dateActive.getDate()}
                 />
-                <LegendeCalendrier />
                 {vue === 'Mois' && (
                     <GrilleMensuelle
                         annee={annee}
