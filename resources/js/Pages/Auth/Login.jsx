@@ -1,23 +1,23 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import {
-    anneauFocus,
-    boutonPrincipal,
-    champSaisie,
-    libelleChamp,
-    lienTexte,
-} from '@/charte';
+    fieldLabel,
+    focusRing,
+    primaryButton,
+    textField,
+    textLink,
+} from '@/brand';
 
 /**
- * Page de connexion, dans la charte du projet.
+ * Login page, following the project's brand guidelines.
  *
- * C'est l'unique page de connexion de l'application : les couples comme
- * Jessica passent par elle. Il n'y a volontairement aucun lien d'inscription,
- * les comptes sont créés à la main par la coordinatrice ; un visiteur sans
- * compte est renvoyé vers la section « Votre accès » de la page d'accueil.
+ * This is the only login page of the application: couples and Jessica both
+ * use it. There is deliberately no sign-up link, accounts are created by hand
+ * by the coordinator; a visitor without an account is sent to the "Votre
+ * accès" section of the landing page.
  *
- * Le formulaire et sa soumission sont ceux de Breeze
- * (AuthenticatedSessionController), seule la présentation change.
+ * The form and its submission are Breeze's (AuthenticatedSessionController),
+ * only the presentation changes.
  */
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -26,9 +26,9 @@ export default function Login({ status, canResetPassword }) {
         remember: false,
     });
 
-    const [motDePasseVisible, setMotDePasseVisible] = useState(false);
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-    const soumettre = (e) => {
+    const submit = (e) => {
         e.preventDefault();
 
         post(route('login'), {
@@ -41,12 +41,12 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Connexion" />
 
             <div className="grid min-h-screen bg-ivory font-sans text-ink lg:grid-cols-[5fr_7fr]">
-                <PanneauMarque />
+                <BrandPanel />
 
                 <main className="flex flex-col px-6 py-8 sm:px-10">
                     <Link
-                        href={route('accueil')}
-                        className={`${anneauFocus} self-start text-[11px] uppercase tracking-[0.18em] text-sage transition-colors hover:text-ink`}
+                        href={route('home')}
+                        className={`${focusRing} self-start text-[11px] uppercase tracking-[0.18em] text-sage transition-colors hover:text-ink`}
                     >
                         ← Accueil
                     </Link>
@@ -82,9 +82,9 @@ export default function Login({ status, canResetPassword }) {
                             </p>
                         )}
 
-                        <form onSubmit={soumettre} className="mt-10">
+                        <form onSubmit={submit} className="mt-10">
                             <div>
-                                <label htmlFor="email" className={libelleChamp}>
+                                <label htmlFor="email" className={fieldLabel}>
                                     Adresse e-mail
                                 </label>
                                 <input
@@ -92,45 +92,45 @@ export default function Login({ status, canResetPassword }) {
                                     type="email"
                                     name="email"
                                     value={data.email}
-                                    className={`${champSaisie} mt-2`}
+                                    className={`${textField} mt-2`}
                                     autoComplete="username"
                                     autoFocus
                                     required
                                     aria-invalid={Boolean(errors.email)}
-                                    aria-describedby={errors.email ? 'erreur-email' : undefined}
+                                    aria-describedby={errors.email ? 'email-error' : undefined}
                                     onChange={(e) => setData('email', e.target.value)}
                                 />
-                                <MessageErreur id="erreur-email" message={errors.email} />
+                                <ErrorMessage id="email-error" message={errors.email} />
                             </div>
 
                             <div className="mt-8">
                                 <div className="flex items-baseline justify-between gap-4">
-                                    <label htmlFor="password" className={libelleChamp}>
+                                    <label htmlFor="password" className={fieldLabel}>
                                         Mot de passe
                                     </label>
                                     <button
                                         type="button"
-                                        className={`${anneauFocus} text-[10px] uppercase tracking-[0.18em] text-sage transition-colors hover:text-ink`}
+                                        className={`${focusRing} text-[10px] uppercase tracking-[0.18em] text-sage transition-colors hover:text-ink`}
                                         aria-controls="password"
-                                        aria-pressed={motDePasseVisible}
-                                        onClick={() => setMotDePasseVisible((visible) => !visible)}
+                                        aria-pressed={isPasswordVisible}
+                                        onClick={() => setIsPasswordVisible((isVisible) => !isVisible)}
                                     >
-                                        {motDePasseVisible ? 'Masquer' : 'Afficher'}
+                                        {isPasswordVisible ? 'Masquer' : 'Afficher'}
                                     </button>
                                 </div>
                                 <input
                                     id="password"
-                                    type={motDePasseVisible ? 'text' : 'password'}
+                                    type={isPasswordVisible ? 'text' : 'password'}
                                     name="password"
                                     value={data.password}
-                                    className={`${champSaisie} mt-2`}
+                                    className={`${textField} mt-2`}
                                     autoComplete="current-password"
                                     required
                                     aria-invalid={Boolean(errors.password)}
-                                    aria-describedby={errors.password ? 'erreur-password' : undefined}
+                                    aria-describedby={errors.password ? 'password-error' : undefined}
                                     onChange={(e) => setData('password', e.target.value)}
                                 />
-                                <MessageErreur id="erreur-password" message={errors.password} />
+                                <ErrorMessage id="password-error" message={errors.password} />
                             </div>
 
                             <div className="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm">
@@ -146,7 +146,7 @@ export default function Login({ status, canResetPassword }) {
                                 </label>
 
                                 {canResetPassword && (
-                                    <Link href={route('password.request')} className={`${lienTexte} text-ink/70`}>
+                                    <Link href={route('password.request')} className={`${textLink} text-ink/70`}>
                                         Mot de passe oublié ?
                                     </Link>
                                 )}
@@ -154,7 +154,7 @@ export default function Login({ status, canResetPassword }) {
 
                             <button
                                 type="submit"
-                                className={`${boutonPrincipal} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
+                                className={`${primaryButton} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
                                 disabled={processing}
                             >
                                 {processing ? 'Connexion…' : 'Se connecter'}
@@ -168,7 +168,7 @@ export default function Login({ status, canResetPassword }) {
                             <p className="mt-3 text-sm leading-relaxed text-ink/70">
                                 Il n’y a pas d’inscription libre : chaque espace est
                                 ouvert par Jessica, pour un couple et un mariage.{' '}
-                                <a href={`${route('accueil')}#acces`} className={`${lienTexte} text-ink`}>
+                                <a href={`${route('home')}#access`} className={`${textLink} text-ink`}>
                                     Demander le vôtre
                                 </a>
                             </p>
@@ -181,13 +181,13 @@ export default function Login({ status, canResetPassword }) {
 }
 
 /**
- * Colonne de gauche sur grand écran : le logo et la devise de la cliente.
- * Elle disparaît sur mobile, où le logo passe au-dessus du formulaire.
+ * Left column on large screens: the client's logo and motto.
+ * It is hidden on mobile, where the logo moves above the form.
  */
-function PanneauMarque() {
+function BrandPanel() {
     return (
         <aside className="hidden flex-col justify-between bg-blush px-14 py-12 lg:flex">
-            <Link href={route('accueil')} className={`${anneauFocus} block self-start`}>
+            <Link href={route('home')} className={`${focusRing} block self-start`}>
                 <span className="block font-display text-base tracking-[0.18em]">
                     LA DERNIÈRE TOUCHE
                 </span>
@@ -217,11 +217,11 @@ function PanneauMarque() {
 }
 
 /**
- * Message d'erreur renvoyé par le serveur sous un champ. Il reste dans la
- * charte (pas de rouge) : le soulignement du champ passe au noir et le
- * message est annoncé aux lecteurs d'écran.
+ * Server-side error message displayed under a field. It stays within the
+ * brand palette (no red): the field underline turns black and the message is
+ * announced to screen readers.
  */
-function MessageErreur({ id, message }) {
+function ErrorMessage({ id, message }) {
     if (!message) {
         return null;
     }

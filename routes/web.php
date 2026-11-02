@@ -1,12 +1,11 @@
 <?php
 
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Page d'accueil publique : le premier écran d'un visiteur, avant toute
-// connexion. Voir resources/js/Pages/Landing.jsx.
-Route::get('/', fn () => Inertia::render('Landing'))->name('accueil');
+Route::get('/', LandingController::class)->name('home');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
