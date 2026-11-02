@@ -4,12 +4,21 @@ import { Head, usePage } from '@inertiajs/react';
 /**
  * Home page of the couple space.
  *
- * Placeholder for now: it only greets the couple inside the layout. The
- * countdown and the key information of the wedding will come once the
- * weddings and couples models exist.
+ * Greets the couple by the first names of the two partners, read from the
+ * `couples` record linked to the account. If no record is linked yet, it falls
+ * back on the account name. The countdown and the key information of the
+ * wedding will come once the weddings model exists.
  */
-export default function Home() {
+export default function Home({ couple }) {
     const user = usePage().props.auth.user;
+
+    // "Marie et Paul", "Marie" if there is a single first name, or the account
+    // name as a fallback.
+    const names = couple
+        ? [couple.partner1_first_name, couple.partner2_first_name]
+            .filter(Boolean)
+            .join(' et ')
+        : user.name;
 
     return (
         <CoupleLayout active="home">
@@ -20,7 +29,7 @@ export default function Home() {
             </p>
 
             <h1 className="mt-6 font-display text-3xl leading-snug sm:text-4xl">
-                Bienvenue, {user.name}.
+                Bonjour {names}.
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/70">
