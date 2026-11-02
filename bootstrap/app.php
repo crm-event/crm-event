@@ -29,30 +29,29 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         /*
-         * Pages d'erreur maison, dans la charte du projet : un couple ne doit
-         * jamais voir le « 404 | Not Found » brut de Laravel.
+         * Custom error pages following the brand guidelines: a couple must
+         * never see Laravel's raw "404 | Not Found" page.
          *
-         * 404 et 403 ne sont pas des bugs mais des situations normales : on les
-         * rend toujours. 500 et 503 en revanche ne sont remplacés qu'en dehors
-         * du poste de développement, pour garder la page de debug de Laravel
-         * quand on travaille.
+         * 404 and 403 are not bugs but expected situations, so they are always
+         * replaced. 500 and 503 are only replaced outside of development, to
+         * keep Laravel's debug page while working.
          */
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
             if ($request->expectsJson()) {
                 return $response;
             }
 
-            $statut = $response->getStatusCode();
+            $status = $response->getStatusCode();
 
-            $aRemplacer = in_array($statut, [403, 404], true)
-                || (in_array($statut, [500, 503], true) && ! app()->environment('local', 'testing'));
+            $shouldRenderCustomPage = in_array($status, [403, 404], true)
+                || (in_array($status, [500, 503], true) && ! app()->environment('local', 'testing'));
 
-            if (! $aRemplacer) {
+            if (! $shouldRenderCustomPage) {
                 return $response;
             }
 
-            return Inertia::render('Error', ['status' => $statut])
+            return Inertia::render('Error', ['status' => $status])
                 ->toResponse($request)
-                ->setStatusCode($statut);
+                ->setStatusCode($status);
         });
     })->create();

@@ -1,47 +1,47 @@
 import { Head, Link } from '@inertiajs/react';
-import { anneauFocus, boutonPrincipal, boutonSecondaire } from '@/charte';
+import { focusRing, primaryButton, secondaryButton } from '@/brand';
 
 /**
- * Page d'erreur du site, dans la charte du projet.
+ * Error page, following the project's brand guidelines.
  *
- * Elle est rendue par le gestionnaire d'exceptions (bootstrap/app.php) à la
- * place des pages par défaut de Laravel : un couple ne doit jamais tomber sur
- * un « 404 | Not Found » brut ni sur une trace technique.
+ * It is rendered by the exception handler (bootstrap/app.php) instead of
+ * Laravel's default pages: a couple must never land on a raw
+ * "404 | Not Found" or on a stack trace.
  */
 
 const MESSAGES = {
     404: {
-        titre: 'Cette page n’existe pas.',
-        texte: 'Le lien que vous avez suivi n’est plus valide, ou il a été recopié incomplètement.',
+        title: 'Cette page n’existe pas.',
+        text: 'Le lien que vous avez suivi n’est plus valide, ou il a été recopié incomplètement.',
     },
     403: {
-        titre: 'Cette page ne vous est pas accessible.',
-        texte: 'Votre compte n’a pas accès à cette partie du site. Si cela vous semble anormal, dites-le à Jessica.',
+        title: 'Cette page ne vous est pas accessible.',
+        text: 'Votre compte n’a pas accès à cette partie du site. Si cela vous semble anormal, dites-le à Jessica.',
     },
     500: {
-        titre: 'Quelque chose s’est mal passé.',
-        texte: 'La page n’a pas pu s’afficher. Réessayez dans un instant ; si cela se reproduit, prévenez Jessica.',
+        title: 'Quelque chose s’est mal passé.',
+        text: 'La page n’a pas pu s’afficher. Réessayez dans un instant ; si cela se reproduit, prévenez Jessica.',
     },
     503: {
-        titre: 'Le site est en maintenance.',
-        texte: 'Il sera de retour dans quelques minutes. Merci de votre patience.',
+        title: 'Le site est en maintenance.',
+        text: 'Il sera de retour dans quelques minutes. Merci de votre patience.',
     },
 };
 
-const PAR_DEFAUT = {
-    titre: 'Une erreur est survenue.',
-    texte: 'La page n’a pas pu s’afficher. Réessayez dans un instant.',
+const DEFAULT_MESSAGE = {
+    title: 'Une erreur est survenue.',
+    text: 'La page n’a pas pu s’afficher. Réessayez dans un instant.',
 };
 
 export default function Error({ status }) {
-    const message = MESSAGES[status] ?? PAR_DEFAUT;
+    const message = MESSAGES[status] ?? DEFAULT_MESSAGE;
 
     return (
         <>
             <Head title={`Erreur ${status}`} />
 
             <main className="flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-20 text-center font-sans text-ink">
-                <Link href="/" className={`${anneauFocus} block`}>
+                <Link href={route('home')} className={`${focusRing} block`}>
                     <img
                         src="/logo-ldt.png"
                         alt="La Dernière Touche"
@@ -56,18 +56,18 @@ export default function Error({ status }) {
                 </p>
 
                 <h1 className="mt-6 font-display text-2xl leading-snug sm:text-3xl">
-                    {message.titre}
+                    {message.title}
                 </h1>
 
                 <p className="mt-6 max-w-md text-base leading-relaxed text-ink/70">
-                    {message.texte}
+                    {message.text}
                 </p>
 
                 <div className="mt-12 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                    <Link href="/" className={boutonPrincipal}>
+                    <Link href={route('home')} className={primaryButton}>
                         Retour à l’accueil
                     </Link>
-                    <Link href={route('login')} className={boutonSecondaire}>
+                    <Link href={route('login')} className={secondaryButton}>
                         Se connecter
                     </Link>
                 </div>
