@@ -90,17 +90,18 @@ const ACCESS_STEPS = [
 ];
 
 export default function Landing({ auth }) {
-    const isLoggedIn = Boolean(auth?.user);
+    // Space of the logged-in user (couple space or back office), null for guests.
+    const homeUrl = auth?.homeUrl ?? null;
 
     return (
         <>
             <Head title="Espace client" />
 
             <div className="flex min-h-screen flex-col bg-ivory font-sans text-ink">
-                <Header isLoggedIn={isLoggedIn} />
+                <Header homeUrl={homeUrl} />
 
                 <main id="content" className="flex-1">
-                    <Hero isLoggedIn={isLoggedIn} />
+                    <Hero homeUrl={homeUrl} />
                     <Features />
                     <Access />
                     <Contact />
@@ -116,7 +117,7 @@ export default function Landing({ auth }) {
 /* Page sections                                                              */
 /* -------------------------------------------------------------------------- */
 
-function Header({ isLoggedIn }) {
+function Header({ homeUrl }) {
     return (
         <header className="relative border-b border-ink/10">
             <a
@@ -137,17 +138,17 @@ function Header({ isLoggedIn }) {
                 </Link>
 
                 <Link
-                    href={isLoggedIn ? route('dashboard') : route('login')}
+                    href={homeUrl ?? route('login')}
                     className={`${focusRing} shrink-0 border border-ink/20 px-5 py-3 text-[11px] uppercase tracking-[0.18em] transition-colors hover:border-ink hover:bg-ink hover:text-ivory`}
                 >
-                    {isLoggedIn ? 'Mon espace' : 'Se connecter'}
+                    {homeUrl ? 'Mon espace' : 'Se connecter'}
                 </Link>
             </div>
         </header>
     );
 }
 
-function Hero({ isLoggedIn }) {
+function Hero({ homeUrl }) {
     return (
         <section className="mx-auto max-w-3xl px-6 py-20 text-center sm:px-10 sm:py-28">
             <img
@@ -174,11 +175,8 @@ function Hero({ isLoggedIn }) {
             </p>
 
             <div className="mt-12 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-                <Link
-                    href={isLoggedIn ? route('dashboard') : route('login')}
-                    className={primaryButton}
-                >
-                    {isLoggedIn ? 'Accéder à mon espace' : 'Se connecter'}
+                <Link href={homeUrl ?? route('login')} className={primaryButton}>
+                    {homeUrl ? 'Accéder à mon espace' : 'Se connecter'}
                 </Link>
                 <a href="#access" className={secondaryButton}>
                     Demander un accès

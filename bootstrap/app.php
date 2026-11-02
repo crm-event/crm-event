@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,7 +22,13 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        $middleware->alias([
+            'role' => EnsureUserHasRole::class,
+        ]);
+
+        // A logged-in user opening a guest page (e.g. /login) is sent back to
+        // their own space instead of Laravel's default /dashboard.
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()->homeUrl());
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

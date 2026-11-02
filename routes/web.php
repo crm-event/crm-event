@@ -1,11 +1,19 @@
 <?php
 
+use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
+
+Route::middleware(['auth', 'role:couple'])
+    ->prefix('espace')
+    ->name('couple.')
+    ->group(function () {
+        Route::get('/', CoupleHomeController::class)->name('home');
+    });
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
