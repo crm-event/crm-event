@@ -157,6 +157,13 @@ export default function BackOfficeLayout({
 }) {
     const utilisateur = usePage().props.auth.user;
     const [menuOuvert, setMenuOuvert] = useState(false);
+    const dateDuJour = new Date().toLocaleDateString('fr-FR', {
+        timeZone: 'Europe/Paris',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
 
     return (
         <div className="min-h-screen bg-blush font-sans text-ink antialiased">
@@ -212,7 +219,7 @@ export default function BackOfficeLayout({
 
                         <div className="hidden items-center gap-1.5 text-caps uppercase text-sage xl:flex">
                             <Icone nom="today" className="text-[16px]" />
-                            <span>Mardi 15 Avril 2025</span>
+                            <span>{dateDuJour}</span>
                         </div>
 
                         <div className="hidden h-5 w-px bg-hairline xl:block" />
