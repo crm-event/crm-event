@@ -67,4 +67,14 @@ class Wedding extends Model
     {
         return $this->hasMany(Document::class);
     }
+
+    /**
+     * The private messages exchanged with Jessica about this wedding.
+     *
+     * @return HasMany<Message, $this>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
 }
