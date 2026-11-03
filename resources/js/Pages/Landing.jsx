@@ -5,10 +5,11 @@ import { focusRing, primaryButton, secondaryButton } from '@/brand';
 /**
  * Public landing page: the screen a visitor sees before logging in.
  *
- * It presents La Dernière Touche (wedding design, day-of coordination and
- * secular ceremonies in Provence and on the French Riviera) and explains what
- * the client area is and how to get access to it. The copy is original: the
- * client's website was used for facts and tone only.
+ * It presents La Dernière Touche (wedding design, coordination and ceremony
+ * officiant in Provence and on the French Riviera) and explains what the
+ * client area is and how to get access to it. Every fact comes from the
+ * client's own documents (docs/CONTEXTE-PROJET.md): no figure or story is
+ * made up.
  *
  * There is deliberately no self sign-up: accounts are created by the
  * coordinator.
@@ -28,17 +29,19 @@ const CONTACT = {
 };
 
 /**
- * TODO(images): photos come from Jessica's portfolio. Put them in
- * public/images/landing/ with these names (about 1600 px, JPG/WebP). Until a
- * file exists, the slot shows a neutral placeholder.
+ * Line-art illustrations drawn in the brand colors (public/images/landing/).
+ * They are decorative, hence the empty `alt`.
+ *
+ * TODO(client): replace them with photos from Jessica's portfolio once she
+ * has provided them and agreed to their use; give each photo a real `alt`.
+ * Stock photos must not be used: they would pass for her own weddings.
  */
 const IMAGES = {
-    table: { src: '/images/landing/table.jpg', alt: 'Table de réception dressée avec un menu personnalisé' },
-    guests: { src: '/images/landing/guests.jpg', alt: 'Invités en chemin vers la cérémonie' },
-    design: { src: '/images/landing/design.jpg', alt: 'Plan de table moderne dans un château en Provence' },
-    coordination: { src: '/images/landing/coordination.jpg', alt: 'Mariée entourée de sa coordinatrice le jour J' },
-    officiant: { src: '/images/landing/officiant.jpg', alt: 'Cérémonie laïque dans le sud de la France' },
-    jessica: { src: '/images/landing/jessica.jpg', alt: 'Jessica, wedding designer et coordinatrice' },
+    arch: { src: '/images/landing/ceremony-arch.svg', alt: '' },
+    bouquet: { src: '/images/landing/bouquet.svg', alt: '' },
+    design: { src: '/images/landing/reception-table.svg', alt: '' },
+    coordination: { src: '/images/landing/planning.svg', alt: '' },
+    officiant: { src: '/images/landing/story-book.svg', alt: '' },
 };
 
 const ACCESS_REQUEST_SUBJECT = 'Demande d’accès à notre espace client';
@@ -64,7 +67,9 @@ const ACCESS_REQUEST_LINK =
     `?subject=${encodeURIComponent(ACCESS_REQUEST_SUBJECT)}` +
     `&body=${encodeURIComponent(ACCESS_REQUEST_BODY)}`;
 
-// First contact from a couple who is not a client yet.
+// First contact from a couple who is not a client yet. The fields follow a
+// typical request received by the client: date, venue, number of guests and
+// inspirations, then a first meeting.
 const PROJECT_REQUEST_BODY = [
     'Bonjour Jessica,',
     '',
@@ -73,10 +78,12 @@ const PROJECT_REQUEST_BODY = [
     'Nos prénoms :',
     'Date du mariage :',
     'Lieu :',
-    'Prestation qui nous intéresse (design, coordination, les deux) :',
-    'Budget estimé :',
+    'Nombre d’invités (environ) :',
+    'Prestations qui nous intéressent (décoration, coordination, officiante) :',
+    'Comment nous vous avons connue :',
     'Téléphone :',
-    'Quelques précisions :',
+    '',
+    'Nous pouvons vous envoyer quelques inspirations.',
     '',
     'Merci beaucoup,',
 ].join('\n');
@@ -93,27 +100,42 @@ const NAV = [
     { href: '#contact', label: 'Contact' },
 ];
 
-/** The three services follow the timeline of a wedding. */
+/**
+ * The three services sold by the client, with their content as described in
+ * her presentation and her terms and conditions.
+ */
 const SERVICES = [
     {
         phase: 'Concevoir',
         title: 'Wedding design',
-        text: 'Nous dessinons l’atmosphère de votre réception : matières, mobilier, lumières, jusqu’au plan de table et aux menus. Vous voyez le résultat avant qu’il existe.',
-        points: ['Moodboards et projections', 'Scénographie et mobilier', 'Plan de table, menus, signalétique'],
+        text: 'De la première ébauche de moodboard au carnet design, nous imaginons votre décor : réception, signalétique, cérémonie et fleurs. Nous l’installons le jour J et le démontons le lendemain.',
+        points: [
+            'Moodboard, devis puis carnet design',
+            'Points d’étape à M-6, M-3 et M-1',
+            'Installation le jour J, désinstallation le lendemain',
+        ],
         image: IMAGES.design,
     },
     {
-        phase: 'Préparer',
-        title: 'Coordination du jour J',
-        text: 'Nous prenons en charge l’organisation de la journée : calendrier, prestataires, installation. Le moment venu, vous n’avez plus qu’à en profiter.',
-        points: ['Rétroplanning et déroulé de la journée', 'Relais auprès de vos prestataires', 'Présence sur place le jour J'],
+        phase: 'Organiser',
+        title: 'Coordination',
+        text: 'Nous optimisons avec vous le planning de la journée, nous contactons vos prestataires et nous vérifions que chaque animation se déroule comme prévu.',
+        points: [
+            'Planning de la journée construit avec vous',
+            'Contact et suivi de vos prestataires',
+            'Vérification des animations',
+        ],
         image: IMAGES.coordination,
     },
     {
         phase: 'Célébrer',
-        title: 'Cérémonie laïque',
-        text: 'Une cérémonie qui raconte votre histoire avec vos mots, du premier texte jusqu’aux vœux.',
-        points: ['Texte écrit avec vous', 'Vœux, lectures et rituels symboliques', 'Déroulé et mise en scène de la cérémonie'],
+        title: 'Officiante de cérémonie',
+        text: 'Une cérémonie qui raconte votre histoire : nous la préparons avec vous, nous l’écrivons, puis nous l’animons le jour J.',
+        points: [
+            '10 questionnaires « carnet d’histoire »',
+            '3 rendez-vous étape',
+            'Rédaction et animation de la cérémonie',
+        ],
         image: IMAGES.officiant,
     },
 ];
@@ -141,19 +163,11 @@ const ACCESS_STEPS = [
     { number: '03', title: 'Vous choisissez votre mot de passe', text: 'Vous recevez un identifiant et un code provisoire, à remplacer dès la première connexion.' },
 ];
 
+/** Key facts, all taken from the client's presentation. */
 const STATS = [
-    { value: 'Provence', label: 'Terrain de jeu naturel' },
-    { value: '50+', label: 'Célébrations accompagnées' },
+    { value: 'Depuis 2024', label: 'Une maison fondée à Marseille' },
+    { value: '10 à 15', label: 'Mariages accompagnés chaque année' },
     { value: '1 couple', label: '1 espace client dédié' },
-];
-
-const GALLERY = [
-    IMAGES.table,
-    IMAGES.guests,
-    IMAGES.design,
-    IMAGES.coordination,
-    IMAGES.officiant,
-    IMAGES.jessica,
 ];
 
 export default function Landing({ auth }) {
@@ -170,7 +184,6 @@ export default function Landing({ auth }) {
                     <Hero homeUrl={homeUrl} />
                     <Stats />
                     <Services />
-                    <Gallery />
                     <About />
                     <Testimonials />
                     <ClientArea />
@@ -281,7 +294,7 @@ function Hero({ homeUrl }) {
                     </h1>
 
                     <p className="mt-8 max-w-xl text-base leading-relaxed text-ink/70">
-                        Scénographie, coordination du jour J et cérémonie laïque : une direction claire,
+                        Wedding design, coordination et officiante de cérémonie : une direction claire,
                         un cadre rassurant, et une ambiance qui vous ressemble vraiment.
                     </p>
 
@@ -303,9 +316,9 @@ function Hero({ homeUrl }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <Photo image={IMAGES.table} ratio="aspect-[3/4]" eager rounded="rounded-3xl" />
+                    <Photo image={IMAGES.arch} ratio="aspect-[3/4]" eager rounded="rounded-3xl" />
                     <Photo
-                        image={IMAGES.guests}
+                        image={IMAGES.bouquet}
                         ratio="aspect-[3/4]"
                         eager
                         className="mt-10"
@@ -339,7 +352,7 @@ function Services() {
                 <SectionIntro
                     eyebrow="Prestations"
                     title="Trois savoir-faire, au rythme de votre mariage."
-                    text="Ils s’associent librement : design et coordination, design et cérémonie, ou coordination et cérémonie."
+                    text="Ils s’associent librement : décoration et coordination, décoration et officiante, ou officiante et coordination."
                 />
 
                 <div className="mt-14 space-y-10">
@@ -378,49 +391,30 @@ function Services() {
     );
 }
 
-function Gallery() {
-    return (
-        <section aria-labelledby="gallery-title" className="border-y border-ink/10 bg-blush/40">
-            <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
-                <SectionIntro
-                    eyebrow="Ambiances"
-                    title="Des images pour se projeter."
-                    text="Un aperçu des univers que nous créons : réception, cérémonie, détails, matières et instants vécus."
-                />
-
-                <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {GALLERY.map((image, index) => (
-                        <Photo
-                            key={`${image.src}-${index}`}
-                            image={image}
-                            ratio={index % 3 === 0 ? 'aspect-[4/5]' : 'aspect-[3/4]'}
-                            rounded="rounded-2xl"
-                        />
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
 function About() {
     return (
-        <section id="a-propos" aria-labelledby="about-title" className="scroll-mt-24">
+        <section id="a-propos" aria-labelledby="about-title" className="scroll-mt-24 border-t border-ink/10">
             <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
-                <Photo image={IMAGES.jessica} ratio="aspect-[4/5]" rounded="rounded-3xl" />
+                {/* TODO(client): a portrait of Jessica can replace this panel once she provides one. */}
+                <figure className="flex aspect-[4/5] flex-col items-center justify-center rounded-3xl bg-blush px-10 text-center">
+                    <img src="/logo-ldt.png" alt="" className="h-32 w-auto" width={285} height={560} />
+                    <blockquote className="mt-10 font-display text-xl italic leading-snug text-ink/80">
+                        «&nbsp;Faire de votre mariage, votre endroit préféré au monde.&nbsp;»
+                    </blockquote>
+                </figure>
 
                 <div className="max-w-xl">
                     <p className="text-[10px] uppercase tracking-brand text-sage">À propos</p>
                     <h2 id="about-title" className="mt-4 font-display text-2xl leading-snug sm:text-3xl">
-                        Jessica, wedding designer et coordinatrice.
+                        Jessica Salles, fondatrice de La Dernière Touche.
                     </h2>
                     <p className="mt-6 text-base leading-relaxed text-ink/70">
-                        Jessica a grandi en Provence et y vit toujours. C’est le paysage qu’elle connaît le mieux,
-                        et celui qu’elle aime faire découvrir aux couples venus d’ici ou d’ailleurs.
+                        Jessica a créé La Dernière Touche à Marseille en 2024. Elle accompagne chaque année
+                        10 à 15 couples, de France et de l’étranger, en Provence et sur la Côte d’Azur.
                     </p>
                     <p className="mt-5 text-base leading-relaxed text-ink/70">
-                        Après près de 50 célébrations, sa méthode reste la même : écouter d’abord, puis créer
-                        un cadre dans lequel chacun se sent bien, des mariés jusqu’au dernier invité.
+                        Elle suit elle-même chaque projet, du premier rendez-vous jusqu’au jour J, et
+                        s’entoure de prestataires de confiance pour les grands jours.
                     </p>
                 </div>
             </div>
@@ -482,7 +476,7 @@ function ClientArea() {
 
 function Access() {
     return (
-        <section id="acces" aria-labelledby="access-title" className="scroll-mt-24 border-y border-ink/10">
+        <section id="access" aria-labelledby="access-title" className="scroll-mt-24 border-y border-ink/10">
             <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
                 <div className="max-w-xl">
                     <h2 id="access-title" className="font-display text-2xl leading-snug sm:text-3xl">
@@ -530,15 +524,9 @@ function Contact() {
                         Parlons de votre projet.
                     </h2>
                     <p className="mt-5 text-sm leading-relaxed text-ink/70">
-                        Dites-nous la date, le lieu et l’ambiance que vous imaginez.
-                        Aucun compte n’est nécessaire pour nous écrire.
-                    </p>
-                    <p className="mt-5 text-sm leading-relaxed text-ink/70">
-                        {CONTACT.address}
-                        <br />
-                        <a href={CONTACT.phoneLink} className={`${focusRing} hover:text-ink`}>
-                            {CONTACT.phone}
-                        </a>
+                        Dites-nous la date, le lieu, le nombre d’invités et l’ambiance que vous imaginez :
+                        nous vous proposerons un premier rendez-vous. Aucun compte n’est nécessaire pour
+                        nous écrire.
                     </p>
 
                     <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row">
@@ -558,7 +546,25 @@ function Contact() {
                     </div>
                 </div>
 
-                <Photo image={IMAGES.guests} ratio="aspect-[5/4]" rounded="rounded-3xl" />
+                <address className="rounded-3xl border border-ink/10 bg-ivory p-8 not-italic">
+                    <p className="text-[10px] uppercase tracking-brand text-sage">Nous joindre</p>
+                    <ul className="mt-6 space-y-4 text-sm leading-relaxed">
+                        <li>
+                            <a href={`mailto:${CONTACT.email}`} className={`${focusRing} transition-colors hover:text-sage`}>
+                                {CONTACT.email}
+                            </a>
+                        </li>
+                        <li>
+                            <a href={CONTACT.phoneLink} className={`${focusRing} transition-colors hover:text-sage`}>
+                                {CONTACT.phone}
+                            </a>
+                        </li>
+                        <li className="text-ink/70">{CONTACT.address}</li>
+                    </ul>
+                    <p className="mt-6 border-t border-ink/10 pt-6 text-xs leading-relaxed text-ink/50">
+                        Les demandes arrivent aussi par Instagram et par le site : toutes sont lues par Jessica.
+                    </p>
+                </address>
             </div>
         </section>
     );
@@ -573,8 +579,8 @@ function Footer() {
                     <div className="max-w-xs">
                         <p className="font-display text-sm tracking-[0.18em]">LA DERNIÈRE TOUCHE</p>
                         <p className="mt-3 text-sm leading-relaxed text-ink/70">
-                            Wedding design, coordination et cérémonie laïque en Provence
-                            et sur la Côte d’Azur.
+                            Wedding design, coordination et officiante de cérémonie en
+                            Provence et sur la Côte d’Azur.
                         </p>
                     </div>
                 </div>
