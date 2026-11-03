@@ -128,7 +128,7 @@ export default function GraphiqueChiffreAffaires() {
                         <div className="w-full border-b border-hairline" />
                     </div>
 
-                    <div className="z-10 grid h-48 w-full grid-cols-12 items-end gap-2 px-2">
+                    <div className="z-10 grid h-48 w-full grid-cols-12 items-end gap-2 pl-2 pr-[4.5rem]">
                         {MOIS.map((mois) => (
                             <Barre key={mois.libelle} mois={mois} />
                         ))}

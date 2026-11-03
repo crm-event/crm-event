@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -18,6 +20,15 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Default attribute values, matching the column defaults of the database.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'role' => UserRole::Couple->value,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -27,6 +38,32 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
         ];
+    }
+
+    /**
+     * Determine whether the user has one of the given roles.
+     */
+    public function hasRole(UserRole ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * URL of the space the user lands on after logging in.
+     */
+    public function homeUrl(): string
+    {
+        return route($this->role->homeRouteName());
+    }
+
+    /**
+     * The couple record linked to this account (null for the admin, or while
+     * the portal access has not been linked to a record).
+     */
+    public function couple(): HasOne
+    {
+        return $this->hasOne(Couple::class);
     }
 }
