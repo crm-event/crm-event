@@ -42,6 +42,7 @@ export function CommandesCalendrier({
     onMoisChange,
     onVueChange,
     onAjouterJalon,
+    onAjouterMariage,
     onAujourdHui,
 }) {
     return (
@@ -111,14 +112,26 @@ export function CommandesCalendrier({
                 ))}
             </div>
 
-            <button
-                type="button"
-                onClick={onAjouterJalon}
-                className={`${anneauFocus} inline-flex items-center gap-1.5 rounded-lg bg-ink px-4 py-2 text-body text-white shadow-sm transition-opacity hover:opacity-80`}
-            >
-                <Icone nom="add" className="text-[18px]" />
-                <span>Poser un jalon</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    aria-label="Poser un jalon"
+                    onClick={onAjouterJalon}
+                    className={`${anneauFocus} inline-flex items-center gap-1 rounded-lg bg-ink px-3 py-2 text-body text-white shadow-sm transition-opacity hover:opacity-80`}
+                >
+                    <Icone nom="add" className="text-[18px]" />
+                    <span>Jalon</span>
+                </button>
+                <button
+                    type="button"
+                    aria-label="Ajouter un mariage"
+                    onClick={onAjouterMariage}
+                    className={`${anneauFocus} inline-flex items-center gap-1 rounded-lg border border-ink bg-white px-3 py-2 text-body text-ink transition-colors hover:bg-ivory`}
+                >
+                    <Icone nom="favorite" className="text-[18px]" />
+                    <span>Mariage</span>
+                </button>
+            </div>
         </section>
     );
 }

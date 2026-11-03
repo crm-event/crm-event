@@ -59,7 +59,7 @@ function construireFiche(evenement) {
         month: 'long',
         year: 'numeric',
     });
-    const titre = evenement.titre ?? evenement.libelle ?? evenement.categorie;
+    const titre = evenement.titre ?? evenement.couple ?? evenement.libelle ?? evenement.categorie;
 
     return {
         badge: evenement.type === 'jour-j' ? 'Mariage confirmé' : evenement.type === 'rdv' ? 'Rendez-vous' : 'Événement du calendrier',
@@ -69,7 +69,7 @@ function construireFiche(evenement) {
         adresse: evenement.notes ?? 'Aucune note complémentaire.',
         chiffres: [
             { libelle: 'Horaire', valeur: evenement.heure ?? 'À définir', note: 'Heure locale' },
-            { libelle: 'Catégorie', valeur: evenement.type === 'rdv' ? 'Rendez-vous' : 'Jalon', note: 'Planning opérationnel' },
+            { libelle: 'Catégorie', valeur: evenement.type === 'jour-j' ? 'Mariage' : evenement.type === 'rdv' ? 'Rendez-vous' : 'Jalon', note: 'Planning opérationnel' },
         ],
         deroule: [
             {
@@ -94,6 +94,7 @@ export default function Calendrier() {
     const [evenementSelectionne, setEvenementSelectionne] = useState(null);
     const [formulaireOuvert, setFormulaireOuvert] = useState(false);
     const [dateAjout, setDateAjout] = useState(null);
+    const [typeAjout, setTypeAjout] = useState('jalon');
     const [evenementEnEdition, setEvenementEnEdition] = useState(null);
     const [jalonsEnregistres, setJalonsEnregistres] = useState(() =>
         typeof window === 'undefined' ? [] : lireJalonsEnregistres(),
@@ -223,7 +224,15 @@ export default function Calendrier() {
 
     const ouvrirAjout = useCallback((date = null) => {
         setEvenementEnEdition(null);
+        setTypeAjout('jalon');
         setDateAjout(date);
+        setFormulaireOuvert(true);
+    }, []);
+
+    const ouvrirAjoutMariage = useCallback(() => {
+        setEvenementEnEdition(null);
+        setTypeAjout('jour-j');
+        setDateAjout(null);
         setFormulaireOuvert(true);
     }, []);
 
@@ -268,13 +277,13 @@ export default function Calendrier() {
             setFormulaireOuvert(false);
             return;
         }
-        const id = `jalon-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
+        const id = `${typeAjout}-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
         setJalonsEnregistres((actuels) => [
             ...actuels,
-            { ...donnees, id, detail: id, type: 'jalon', custom: true },
+            { ...donnees, id, detail: id, type: typeAjout, custom: true },
         ]);
         setFormulaireOuvert(false);
-    }, [evenementEnEdition]);
+    }, [evenementEnEdition, typeAjout]);
 
     const dateParDefaut = dateAjout ?? formaterDate(dateActive);
     const fiche = evenementSelectionne ? construireFiche(evenementSelectionne) : null;
@@ -301,6 +310,7 @@ export default function Calendrier() {
                     onMoisChange={changerMois}
                     onVueChange={changerVue}
                     onAjouterJalon={() => ouvrirAjout()}
+                    onAjouterMariage={ouvrirAjoutMariage}
                     onAujourdHui={allerAujourdHui}
                 />
                 {vue === 'Mois' && (
@@ -340,6 +350,7 @@ export default function Calendrier() {
                 ouvert={formulaireOuvert}
                 dateParDefaut={dateParDefaut}
                 evenement={evenementEnEdition}
+                typeAjout={typeAjout}
                 onFermer={() => setFormulaireOuvert(false)}
                 onEnregistrer={enregistrerJalon}
             />
