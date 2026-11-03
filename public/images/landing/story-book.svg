@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 600" width="750" height="600" preserveAspectRatio="xMidYMid slice">
+<rect width="750" height="600" fill="#F1E9E3"/>
+<path d="M375 250 C320 225 230 222 150 238 L150 470 C230 455 320 458 375 482 Z" fill="#F8F6F2" stroke="#000000" stroke-width="1.8"/>
+<path d="M375 250 C430 225 520 222 600 238 L600 470 C520 455 430 458 375 482 Z" fill="#F8F6F2" stroke="#000000" stroke-width="1.8"/>
+<line x1="185" y1="290" x2="335" y2="290" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="307" x2="317" y2="307" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="324" x2="299" y2="324" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="341" x2="281" y2="341" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="358" x2="335" y2="358" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="375" x2="317" y2="375" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="392" x2="299" y2="392" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="409" x2="281" y2="409" stroke="#72746A" stroke-width="1.1"/><line x1="185" y1="426" x2="335" y2="426" stroke="#72746A" stroke-width="1.1"/>
+<line x1="410" y1="290" x2="560" y2="290" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="307" x2="542" y2="307" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="324" x2="524" y2="324" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="341" x2="506" y2="341" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="358" x2="560" y2="358" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="375" x2="542" y2="375" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="392" x2="524" y2="392" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="409" x2="506" y2="409" stroke="#72746A" stroke-width="1.1"/><line x1="410" y1="426" x2="560" y2="426" stroke="#72746A" stroke-width="1.1"/>
+<text x="262" y="272" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#000000">Notre histoire</text>
+<circle cx="352" cy="150" r="34" fill="none" stroke="#000000" stroke-width="2.2"/>
+<circle cx="398" cy="150" r="34" fill="none" stroke="#72746A" stroke-width="2.2"/>
+<path d="M398 116 l6 -12 h-12 z" fill="#F8F6F2" stroke="#72746A" stroke-width="1.3"/>
+<path d="M560 520 L610 495 L660 500" fill="none" stroke="#72746A" stroke-width="1.4"/>
+<path d="M560 520 Q564.1 530.3 574.9 528.1 Q570.9 517.8 560 520Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M574.3 512.8 Q582.6 505.5 576.8 496 Q568.5 503.4 574.3 512.8Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M588.6 505.7 Q592.7 516 603.6 513.8 Q599.5 503.5 588.6 505.7Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M602.9 498.5 Q611.2 491.2 605.4 481.7 Q597.1 489.1 602.9 498.5Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M618.1 495.8 Q616 506.7 626.4 510.6 Q628.4 499.7 618.1 495.8Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M634 497.4 Q644.9 495.6 645.1 484.5 Q634.1 486.3 634 497.4Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M649.9 499 Q647.8 509.9 658.2 513.8 Q660.3 502.9 649.9 499Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M90 500 L140 515 L190 505" fill="none" stroke="#72746A" stroke-width="1.4"/>
+<path d="M90 500 Q85.9 510.3 95.3 516.1 Q99.4 505.8 90 500Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M105.3 504.6 Q116.4 504.9 118.7 494.1 Q107.6 493.7 105.3 504.6Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M120.7 509.2 Q116.5 519.5 126 525.3 Q130.1 515 120.7 509.2Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M136 513.8 Q147.1 514.1 149.3 503.3 Q138.2 502.9 136 513.8Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M151.6 512.7 Q152.8 523.7 163.9 524.4 Q162.6 513.4 151.6 512.7Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M167.3 509.5 Q177.2 504.6 174.1 494 Q164.1 498.9 167.3 509.5Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<path d="M182.9 506.4 Q184.2 517.4 195.2 518.2 Q194 507.1 182.9 506.4Z" fill="#72746A" fill-opacity=".22" stroke="#72746A" stroke-width="1.3"/>
+<line x1="60" y1="540" x2="690" y2="540" stroke="#000000" stroke-opacity=".3" stroke-width="1.2"/>
+</svg>
