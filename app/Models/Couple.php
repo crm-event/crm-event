@@ -66,6 +66,18 @@ class Couple extends Model
         return $this->hasManyThrough(Document::class, Wedding::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class)->oldest();
+    }
+
+    public function threadTitle(): string
+    {
+        return collect([$this->partner1_first_name, $this->partner2_first_name])
+            ->filter()
+            ->join(' & ');
+    }
+
     /**
      * First names of the partners, as shown to the other couples:
      * "Marie et Paul", or "Marie" when only one first name is known.
