@@ -85,7 +85,6 @@ function Etape({ etape, derniere }) {
         </div>
     );
 }
-
 // Composant principal
 export default function ResumeMariage() {
     return (
@@ -102,7 +101,6 @@ export default function ResumeMariage() {
                         Résumé du mariage
                     </h2>
                 </div>
-
                 <Icone
                     nom="event_note"
                     className="text-[18px] text-sage"
@@ -128,5 +126,3 @@ export default function ResumeMariage() {
         </section>
     );
 }
-
-

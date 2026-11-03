@@ -42,6 +42,10 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/calendrier', function () {
+    return Inertia::render('Calendrier');
+})->middleware(['auth', 'verified'])->name('calendrier');
+
 Route::get('/wedding', function () {
     return Inertia::render('Wedding');
 })->middleware(['auth', 'verified'])->name('wedding');
