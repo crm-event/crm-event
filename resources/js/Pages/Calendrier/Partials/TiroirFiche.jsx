@@ -1,6 +1,6 @@
 import Icone from '@/Components/Icone';
 import { anneauFocus } from '@/charte';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Tiroir latéral qui déploie la fiche régie d'un Jour J ou d'un jalon.
@@ -9,8 +9,15 @@ import { useEffect, useRef } from 'react';
  * qui décide de l'affichage. Le tiroir se ferme avec Échap ou un clic sur le
  * fond.
  */
-export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier }) {
+export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier, onSupprimer }) {
     const boutonFermer = useRef(null);
+    const [confirmationSuppression, setConfirmationSuppression] = useState(false);
+
+    useEffect(() => {
+        if (!ouvert) {
+            setConfirmationSuppression(false);
+        }
+    }, [ouvert]);
 
     useEffect(() => {
         if (!ouvert) {
@@ -147,23 +154,39 @@ export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier }) {
                     </div>
                 </div>
 
-                <div className="mt-6 flex items-center gap-3 border-t border-hairline pt-6">
-                    <button
-                        type="button"
-                        onClick={onModifier}
-                        className={`${anneauFocus} flex-1 rounded-md bg-ink py-2.5 text-center text-label text-white transition-opacity hover:opacity-80`}
-                    >
-                        Modifier dans le calendrier
-                    </button>
-                    <button
-                        type="button"
-                        title="Imprimer le conducteur"
-                        aria-label="Imprimer le conducteur"
-                        onClick={() => window.print()}
-                        className={`${anneauFocus} rounded-md border border-hairline px-3.5 py-2.5 text-ink transition-colors hover:bg-ivory`}
-                    >
-                        <Icone nom="print" className="text-[18px]" />
-                    </button>
+                <div className="mt-6 border-t border-hairline pt-6">
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={onModifier}
+                            className={`${anneauFocus} flex-1 rounded-md bg-ink py-2.5 text-center text-label text-white transition-opacity hover:opacity-80`}
+                        >
+                            Modifier dans le calendrier
+                        </button>
+                        <button
+                            type="button"
+                            title="Imprimer le conducteur"
+                            aria-label="Imprimer le conducteur"
+                            onClick={() => window.print()}
+                            className={`${anneauFocus} rounded-md border border-hairline px-3.5 py-2.5 text-ink transition-colors hover:bg-ivory`}
+                        >
+                            <Icone nom="print" className="text-[18px]" />
+                        </button>
+                    </div>
+                    {confirmationSuppression ? (
+                        <div className="mt-4 rounded-md border border-warning/40 bg-ivory p-3">
+                            <p className="text-body-sm text-ink">Supprimer cet élément du calendrier ?</p>
+                            <div className="mt-3 flex justify-end gap-2">
+                                <button type="button" onClick={() => setConfirmationSuppression(false)} className={`${anneauFocus} rounded-md border border-hairline px-3 py-2 text-body-sm text-ink hover:bg-white`}>Annuler</button>
+                                <button type="button" onClick={onSupprimer} className={`${anneauFocus} rounded-md bg-ink px-3 py-2 text-body-sm text-white hover:opacity-80`}>Confirmer la suppression</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <button type="button" onClick={() => setConfirmationSuppression(true)} className={`${anneauFocus} mt-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-body-sm text-warning hover:bg-ivory`}>
+                            <Icone nom="delete" className="text-[18px]" />
+                            Supprimer cet élément
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@ import Icone from '@/Components/Icone';
  * Les quatre indicateurs de synthèse du mois affichés au-dessus du calendrier.
  */
 const classesCarte =
-    'flex flex-col justify-between rounded-lg border border-hairline bg-white p-4';
+    'flex flex-col justify-between overflow-hidden rounded-lg border border-hairline bg-white p-4 md:h-[150px]';
 
 function Metrique({ titre, valeur, children, note }) {
     return (
@@ -20,7 +20,7 @@ function Metrique({ titre, valeur, children, note }) {
 }
 
 const noteDiscrete = (texte) => (
-    <span className="mt-1 text-[11px] text-sage">{texte}</span>
+    <span className="mt-1 block truncate text-[11px] text-sage" title={texte}>{texte}</span>
 );
 
 export default function MetriquesMois({ evenements, annee, mois, jourRepere }) {

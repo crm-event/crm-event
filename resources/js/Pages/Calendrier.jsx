@@ -9,10 +9,11 @@ import VueChronologique from '@/Pages/Calendrier/Partials/VueChronologique';
 import VueSemaine from '@/Pages/Calendrier/Partials/VueSemaine';
 import { ANNEE, AUJOURD_HUI, EVENEMENTS, FICHES, MOIS } from '@/Pages/Calendrier/donnees';
 import { Head } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 const CLE_STOCKAGE = 'crm-event.calendrier.jalons.v1';
 const CLE_MODIFICATIONS = 'crm-event.calendrier.modifications.v1';
+const CLE_SUPPRESSIONS = 'crm-event.calendrier.suppressions.v1';
 
 function lireJalonsEnregistres() {
     try {
@@ -33,6 +34,17 @@ function lireModifications() {
             : {};
     } catch {
         return {};
+    }
+}
+
+function lireSuppressions() {
+    try {
+        const suppressions = JSON.parse(window.localStorage.getItem(CLE_SUPPRESSIONS) ?? '[]');
+        return Array.isArray(suppressions)
+            ? suppressions.filter((id) => typeof id === 'string')
+            : [];
+    } catch {
+        return [];
     }
 }
 
@@ -74,6 +86,7 @@ function formaterDate(date) {
 }
 
 export default function Calendrier() {
+    const positionDefilement = useRef(null);
     const [dateActive, setDateActive] = useState(
         () => new Date(ANNEE, MOIS - 1, AUJOURD_HUI),
     );
@@ -88,14 +101,37 @@ export default function Calendrier() {
     const [modifications, setModifications] = useState(() =>
         typeof window === 'undefined' ? {} : lireModifications(),
     );
+    const [suppressions, setSuppressions] = useState(() =>
+        typeof window === 'undefined' ? [] : lireSuppressions(),
+    );
+
+    useEffect(() => {
+        const gouttiereInitiale = document.documentElement.style.scrollbarGutter;
+        document.documentElement.style.scrollbarGutter = 'stable';
+
+        return () => {
+            document.documentElement.style.scrollbarGutter = gouttiereInitiale;
+        };
+    }, []);
+
+    useLayoutEffect(() => {
+        if (positionDefilement.current !== null) {
+            window.scrollTo(0, positionDefilement.current);
+            positionDefilement.current = null;
+        }
+    }, [dateActive, vue]);
+
+    const memoriserDefilement = useCallback(() => {
+        positionDefilement.current = window.scrollY;
+    }, []);
 
     const annee = dateActive.getFullYear();
     const mois = dateActive.getMonth() + 1;
     const evenementsTous = useMemo(
         () => [...EVENEMENTS.map((evenement) => modifications[evenement.id]
             ? { ...evenement, ...modifications[evenement.id], modifie: true }
-            : evenement), ...jalonsEnregistres],
-        [jalonsEnregistres, modifications],
+            : evenement), ...jalonsEnregistres].filter((evenement) => !suppressions.includes(evenement.id)),
+        [jalonsEnregistres, modifications, suppressions],
     );
 
     useEffect(() => {
@@ -113,6 +149,14 @@ export default function Calendrier() {
             // Les modifications restent visibles jusqu'au prochain rechargement si le stockage est indisponible.
         }
     }, [modifications]);
+
+    useEffect(() => {
+        try {
+            window.localStorage.setItem(CLE_SUPPRESSIONS, JSON.stringify(suppressions));
+        } catch {
+            // Les suppressions restent visibles jusqu'au prochain rechargement si le stockage est indisponible.
+        }
+    }, [suppressions]);
 
     const evenements = useMemo(
         () =>
@@ -145,20 +189,33 @@ export default function Calendrier() {
     );
 
     const changerMois = useCallback((delta) => {
+        memoriserDefilement();
         setDateActive((date) => new Date(date.getFullYear(), date.getMonth() + delta, 1));
-    }, []);
+    }, [memoriserDefilement]);
 
     const changerAnnee = useCallback((nouvelleAnnee) => {
+        memoriserDefilement();
         setDateActive((date) => new Date(nouvelleAnnee, date.getMonth(), 1));
-    }, []);
+    }, [memoriserDefilement]);
 
     const changerSemaine = useCallback((delta) => {
+        memoriserDefilement();
         setDateActive((date) => {
             const nouvelleDate = new Date(date);
             nouvelleDate.setDate(nouvelleDate.getDate() + delta * 7);
             return nouvelleDate;
         });
-    }, []);
+    }, [memoriserDefilement]);
+
+    const changerVue = useCallback((nouvelleVue) => {
+        memoriserDefilement();
+        setVue(nouvelleVue);
+    }, [memoriserDefilement]);
+
+    const allerAujourdHui = useCallback(() => {
+        memoriserDefilement();
+        setDateActive(new Date());
+    }, [memoriserDefilement]);
 
     const ouvrirFiche = useCallback((evenement) => {
         setEvenementSelectionne(evenement);
@@ -174,6 +231,25 @@ export default function Calendrier() {
         setEvenementEnEdition(evenementSelectionne);
         setEvenementSelectionne(null);
         setFormulaireOuvert(true);
+    }, [evenementSelectionne]);
+
+    const supprimerEvenement = useCallback(() => {
+        if (!evenementSelectionne) {
+            return;
+        }
+
+        const { id, custom } = evenementSelectionne;
+        if (custom) {
+            setJalonsEnregistres((actuels) => actuels.filter((jalon) => jalon.id !== id));
+        } else {
+            setSuppressions((actuelles) => actuelles.includes(id) ? actuelles : [...actuelles, id]);
+            setModifications((actuelles) => {
+                const prochaines = { ...actuelles };
+                delete prochaines[id];
+                return prochaines;
+            });
+        }
+        setEvenementSelectionne(null);
     }, [evenementSelectionne]);
 
     const enregistrerJalon = useCallback((donnees) => {
@@ -207,7 +283,7 @@ export default function Calendrier() {
         <BackOfficeLayout actif="calendrier" filAriane="Planning Opérationnel">
             <Head title="Calendrier" />
 
-            <div className="w-full">
+            <div className="w-full" style={{ overflowAnchor: 'none' }}>
                 <EnteteCalendrier
                     annee={annee}
                 />
@@ -223,9 +299,9 @@ export default function Calendrier() {
                     vue={vue}
                     onAnneeChange={changerAnnee}
                     onMoisChange={changerMois}
-                    onVueChange={setVue}
+                    onVueChange={changerVue}
                     onAjouterJalon={() => ouvrirAjout()}
-                    onAujourdHui={() => setDateActive(new Date())}
+                    onAujourdHui={allerAujourdHui}
                 />
                 {vue === 'Mois' && (
                     <GrilleMensuelle
@@ -258,6 +334,7 @@ export default function Calendrier() {
                 ouvert={Boolean(evenementSelectionne)}
                 onFermer={() => setEvenementSelectionne(null)}
                 onModifier={ouvrirEdition}
+                onSupprimer={supprimerEvenement}
             />
             <FormulaireJalon
                 ouvert={formulaireOuvert}
