@@ -14,9 +14,9 @@ import { useState } from 'react';
 const NAVIGATION = [
     { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
     { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread' },
-    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite' },
+    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'mariages.prestations' },
     { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today' },
-    { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long' },
+    { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long', route: 'facturation.index' },
     { cle: 'depenses', libelle: 'Dépenses', icone: 'payments' },
     { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
     { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up' },
