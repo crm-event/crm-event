@@ -6,6 +6,8 @@ use Database\Factories\CoupleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
  * Client record of a couple, created from the first inquiry.
@@ -42,6 +44,26 @@ class Couple extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The weddings of this couple (a couple can come back for a second event).
+     *
+     * @return HasMany<Wedding, $this>
+     */
+    public function weddings(): HasMany
+    {
+        return $this->hasMany(Wedding::class);
+    }
+
+    /**
+     * The documents of all the weddings of this couple.
+     *
+     * @return HasManyThrough<Document, Wedding, $this>
+     */
+    public function documents(): HasManyThrough
+    {
+        return $this->hasManyThrough(Document::class, Wedding::class);
     }
 
     /**

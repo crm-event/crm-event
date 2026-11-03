@@ -9,10 +9,6 @@ use Inertia\Response;
 
 class HomeController extends Controller
 {
-    /**
-     * Display the home page of the couple space, where a couple lands after
-     * logging in.
-     */
     public function __invoke(Request $request): Response
     {
         $couple = $request->user()->couple;
@@ -22,6 +18,11 @@ class HomeController extends Controller
                 'partner1_first_name',
                 'partner2_first_name',
             ]),
+            'documents' => [
+                'total' => $couple?->documents()->count() ?? 0,
+                'unseen' => $couple?->documents()->unseen()->count() ?? 0,
+                'to_sign' => $couple?->documents()->pendingApproval()->count() ?? 0,
+            ],
         ]);
     }
 }
