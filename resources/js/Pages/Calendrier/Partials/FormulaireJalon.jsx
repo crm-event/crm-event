@@ -2,7 +2,7 @@ import Icone from '@/Components/Icone';
 import { anneauFocus } from '@/charte';
 import { useEffect, useState } from 'react';
 
-export default function FormulaireJalon({ ouvert, dateParDefaut, onFermer, onEnregistrer }) {
+export default function FormulaireJalon({ ouvert, dateParDefaut, evenement, onFermer, onEnregistrer }) {
     const [titre, setTitre] = useState('');
     const [date, setDate] = useState(dateParDefaut);
     const [heure, setHeure] = useState('');
@@ -11,9 +11,13 @@ export default function FormulaireJalon({ ouvert, dateParDefaut, onFermer, onEnr
 
     useEffect(() => {
         if (ouvert) {
-            setDate(dateParDefaut);
+            setTitre(evenement?.titre ?? evenement?.libelle ?? evenement?.couple ?? '');
+            setDate(evenement?.date ?? dateParDefaut);
+            setHeure(evenement?.heure ?? '');
+            setLieu(evenement?.lieu ?? evenement?.location ?? '');
+            setNotes(evenement?.notes ?? '');
         }
-    }, [dateParDefaut, ouvert]);
+    }, [dateParDefaut, evenement, ouvert]);
 
     useEffect(() => {
         if (!ouvert) {
@@ -34,27 +38,25 @@ export default function FormulaireJalon({ ouvert, dateParDefaut, onFermer, onEnr
 
     const enregistrer = (event) => {
         event.preventDefault();
+        const intitulé = titre.trim();
         onEnregistrer({
-            titre: titre.trim(),
-            libelle: titre.trim(),
+            titre: intitulé,
+            libelle: intitulé,
+            ...(evenement?.type === 'jour-j' || evenement?.type === 'carte' ? { couple: intitulé } : {}),
             date,
             heure,
-            location: lieu.trim(),
+            lieu: lieu.trim(),
             notes: notes.trim(),
         });
-        setTitre('');
-        setHeure('');
-        setLieu('');
-        setNotes('');
     };
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/35 p-4" onClick={onFermer}>
-            <section role="dialog" aria-modal="true" aria-labelledby="titre-jalon" className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <section role="dialog" aria-modal="true" aria-labelledby="titre-jalon" className="max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
                 <div className="mb-5 flex items-start justify-between border-b border-hairline pb-4">
                     <div>
                         <span className="text-caps uppercase tracking-wider text-sage">Planning opérationnel</span>
-                        <h2 id="titre-jalon" className="mt-1 font-display text-title-md text-ink">Poser un jalon</h2>
+                        <h2 id="titre-jalon" className="mt-1 font-display text-title-md text-ink">{evenement ? 'Modifier l’événement' : 'Poser un jalon'}</h2>
                     </div>
                     <button type="button" aria-label="Fermer" onClick={onFermer} className={`${anneauFocus} rounded-full p-1 text-sage hover:bg-ivory hover:text-ink`}><Icone nom="close" /></button>
                 </div>
@@ -76,9 +78,10 @@ export default function FormulaireJalon({ ouvert, dateParDefaut, onFermer, onEnr
                     <label className="block text-label text-ink">Note (facultative)
                         <textarea rows="3" maxLength="1000" value={notes} onChange={(event) => setNotes(event.target.value)} className="mt-1 w-full rounded-lg border-hairline text-body focus:border-sage focus:ring-sage" />
                     </label>
+                    <p className="text-[11px] text-sage">Enregistré dans ce navigateur uniquement.</p>
                     <div className="flex justify-end gap-3 border-t border-hairline pt-4">
                         <button type="button" onClick={onFermer} className={`${anneauFocus} rounded-lg border border-hairline px-4 py-2 text-label text-ink hover:bg-ivory`}>Annuler</button>
-                        <button type="submit" className={`${anneauFocus} rounded-lg bg-ink px-4 py-2 text-label text-white hover:opacity-80`}>Enregistrer le jalon</button>
+                        <button type="submit" className={`${anneauFocus} rounded-lg bg-ink px-4 py-2 text-label text-white hover:opacity-80`}>{evenement ? 'Enregistrer les modifications' : 'Enregistrer le jalon'}</button>
                     </div>
                 </form>
             </section>

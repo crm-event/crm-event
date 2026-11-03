@@ -99,7 +99,7 @@ function Evenement({ evenement, onOuvrir }) {
                 <button type="button" onClick={() => onOuvrir(evenement)} className={`${anneauFocus} flex w-full items-center gap-1.5 rounded border border-hairline bg-ivory px-2 py-1 text-left text-sage hover:border-sage`}>
                     <Point classes="h-1.5 w-1.5 bg-sage" />
                     <span className="truncate text-[11px]">
-                        {evenement.libelle}
+                        {evenement.libelle ?? evenement.titre}
                     </span>
                 </button>
             );
@@ -146,7 +146,7 @@ function Evenement({ evenement, onOuvrir }) {
     }
 }
 
-function Case({ jour, mois, annee, horsMois, index, derniereLigne, jours, onOuvrir }) {
+function Case({ jour, mois, annee, horsMois, index, derniereLigne, jours, onOuvrir, onAjouter }) {
     const donnees = horsMois ? undefined : jours[jour];
     const evenements = donnees?.evenements ?? [];
     const maintenant = new Date();
@@ -220,6 +220,17 @@ function Case({ jour, mois, annee, horsMois, index, derniereLigne, jours, onOuvr
                 )}
             </div>
 
+            {!horsMois && (
+                <button
+                    type="button"
+                    aria-label={`Ajouter un jalon le ${jour}/${mois}/${annee}`}
+                    onClick={() => onAjouter(`${annee}-${String(mois).padStart(2, '0')}-${String(jour).padStart(2, '0')}`)}
+                    className={`${anneauFocus} mt-1 self-start rounded px-1 text-[10px] text-sage hover:bg-ivory hover:text-ink`}
+                >
+                    + Ajouter
+                </button>
+            )}
+
             {evenements.length > 0 && (
                 <div className="mt-1.5 space-y-1">
                     {evenements.map((evenement, position) => (
@@ -235,7 +246,7 @@ function Case({ jour, mois, annee, horsMois, index, derniereLigne, jours, onOuvr
     );
 }
 
-export default function GrilleMensuelle({ annee, mois, jours, onOuvrir }) {
+export default function GrilleMensuelle({ annee, mois, jours, onOuvrir, onAjouter }) {
     const cases = construireCases(annee, mois);
 
     return (
@@ -263,6 +274,7 @@ export default function GrilleMensuelle({ annee, mois, jours, onOuvrir }) {
                             derniereLigne={index >= cases.length - 7}
                             jours={jours}
                             onOuvrir={onOuvrir}
+                            onAjouter={onAjouter}
                         />
                     ))}
                 </div>

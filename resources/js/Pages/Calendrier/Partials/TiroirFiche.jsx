@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
  * qui décide de l'affichage. Le tiroir se ferme avec Échap ou un clic sur le
  * fond.
  */
-export default function TiroirFiche({ fiche, ouvert, onFermer }) {
+export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier }) {
     const boutonFermer = useRef(null);
 
     useEffect(() => {
@@ -150,11 +150,10 @@ export default function TiroirFiche({ fiche, ouvert, onFermer }) {
                 <div className="mt-6 flex items-center gap-3 border-t border-hairline pt-6">
                     <button
                         type="button"
-                        disabled
-                        title="La fiche Mariage sera disponible avec la page Mariages."
+                        onClick={onModifier}
                         className={`${anneauFocus} flex-1 rounded-md bg-ink py-2.5 text-center text-label text-white transition-opacity hover:opacity-80`}
                     >
-                        Dossier mariage à venir
+                        Modifier dans le calendrier
                     </button>
                     <button
                         type="button"

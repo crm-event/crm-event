@@ -3,7 +3,7 @@ import { anneauFocus } from '@/charte';
 
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
-export default function VueSemaine({ dateRepere, evenements, onSemaineChange, onOuvrir }) {
+export default function VueSemaine({ dateRepere, evenements, onSemaineChange, onOuvrir, onAjouter }) {
     const lundi = new Date(dateRepere);
     lundi.setDate(lundi.getDate() - ((lundi.getDay() + 6) % 7));
     const cases = Array.from({ length: 7 }, (_, index) => {
@@ -40,6 +40,14 @@ export default function VueSemaine({ dateRepere, evenements, onSemaineChange, on
                                 <span className="font-display text-title-sm text-ink">{date.getDate()}</span>
                                 <span className="ml-1 text-[10px] text-sage">{date.toLocaleDateString('fr-FR', { month: 'short' })}</span>
                             </div>
+                            <button
+                                type="button"
+                                aria-label={`Ajouter un jalon le ${date.toLocaleDateString('fr-FR')}`}
+                                onClick={() => onAjouter(cleDate)}
+                                className={`${anneauFocus} mb-3 rounded px-1 text-[10px] text-sage hover:bg-ivory hover:text-ink`}
+                            >
+                                + Ajouter
+                            </button>
                             <div className="space-y-2">
                                 {evenementsDuJour.map((evenement) => (
                                     <button key={evenement.id} type="button" onClick={() => onOuvrir(evenement)} className={`${anneauFocus} w-full rounded-md border border-hairline bg-ivory/70 p-2 text-left hover:border-sage`}>
