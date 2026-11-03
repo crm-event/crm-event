@@ -67,6 +67,26 @@ class Couple extends Model
     }
 
     /**
+     * The appointments of all the weddings of this couple.
+     *
+     * @return HasManyThrough<Appointment, Wedding, $this>
+     */
+    public function appointments(): HasManyThrough
+    {
+        return $this->hasManyThrough(Appointment::class, Wedding::class);
+    }
+
+    /**
+     * The messages of all the weddings of this couple.
+     *
+     * @return HasManyThrough<Message, Wedding, $this>
+     */
+    public function messages(): HasManyThrough
+    {
+        return $this->hasManyThrough(Message::class, Wedding::class);
+    }
+
+    /**
      * First names of the partners, as shown to the other couples:
      * "Marie et Paul", or "Marie" when only one first name is known.
      */

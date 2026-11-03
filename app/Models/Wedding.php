@@ -67,4 +67,25 @@ class Wedding extends Model
     {
         return $this->hasMany(Document::class);
     }
+
+    /**
+     * The appointments scheduled for this wedding.
+     *
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * The messages of the thread between Jessica and the couple for this
+     * wedding.
+     *
+     * @return HasMany<Message, $this>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
 }
