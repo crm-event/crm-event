@@ -63,8 +63,8 @@ function EntreeNavigation({ entree, active }) {
 
 function BarreLaterale({ actif, utilisateur }) {
     return (
-        <div className="flex h-full flex-col justify-between bg-ivory">
-            <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-full flex-col justify-between bg-ivory">
+            <div className="flex flex-1 flex-col">
                 <div className="flex h-20 items-center gap-3 border-b border-hairline px-6">
                     <Link href="/" className={anneauFocus}>
                         <img
@@ -93,7 +93,7 @@ function BarreLaterale({ actif, utilisateur }) {
 
                 <nav
                     aria-label="Navigation principale"
-                    className="flex-1 space-y-0.5 overflow-y-auto px-2"
+                    className="flex-1 space-y-0.5 px-2"
                 >
                     {NAVIGATION.map((entree) => (
                         <EntreeNavigation
@@ -167,7 +167,7 @@ export default function BackOfficeLayout({
 
     return (
         <div className="min-h-screen bg-blush font-sans text-ink antialiased">
-            <aside className="fixed left-0 top-0 z-50 hidden h-screen w-sidebar border-r border-hairline lg:block">
+            <aside className="fixed left-0 top-0 z-50 hidden h-screen w-sidebar overflow-y-auto border-r border-hairline lg:block">
                 <BarreLaterale actif={actif} utilisateur={utilisateur} />
             </aside>
 
@@ -177,7 +177,7 @@ export default function BackOfficeLayout({
                         className="absolute inset-0 bg-ink/40"
                         onClick={() => setMenuOuvert(false)}
                     />
-                    <aside className="relative h-full w-sidebar max-w-[85vw] border-r border-hairline">
+                    <aside className="relative h-full w-sidebar max-w-[85vw] overflow-y-auto border-r border-hairline">
                         <BarreLaterale actif={actif} utilisateur={utilisateur} />
                     </aside>
                 </div>

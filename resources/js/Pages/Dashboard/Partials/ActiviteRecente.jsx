@@ -2,7 +2,7 @@ import Icone from '@/Components/Icone';
 import { anneauFocus } from '@/charte';
 
 /**
- * Fil d'activité du studio et encart de citation, dans la colonne de droite.
+ * Fil d'activité du studio, dans la colonne de droite.
  *
  * Les événements sont ceux de la maquette, en attendant les vraies données.
  */
@@ -110,42 +110,27 @@ function Activite({ activite }) {
 
 export default function ActiviteRecente() {
     return (
-        <>
-            <section className="rounded-lg border border-hairline bg-white p-6 shadow-sm">
-                <div className="flex items-center justify-between border-b border-hairline pb-3">
-                    <div>
-                        <span className="text-caps uppercase text-sage">
-                            Temps réel
-                        </span>
-                        <h2 className="font-display text-title-sm text-ink">
-                            Activité récente du studio
-                        </h2>
-                    </div>
-                    <Icone nom="history" className="text-[18px] text-sage" />
-                </div>
-
-                <div className="relative mt-4">
-                    <div className="absolute bottom-2 left-3.5 top-2 w-px bg-hairline" />
-                    <div className="space-y-4 text-body-sm">
-                        {ACTIVITES.map((activite) => (
-                            <Activite key={activite.titre} activite={activite} />
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            <aside className="flex items-start gap-3 rounded-lg border border-hairline bg-ivory p-4">
-                <Icone nom="auto_awesome" className="mt-0.5 text-[20px] text-sage" />
-                <div className="flex flex-col text-body-sm">
-                    <span className="font-display text-title-sm italic text-ink">
-                        « La simplicité est la sophistication suprême. »
+        <section className="rounded-lg border border-hairline bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between border-b border-hairline pb-3">
+                <div>
+                    <span className="text-caps uppercase text-sage">
+                        Temps réel
                     </span>
-                    <span className="mt-1 text-[11px] text-sage">
-                        2 mariages prévus en Avril. Prochaine revue logistique le
-                        17 Avril à 10:00 avec l’équipe régie son &amp; lumière.
-                    </span>
+                    <h2 className="font-display text-title-sm text-ink">
+                        Activité récente du studio
+                    </h2>
                 </div>
-            </aside>
-        </>
+                <Icone nom="history" className="text-[18px] text-sage" />
+            </div>
+
+            <div className="relative mt-4">
+                <div className="absolute bottom-2 left-3.5 top-2 w-px bg-hairline" />
+                <div className="space-y-4 text-body-sm">
+                    {ACTIVITES.map((activite) => (
+                        <Activite key={activite.titre} activite={activite} />
+                    ))}
+                </div>
+            </div>
+        </section>
     );
 }
