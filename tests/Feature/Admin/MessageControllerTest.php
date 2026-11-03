@@ -1,0 +1,107 @@
+<?php
+
+namespace Tests\Feature\Admin;
+
+use App\Models\Couple;
+use App\Models\Message;
+use App\Models\User;
+use App\Models\Wedding;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class MessageControllerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $jessica;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutVite();
+        $this->jessica = User::factory()->admin()->create();
+    }
+
+    public function test_the_inbox_lists_the_couples_with_access_most_recent_first_with_unread_counts(): void
+    {
+        $quiet = Couple::factory()->withPortalAccess()->create(['partner1_first_name' => 'Anna', 'partner2_first_name' => 'Tom']);
+        $active = Couple::factory()->withPortalAccess()->create(['partner1_first_name' => 'Marie', 'partner2_first_name' => 'Paul']);
+        Couple::factory()->create(['partner1_first_name' => 'Sans', 'partner2_first_name' => 'Accès']);
+
+        $wedding = Wedding::factory()->for($active)->create();
+        Message::factory()->for($wedding)->count(2)->create(['sender_id' => $active->user_id]);
+        Message::factory()->for($wedding)->create(['sender_id' => $this->jessica->id, 'body' => 'Je vous réponds demain.']);
+
+        $response = $this->actingAs($this->jessica)->get(route('admin.messages.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Messages/Index')
+            ->has('threads', 2)
+            ->where('threads.0.title', 'Marie & Paul')
+            ->where('threads.0.unread_count', 2)
+            ->where('threads.0.last_message', 'Je vous réponds demain.')
+            ->where('threads.1.couple_id', $quiet->id)
+            ->where('threads.1.last_message', null)
+        );
+    }
+
+    public function test_opening_a_thread_marks_the_couple_s_messages_as_read(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+        $fromCouple = Message::factory()->for($wedding)->create(['sender_id' => $couple->user_id]);
+
+        $response = $this->actingAs($this->jessica)->get(route('admin.messages.show', $couple));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Messages/Show')
+            ->where('couple.id', $couple->id)
+            ->has('messages', 1)
+            ->where('canWrite', true)
+        );
+        $this->assertNotNull($fromCouple->fresh()->read_at);
+    }
+
+    public function test_jessica_can_reply_to_a_couple(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+
+        $response = $this->actingAs($this->jessica)->post(route('admin.messages.store', $couple), [
+            'body' => 'Bonjour, voici le devis mis à jour.',
+        ]);
+
+        $response->assertRedirect(route('admin.messages.show', $couple));
+        $this->assertDatabaseHas('messages', [
+            'wedding_id' => $wedding->id,
+            'sender_id' => $this->jessica->id,
+            'body' => 'Bonjour, voici le devis mis à jour.',
+        ]);
+    }
+
+    public function test_jessica_cannot_write_to_a_couple_without_wedding(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+
+        $this->actingAs($this->jessica)
+            ->post(route('admin.messages.store', $couple), ['body' => 'Bonjour'])
+            ->assertSessionHasErrors('body');
+
+        $this->assertDatabaseCount('messages', 0);
+    }
+
+    public function test_couples_and_guests_cannot_open_the_inbox(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+
+        $this->actingAs($couple->user)->get(route('admin.messages.index'))->assertForbidden();
+        $this->actingAs($couple->user)->get(route('admin.messages.show', $couple))->assertForbidden();
+
+        auth()->logout();
+
+        $this->get(route('admin.messages.index'))->assertRedirect(route('login'));
+    }
+}
