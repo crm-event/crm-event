@@ -28,7 +28,12 @@ const NAVIGATION_GROUPS = [
     {
         label: 'Entre couples',
         entries: [
-            { key: 'community', label: 'Communauté', icon: 'diversity_1' },
+            {
+                key: 'community',
+                label: 'Communauté',
+                icon: 'diversity_1',
+                route: 'couple.community.index',
+            },
         ],
     },
 ];
