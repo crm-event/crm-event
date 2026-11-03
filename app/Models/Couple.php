@@ -6,6 +6,7 @@ use Database\Factories\CoupleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Client record of a couple, created from the first inquiry.
@@ -42,6 +43,23 @@ class Couple extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function weddings(): HasMany
+    {
+        return $this->hasMany(Wedding::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class)->oldest();
+    }
+
+    public function threadTitle(): string
+    {
+        return collect([$this->partner1_first_name, $this->partner2_first_name])
+            ->filter()
+            ->join(' & ');
     }
 
     /**
