@@ -10,23 +10,22 @@
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /*
-    Charte graphique « La Dernière Touche », fournie par la cliente.
-    Elle ne compte que cinq couleurs : les pages destinées aux couples ne
-    doivent pas en introduire d'autres. Le blanc et le noir de Tailwind
-    complètent la liste.
+    "La Dernière Touche" brand guidelines, provided by the client.
+    They only have five colors: pages meant for couples must not introduce
+    any other. Tailwind's white and black complete the list.
   */
-  --color-ivory: #f8f6f2; /* fond principal */
-  --color-blush: #f1e9e3; /* fond secondaire, encarts */
-  --color-sage: #72746a; /* unique couleur d'accent */
-  --color-ink: #000000; /* textes et aplats sombres */
+  --color-ivory: #f8f6f2; /* main background */
+  --color-blush: #f1e9e3; /* secondary background, panels */
+  --color-sage: #72746a; /* only accent color */
+  --color-ink: #000000; /* text and dark fills */
 
   /*
-    Baskerville Display PT (charte) est une police payante ; Libre Baskerville
-    en est l'équivalent libre le plus proche. Elle est chargée dans app.blade.php.
+    Baskerville Display PT (brand font) is a paid font; Libre Baskerville is
+    its closest free equivalent. It is loaded in app.blade.php.
   */
   --font-display: 'Libre Baskerville', Baskerville, 'Times New Roman', serif;
 
-  /* Interlettrage des micro-titres en capitales de la charte. */
+  /* Letter spacing of the brand's uppercase captions. */
   --tracking-brand: 0.28em;
 
   --color-hairline: #e4ddd6;

@@ -32,9 +32,9 @@ function MariagesEnCours() {
             <EnTeteCarte titre="Mariages en cours">
                 <Icone nom="favorite" className="text-[18px] text-sage" />
             </EnTeteCarte>
-            <div className="my-2 flex items-baseline gap-2">
-                <span className="font-display text-kpi text-ink">12</span>
-                <span className="text-body-sm text-sage">dossiers confirmés</span>
+            <div className="my-2 flex flex-col items-start gap-1">
+                <span className="font-display text-[48px] leading-none text-ink">12</span>
+                <span className="text-[11px] text-sage">dossiers confirmés</span>
             </div>
             <div className={`${classesPied} text-success`}>
                 <span className="inline-flex items-center gap-1">
@@ -117,9 +117,9 @@ function DemandesEnAttente() {
                     À traiter
                 </span>
             </EnTeteCarte>
-            <div className="my-2 flex items-baseline gap-2">
-                <span className="font-display text-kpi text-ink">7</span>
-                <span className="text-body-sm text-sage">leads qualifiés</span>
+            <div className="my-2 flex flex-col items-start gap-1">
+                <span className="font-display text-[48px] leading-none text-ink">7</span>
+                <span className="text-[11px] text-sage">leads qualifiés</span>
             </div>
             <div className={classesPied}>
                 <span className="inline-flex items-center gap-1 text-sage">
