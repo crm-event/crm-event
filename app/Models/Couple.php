@@ -46,6 +46,17 @@ class Couple extends Model
     }
 
     /**
+     * First names of the partners, as shown to the other couples:
+     * "Marie et Paul", or "Marie" when only one first name is known.
+     */
+    public function firstNames(): string
+    {
+        return collect([$this->partner1_first_name, $this->partner2_first_name])
+            ->filter()
+            ->join(' et ');
+    }
+
+    /**
      * The weddings of the couple.
      *
      * @return HasMany<Wedding, $this>
