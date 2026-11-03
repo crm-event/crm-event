@@ -6,6 +6,7 @@ use Database\Factories\CoupleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Client record of a couple, created from the first inquiry.
@@ -45,13 +46,12 @@ class Couple extends Model
     }
 
     /**
-     * First names of the partners, as shown to the other couples:
-     * "Marie et Paul", or "Marie" when only one first name is known.
+     * The weddings of the couple.
+     *
+     * @return HasMany<Wedding, $this>
      */
-    public function firstNames(): string
+    public function weddings(): HasMany
     {
-        return collect([$this->partner1_first_name, $this->partner2_first_name])
-            ->filter()
-            ->join(' et ');
+        return $this->hasMany(Wedding::class);
     }
 }
