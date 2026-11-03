@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\LandingController;
@@ -14,6 +15,7 @@ Route::middleware(['auth', 'role:couple'])
     ->name('couple.')
     ->group(function () {
         Route::get('/', CoupleHomeController::class)->name('home');
+        Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');
         Route::post('/communaute', [CommunityController::class, 'store'])->name('community.store');
