@@ -2,12 +2,20 @@
 
 namespace App\Models;
 
+use Database\Factories\CoupleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Client record of a couple, created from the first inquiry.
+ *
+ * It is distinct from the login account: `user_id` stays null until Jessica
+ * opens the portal access (see docs/bdd/README.md, decision D2).
+ */
 class Couple extends Model
 {
+    /** @use HasFactory<CoupleFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -25,6 +33,12 @@ class Couple extends Model
         'notes',
     ];
 
+    /**
+     * The login account of the couple, null while the portal access is not
+     * open.
+     *
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
