@@ -6,6 +6,7 @@ import Prestataires from '@/Pages/Wedding/Partials/Prestataires.jsx';
 import Icone from '@/Components/Icone';
 import { anneauFocus } from '@/charte';
 import { formaterEuros } from '@/formats';
+import {Head} from "@inertiajs/react";
 
 const ONGLET = [
     { id: 'resume', label: 'Résumé', icon: 'dashboard' },
@@ -56,13 +57,25 @@ function Statut({ children, sombre = false }) {
     );
 }
 
-export default function Wedding() {
+export default function Wedding({
+                                    wedding,
+                                    prestations = [],
+                                    prestataires = [],
+                                    milestones = [],
+                                    questions = QUESTIONS_PAR_DEFAUT,
+                                    onOpenTab,
+                                    onOpenPortal,
+                                    onEditWedding,
+                                    onSendReminder,
+                                    onViewAnswers,
+                                    onManageProviders,
+                                }) {
+
     const [ongletActif, setOngletActif] = useState('resume');
 
     const nomCouple =
-        wedding.couple_name ||
-        wedding.title ||
-        [wedding.partner_one_name, wedding.partner_two_name].filter(Boolean).join(' & ') ||
+        wedding?.couple_name ||
+        [wedding?.partner_one_name, wedding?.partner_two_name].filter(Boolean).join(' & ') ||
         'Clémence d’Ormesson & Alexandre Royer';
 
     const totalPrestations = useMemo(
@@ -75,9 +88,9 @@ export default function Wedding() {
         [prestations],
     );
 
-    const dateMariage = wedding.wedding_date || wedding.date || '2025-06-28';
-    const lieu = wedding.venue_name || wedding.location || 'Château de Sannes · Lubéron';
-    const nombreInvites = wedding.guest_count ?? wedding.guests_count ?? 140;
+    const dateMariage = wedding?.wedding_date || wedding?.date || '2025-06-28';
+    const lieu = wedding?.venue_name || wedding?.location || 'Château de Sannes · Lubéron';
+    const nombreInvites = wedding?.guest_count ?? wedding?.guests_count ?? 140;
     const nombrePrestatairesConfirmes = prestataires.filter(
         (prestataire) => (prestataire.statut || prestataire.status) === 'confirmé',
     ).length;
@@ -89,22 +102,16 @@ export default function Wedding() {
 
     return (
         <BackOfficeLayout actif="mariages" filAriane={nomCouple}>
+            <Head title="Dashboard" />
             <div className="mx-auto max-w-[1500px] space-y-4">
                 {/* En-tête du dossier */}
                 <section className="relative overflow-hidden rounded-2xl border border-hairline bg-white">
-                    {wedding.cover_image && (
-                        <img
-                            src={wedding.cover_image}
-                            alt=""
-                            className="absolute inset-y-0 right-0 h-full w-2/5 object-cover opacity-20"
-                        />
-                    )}
                     <div className="relative flex flex-col justify-between gap-5 p-5 sm:flex-row sm:items-end sm:p-6">
                         <div className="min-w-0">
                             <div className="mb-3 flex flex-wrap items-center gap-2">
                                 <Statut sombre>{EtapeTimeline.statut || 'En préparation'}</Statut>
                                 <span className="rounded-full bg-ivory px-2 py-1 text-[9px] tracking-wider text-sage">
-                                    # DOS-{wedding.id || '2025-0628'}
+                                    # DOS-{wedding?.id || '2025-0628'}
                                 </span>
                             </div>
                             <h1 className="max-w-2xl font-display text-2xl leading-tight tracking-tight text-ink sm:text-3xl">
@@ -216,7 +223,7 @@ export default function Wedding() {
                                 <p className="text-[9px] uppercase tracking-[0.15em] text-sage">
                                     Honoraires totaux
                                     <strong className="ml-2 font-display text-xl font-normal tracking-normal text-ink">
-                                        {formaterEuros(wedding.total_fees ?? totalPrestations)}
+                                        {formaterEuros(wedding?.total_fees ?? totalPrestations)}
                                     </strong>
                                     <span className="ml-1">HT</span>
                                 </p>
@@ -236,7 +243,7 @@ export default function Wedding() {
                             <section className="rounded-2xl border border-hairline bg-white p-4 sm:p-5">
                                 <div className="flex items-center justify-between gap-2">
                                     <MicroTitre>Cérémonie personnalisée</MicroTitre>
-                                    <Statut>{wedding.questionnaire_progress ?? '80% rempli'}</Statut>
+                                    <Statut>{wedding?.questionnaire_progress ?? '80% rempli'}</Statut>
                                 </div>
                                 <h2 className="mt-1 font-display text-lg text-ink">
                                     Carnet d’Histoires
@@ -251,14 +258,14 @@ export default function Wedding() {
                                             Questionnaire couple
                                         </span>
                                         <span className="text-[10px] text-sage">
-                                            {wedding.questionnaire_score ?? '8 / 10'}
+                                            {wedding?.questionnaire_score ?? '8 / 10'}
                                         </span>
                                     </div>
                                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-cream">
                                         <div
                                             className="h-full rounded-full bg-ink"
                                             style={{
-                                                width: `${Number(wedding.questionnaire_percent ?? 80)}%`,
+                                                width: `${Number(wedding?.questionnaire_percent ?? 80)}%`,
                                             }}
                                         />
                                     </div>
