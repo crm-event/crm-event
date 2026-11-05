@@ -46,18 +46,60 @@ class DemoDataSeeder extends Seeder
             ]);
 
         $documents = [
-            ['category' => 'terms', 'title' => 'CGV 2027', 'file_path' => 'documents/cgv-2027.pdf', 'requires_approval' => true, 'viewed_at' => null],
-            ['category' => 'contract', 'title' => 'Contrat', 'file_path' => 'documents/contrat.pdf', 'requires_approval' => true, 'viewed_at' => now()],
-            ['category' => 'misc', 'title' => 'Plan de salle', 'file_path' => 'documents/plan.pdf', 'requires_approval' => false, 'viewed_at' => now()],
-            ['category' => 'misc', 'title' => 'Moodboard', 'file_path' => 'documents/moodboard.pdf', 'requires_approval' => false, 'viewed_at' => null],
+            [
+                'category' => 'contract',
+                'title' => 'Contrat de prestation',
+                'message' => 'Votre contrat, à lire et à approuver.',
+                'file_path' => 'documents/contrat.pdf',
+                'size_bytes' => 748,
+                'requires_approval' => true,
+                'viewed_at' => now(),
+                'approved_at' => null,
+            ],
+            [
+                'category' => 'terms',
+                'title' => 'Conditions générales de vente 2026',
+                'message' => 'Les conditions qui encadrent notre collaboration.',
+                'file_path' => 'documents/cgv-2026.pdf',
+                'size_bytes' => 763,
+                'requires_approval' => true,
+                'viewed_at' => now(),
+            ],
+            [
+                'category' => 'design',
+                'title' => 'Carnet de design — version 1',
+                'message' => 'Première proposition complète de scénographie.',
+                'file_path' => 'documents/carnet-design-v1.pdf',
+                'size_bytes' => 757,
+                'requires_approval' => false,
+                'viewed_at' => now(),
+            ],
+            [
+                'category' => 'appointment',
+                'title' => 'Récapitulatif du point M-6',
+                'message' => null,
+                'file_path' => 'documents/recapitulatif-m-6.pdf',
+                'size_bytes' => 754,
+                'requires_approval' => false,
+                'viewed_at' => now(),
+            ],
         ];
 
-        foreach ($documents as $attributes) {
-            $document = $wedding->documents()->firstOrNew(['title' => $attributes['title']]);
+        $wedding->documents()
+            ->whereIn('file_path', [
+                'documents/cgv-2027.pdf',
+                'documents/plan.pdf',
+                'documents/moodboard.pdf',
+            ])
+            ->delete();
 
-            if (! $document->exists) {
-                $document->forceFill($attributes)->save();
-            }
+        foreach ($documents as $attributes) {
+            $document = $wedding->documents()->firstOrNew([
+                'file_path' => $attributes['file_path'],
+            ]);
+
+            $document->forceFill($attributes)->save();
+
         }
     }
 }

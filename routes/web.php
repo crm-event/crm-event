@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Couple\CommunityController;
+use App\Http\Controllers\Couple\DocumentController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
 use App\Http\Controllers\LandingController;
@@ -21,11 +23,23 @@ Route::middleware(['auth', 'role:couple'])
         Route::post('/communaute', [CommunityController::class, 'store'])->name('community.store');
         Route::delete('/communaute/{communityPost}', [CommunityController::class, 'destroy'])->name('community.destroy');
 
+        Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+        Route::post('/documents/{document}/approve', [DocumentController::class, 'approve'])->name('documents.approve');
+
         Route::get('/messages', [CoupleMessageController::class, 'index'])->name('messages.index');
         Route::post('/messages', [CoupleMessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/{message}/voice', [CoupleMessageController::class, 'voice'])->name('messages.voice');
         Route::patch('/messages/{message}', [CoupleMessageController::class, 'update'])->name('messages.update');
         Route::delete('/messages/{message}', [CoupleMessageController::class, 'destroy'])->name('messages.destroy');
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin/documents')
+    ->name('admin.documents.')
+    ->group(function () {
+        Route::get('/', [AdminDocumentController::class, 'index'])->name('index');
+        Route::post('/', [AdminDocumentController::class, 'store'])->name('store');
     });
 
 Route::middleware(['auth', 'role:admin'])

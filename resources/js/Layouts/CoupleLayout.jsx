@@ -20,7 +20,7 @@ const NAVIGATION_GROUPS = [
             { key: 'home', label: 'Accueil', icon: 'home', route: 'couple.home' },
             { key: 'wedding', label: 'Notre mariage', icon: 'favorite' },
             { key: 'design', label: 'Design', icon: 'palette' },
-            { key: 'documents', label: 'Documents', icon: 'description' },
+            { key: 'documents', label: 'Documents', icon: 'description', route: 'couple.documents.index' },
             { key: 'appointments', label: 'Rendez-vous', icon: 'event' },
             { key: 'messages', label: 'Messages', icon: 'chat_bubble', route: 'couple.messages.index' },
         ],
