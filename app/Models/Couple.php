@@ -68,6 +68,16 @@ class Couple extends Model
     }
 
     /**
+     * The appointments of all the weddings of this couple.
+     *
+     * @return HasManyThrough<Appointment, Wedding, $this>
+     */
+    public function appointments(): HasManyThrough
+    {
+        return $this->hasManyThrough(Appointment::class, Wedding::class);
+    }
+
+    /**
      * The most recent wedding of this couple, the one new messages are
      * attached to.
      *

@@ -69,6 +69,16 @@ class Wedding extends Model
     }
 
     /**
+     * The appointments scheduled for this wedding.
+     *
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /**
      * The private messages exchanged with Jessica about this wedding.
      *
      * @return HasMany<Message, $this>
