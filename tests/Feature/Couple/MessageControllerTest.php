@@ -156,7 +156,7 @@ class MessageControllerTest extends TestCase
 
         $this->actingAs($couple->user)
             ->post(route('couple.messages.store'), ['body' => '   '])
-            ->assertSessionHasErrors(['body' => 'Votre message est vide.']);
+            ->assertSessionHasErrors(['body' => 'Ajoutez un message écrit ou un message vocal.']);
     }
 
     public function test_the_admin_and_guests_cannot_open_the_couple_thread(): void
