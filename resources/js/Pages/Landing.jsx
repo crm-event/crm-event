@@ -9,15 +9,35 @@ const CONTACT = {
     address: '9 boulevard René Chaillan, 13013 Marseille',
     siret: '984 937 078 00017',
     whatsapp: '',
+    instagram: 'https://www.instagram.com/ladernieretouche.wedding/',
     website: 'https://www.ladernieretouche.com/',
 };
 
 const IMAGES = {
-    arch: { src: '/images/landing/ceremony-arch.svg', alt: '' },
-    bouquet: { src: '/images/landing/bouquet.svg', alt: '' },
-    design: { src: '/images/landing/reception-table.svg', alt: '' },
-    coordination: { src: '/images/landing/planning.svg', alt: '' },
-    officiant: { src: '/images/landing/story-book.svg', alt: '' },
+    arch: {
+        src: '/images/landing/accueil1.jpg',
+        alt: 'Décoration élégante de mariage',
+    },
+    bouquet: {
+        src: '/images/landing/accueil2.jpg',
+        alt: 'Détails raffinés d’un mariage',
+    },
+    design: {
+        src: '/images/landing/wedding-design.jpg',
+        alt: 'Décoration contemporaine de mariage',
+    },
+    coordination: {
+        src: '/images/landing/coordination.jpg',
+        alt: 'Coordination d’un mariage',
+    },
+    officiant: {
+        src: '/images/landing/officiante-de-ceremonie.jpg',
+        alt: 'Cérémonie de mariage',
+    },
+    jessica: {
+        src: '/images/landing/jessica.jpg',
+        alt: 'Jessica, fondatrice de La Dernière Touche',
+    },
 };
 
 const CONTENT = {
@@ -48,7 +68,7 @@ const CONTENT = {
         },
 
         stats: [
-            { value: 'Depuis 2024', label: 'Une maison fondée à Marseille' },
+            { value: 'Depuis 2024', label: 'Une maison fondée en Provence' },
             { value: '10 à 15', label: 'Mariages accompagnés chaque année' },
             { value: '1 couple', label: '1 espace client dédié' },
         ],
@@ -97,7 +117,7 @@ const CONTENT = {
         about: {
             eyebrow: 'À propos',
             title: 'Jessica Salles, fondatrice de La Dernière Touche.',
-            first: 'Jessica a créé La Dernière Touche à Marseille en 2024. Elle accompagne chaque année 10 à 15 couples, de France et de l’étranger, en Provence et sur la Côte d’Azur.',
+            first: 'Jessica a créé La Dernière Touche en Provence en 2024. Elle accompagne chaque année 10 à 15 couples, de France et de l’étranger, en Provence et sur la Côte d’Azur.',
             second: 'Elle suit elle-même chaque projet, du premier rendez-vous jusqu’au jour J, et s’entoure de prestataires de confiance pour les grands jours.',
             quote: 'Faire de votre mariage, votre endroit préféré au monde.',
         },
@@ -106,22 +126,10 @@ const CONTENT = {
             title: 'Un espace privé pour suivre votre mariage.',
             text: 'Chaque couple accompagné retrouve son projet au même endroit, du premier devis au jour J.',
             features: [
-                {
-                    title: 'Le projet en un coup d’œil',
-                    text: 'Date, lieu, temps forts de la journée et personnes impliquées, sur une seule page.',
-                },
-                {
-                    title: 'Votre design',
-                    text: 'Moodboards, carnet design et projections : suivez chaque version et laissez vos commentaires.',
-                },
-                {
-                    title: 'Vos documents',
-                    text: 'Devis, contrat et conditions générales, à consulter et télécharger à tout moment.',
-                },
-                {
-                    title: 'Vos échanges',
-                    text: 'Vos messages avec Jessica et l’historique de ce qui a été décidé, au même endroit.',
-                },
+                ['Le projet en un coup d’œil', 'Date, lieu, temps forts de la journée et personnes impliquées, sur une seule page.'],
+                ['Votre design', 'Moodboards, carnet design et projections : suivez chaque version et laissez vos commentaires.'],
+                ['Vos documents', 'Devis, contrat et conditions générales, à consulter et télécharger à tout moment.'],
+                ['Vos échanges', 'Vos messages avec Jessica et l’historique de ce qui a été décidé, au même endroit.'],
             ],
         },
 
@@ -131,34 +139,22 @@ const CONTENT = {
             request: 'Demander mon accès',
             login: 'J’ai déjà un identifiant',
             steps: [
-                {
-                    number: '01',
-                    title: 'Vous nous écrivez',
-                    text: 'Un simple message suffit. Nous vérifions que votre dossier est bien ouvert.',
-                },
-                {
-                    number: '02',
-                    title: 'Nous ouvrons votre accès',
-                    text: 'Votre compte est créé par nos soins, une fois votre devis et votre contrat signés.',
-                },
-                {
-                    number: '03',
-                    title: 'Vous choisissez votre mot de passe',
-                    text: 'Vous recevez un identifiant et un code provisoire, à remplacer dès la première connexion.',
-                },
+                ['01', 'Vous nous écrivez', 'Un simple message suffit. Nous vérifions que votre dossier est bien ouvert.'],
+                ['02', 'Nous ouvrons votre accès', 'Votre compte est créé par nos soins, une fois votre devis et votre contrat signés.'],
+                ['03', 'Vous choisissez votre mot de passe', 'Vous recevez un identifiant et un code provisoire, à remplacer dès la première connexion.'],
             ],
         },
 
         contact: {
-            title: 'Parlons de votre projet.',
-            text: 'Dites-nous la date, le lieu, le nombre d’invités et l’ambiance que vous imaginez : nous vous proposerons un premier rendez-vous. Aucun compte n’est nécessaire pour nous écrire.',
+            title: 'Parlez-nous de votre mariage.',
+            text: 'Parlez-nous de votre mariage : sa date, son lieu, le nombre d’invités et l’ambiance que vous imaginez. Nous vous proposerons ensuite un premier rendez-vous. Aucun compte n’est nécessaire pour nous écrire.',
             button: 'Présenter mon projet',
+            instagram: 'Suivez-nous sur Instagram',
             label: 'Nous joindre',
             note: 'Les demandes arrivant par e-mail, Instagram ou le site sont toutes lues par Jessica.',
         },
 
-        footer:
-            'Wedding design, coordination et officiante de cérémonie en Provence et sur la Côte d’Azur.',
+        footer: 'Wedding design, coordination et officiante de cérémonie en Provence et sur la Côte d’Azur.',
         portfolio: 'Voir le portfolio',
     },
 
@@ -189,7 +185,7 @@ const CONTENT = {
         },
 
         stats: [
-            { value: 'Since 2024', label: 'A wedding studio founded in Marseille' },
+            { value: 'Since 2024', label: 'A wedding studio founded in Provence' },
             { value: '10 to 15', label: 'Weddings supported every year' },
             { value: '1 couple', label: '1 dedicated client area' },
         ],
@@ -238,7 +234,7 @@ const CONTENT = {
         about: {
             eyebrow: 'About',
             title: 'Jessica Salles, founder of La Dernière Touche.',
-            first: 'Jessica founded La Dernière Touche in Marseille in 2024. Each year, she supports 10 to 15 couples from France and abroad across Provence and the French Riviera.',
+            first: 'Jessica founded La Dernière Touche in Provence in 2024. Each year, she supports 10 to 15 couples from France and abroad across Provence and the French Riviera.',
             second: 'She personally follows every project, from the first meeting to the wedding day, and works with trusted suppliers to make each celebration special.',
             quote: 'Making your wedding your favourite place in the world.',
         },
@@ -247,22 +243,10 @@ const CONTENT = {
             title: 'A private space to follow your wedding.',
             text: 'Every couple we support can find their project in one place, from the first quotation to the wedding day.',
             features: [
-                {
-                    title: 'Your project at a glance',
-                    text: 'Your date, venue, key moments and the people involved, all on one page.',
-                },
-                {
-                    title: 'Your design',
-                    text: 'Moodboards, design books and proposals: follow every version and leave your comments.',
-                },
-                {
-                    title: 'Your documents',
-                    text: 'Quotes, contracts and terms, available to view and download at any time.',
-                },
-                {
-                    title: 'Your conversations',
-                    text: 'Your messages with Jessica and the history of every decision, all in one place.',
-                },
+                ['Your project at a glance', 'Your date, venue, key moments and the people involved, all on one page.'],
+                ['Your design', 'Moodboards, design books and proposals: follow every version and leave your comments.'],
+                ['Your documents', 'Quotes, contracts and terms, available to view and download at any time.'],
+                ['Your conversations', 'Your messages with Jessica and the history of every decision, all in one place.'],
             ],
         },
 
@@ -272,130 +256,52 @@ const CONTENT = {
             request: 'Request access',
             login: 'I already have an account',
             steps: [
-                {
-                    number: '01',
-                    title: 'You contact us',
-                    text: 'A simple message is all it takes. We check that your file has been opened.',
-                },
-                {
-                    number: '02',
-                    title: 'We create your access',
-                    text: 'Your account is created once your quote and contract have been signed.',
-                },
-                {
-                    number: '03',
-                    title: 'You choose your password',
-                    text: 'You receive a username and temporary code, which you replace after your first login.',
-                },
+                ['01', 'You contact us', 'A simple message is all it takes. We check that your file has been opened.'],
+                ['02', 'We create your access', 'Your account is created once your quote and contract have been signed.'],
+                ['03', 'You choose your password', 'You receive a username and temporary code, which you replace after your first login.'],
             ],
         },
 
         contact: {
-            title: 'Let’s talk about your project.',
-            text: 'Tell us your date, venue, guest count and the atmosphere you have in mind. We will suggest an initial meeting. No account is needed to contact us.',
+            title: 'Tell us about your wedding.',
+            text: 'Tell us about your wedding: the date, venue, number of guests and atmosphere you have in mind. We will then suggest an initial meeting. No account is needed to contact us.',
             button: 'Share your project',
+            instagram: 'Follow us on Instagram',
             label: 'Get in touch',
             note: 'Every request received by email, Instagram or through the website is personally read by Jessica.',
         },
 
-        footer:
-            'Wedding design, coordination and ceremony officiating across Provence and the French Riviera.',
+        footer: 'Wedding design, coordination and ceremony officiating across Provence and the French Riviera.',
         portfolio: 'View the portfolio',
     },
 };
 
 function createMailLinks(language) {
-    const isEnglish = language === 'en';
+    const english = language === 'en';
 
-    const accessSubject = isEnglish
+    const accessSubject = english
         ? 'Request for access to our client area'
         : 'Demande d’accès à notre espace client';
 
-    const accessBody = isEnglish
-        ? [
-            'Hello Jessica,',
-            '',
-            'We would like to access our client area.',
-            '',
-            'Our names:',
-            'Wedding date:',
-            'Venue:',
-            'Contact email:',
-            'Phone number:',
-            '',
-            'Thank you,',
-        ].join('\n')
-        : [
-            'Bonjour Jessica,',
-            '',
-            'Nous souhaitons accéder à notre espace client.',
-            '',
-            'Nos prénoms :',
-            'Date du mariage :',
-            'Lieu :',
-            'E-mail de contact :',
-            'Téléphone :',
-            '',
-            'Merci beaucoup,',
-        ].join('\n');
+    const accessBody = english
+        ? ['Hello Jessica,', '', 'We would like to access our client area.', '', 'Our names:', 'Wedding date:', 'Venue:', 'Contact email:', 'Phone number:', '', 'Thank you,'].join('\n')
+        : ['Bonjour Jessica,', '', 'Nous souhaitons accéder à notre espace client.', '', 'Nos prénoms :', 'Date du mariage :', 'Lieu :', 'E-mail de contact :', 'Téléphone :', '', 'Merci beaucoup,'].join('\n');
 
-    const projectSubject = isEnglish
-        ? 'Our wedding project'
-        : 'Notre projet de mariage';
+    const projectSubject = english ? 'Our wedding project' : 'Notre projet de mariage';
 
-    const projectBody = isEnglish
-        ? [
-            'Hello Jessica,',
-            '',
-            'We would like to tell you about our wedding project.',
-            '',
-            'Our names:',
-            'Wedding date:',
-            'Venue:',
-            'Approximate number of guests:',
-            'Services we are interested in (design, coordination, ceremony officiating):',
-            'How did you hear about us:',
-            'Phone number:',
-            '',
-            'We can also send you some inspiration images.',
-            '',
-            'Thank you,',
-        ].join('\n')
-        : [
-            'Bonjour Jessica,',
-            '',
-            'Nous souhaitons vous présenter notre projet de mariage.',
-            '',
-            'Nos prénoms :',
-            'Date du mariage :',
-            'Lieu :',
-            'Nombre d’invités (environ) :',
-            'Prestations qui nous intéressent (décoration, coordination, officiante) :',
-            'Comment nous vous avons connue :',
-            'Téléphone :',
-            '',
-            'Nous pouvons vous envoyer quelques inspirations.',
-            '',
-            'Merci beaucoup,',
-        ].join('\n');
+    const projectBody = english
+        ? ['Hello Jessica,', '', 'We would like to tell you about our wedding project.', '', 'Our names:', 'Wedding date:', 'Venue:', 'Approximate number of guests:', 'Services we are interested in (design, coordination, ceremony officiating):', 'How did you hear about us:', 'Phone number:', '', 'We can also send you some inspiration images.', '', 'Thank you,'].join('\n')
+        : ['Bonjour Jessica,', '', 'Nous souhaitons vous présenter notre projet de mariage.', '', 'Nos prénoms :', 'Date du mariage :', 'Lieu :', 'Nombre d’invités (environ) :', 'Prestations qui nous intéressent (décoration, coordination, officiante) :', 'Comment nous vous avons connue :', 'Téléphone :', '', 'Nous pouvons vous envoyer quelques inspirations.', '', 'Merci beaucoup,'].join('\n');
 
     return {
-        access:
-            `mailto:${CONTACT.email}` +
-            `?subject=${encodeURIComponent(accessSubject)}` +
-            `&body=${encodeURIComponent(accessBody)}`,
-        project:
-            `mailto:${CONTACT.email}` +
-            `?subject=${encodeURIComponent(projectSubject)}` +
-            `&body=${encodeURIComponent(projectBody)}`,
+        access: `mailto:${CONTACT.email}?subject=${encodeURIComponent(accessSubject)}&body=${encodeURIComponent(accessBody)}`,
+        project: `mailto:${CONTACT.email}?subject=${encodeURIComponent(projectSubject)}&body=${encodeURIComponent(projectBody)}`,
     };
 }
 
 export default function Landing({ auth }) {
     const [language, setLanguage] = useState(() => {
-        if (typeof window === 'undefined') {
-            return 'fr';
-        }
+        if (typeof window === 'undefined') return 'fr';
 
         return window.localStorage.getItem('ldt-language') ?? 'fr';
     });
@@ -415,12 +321,7 @@ export default function Landing({ auth }) {
             <Head title="La Dernière Touche · Wedding design & coordination en Provence" />
 
             <div className="flex min-h-screen flex-col bg-ivory font-sans text-ink">
-                <Header
-                    homeUrl={homeUrl}
-                    language={language}
-                    onLanguageChange={changeLanguage}
-                    t={t}
-                />
+                <Header homeUrl={homeUrl} language={language} onLanguageChange={changeLanguage} t={t} />
 
                 <main id="content" className="flex-1">
                     <Hero homeUrl={homeUrl} t={t} />
@@ -489,38 +390,10 @@ function Header({ homeUrl, language, onLanguageChange, t }) {
 
                 <nav aria-label={t.navigation} className="hidden lg:block">
                     <ul className="flex items-center gap-9">
-                        <li>
-                            <a
-                                href="#prestations"
-                                className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}
-                            >
-                                {t.nav.services}
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#a-propos"
-                                className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}
-                            >
-                                {t.nav.about}
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#espace-client"
-                                className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}
-                            >
-                                {t.nav.clientArea}
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#contact"
-                                className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}
-                            >
-                                {t.nav.contact}
-                            </a>
-                        </li>
+                        <li><a href="#prestations" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.services}</a></li>
+                        <li><a href="#a-propos" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.about}</a></li>
+                        <li><a href="#espace-client" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.clientArea}</a></li>
+                        <li><a href="#contact" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.contact}</a></li>
                     </ul>
                 </nav>
 
@@ -554,41 +427,23 @@ function Hero({ homeUrl, t }) {
             <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 pb-20 pt-16 sm:px-10 sm:pt-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
                 <div className="relative z-10">
                     <p className="text-[10px] uppercase tracking-brand text-sage">{t.hero.eyebrow}</p>
-
-                    <h1 className="mt-5 font-display text-3xl leading-[1.2] sm:text-4xl lg:text-5xl">
-                        {t.hero.title}
-                    </h1>
-
-                    <p className="mt-8 max-w-xl text-base leading-relaxed text-ink/70">
-                        {t.hero.text}
-                    </p>
+                    <h1 className="mt-5 font-display text-3xl leading-[1.2] sm:text-4xl lg:text-5xl">{t.hero.title}</h1>
+                    <p className="mt-8 max-w-xl text-base leading-relaxed text-ink/70">{t.hero.text}</p>
 
                     <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                         {homeUrl ? (
-                            <Link href={homeUrl} className={primaryButton}>
-                                {t.hero.loggedPrimary}
-                            </Link>
+                            <Link href={homeUrl} className={primaryButton}>{t.hero.loggedPrimary}</Link>
                         ) : (
-                            <a href="#contact" className={primaryButton}>
-                                {t.hero.primary}
-                            </a>
+                            <a href="#contact" className={primaryButton}>{t.hero.primary}</a>
                         )}
 
-                        <a href="#prestations" className={secondaryButton}>
-                            {t.hero.secondary}
-                        </a>
+                        <a href="#prestations" className={secondaryButton}>{t.hero.secondary}</a>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                     <Photo image={IMAGES.arch} ratio="aspect-[3/4]" eager rounded="rounded-3xl" />
-                    <Photo
-                        image={IMAGES.bouquet}
-                        ratio="aspect-[3/4]"
-                        eager
-                        className="mt-10"
-                        rounded="rounded-3xl"
-                    />
+                    <Photo image={IMAGES.bouquet} ratio="aspect-[3/4]" eager className="mt-10" rounded="rounded-3xl" />
                 </div>
             </div>
         </section>
@@ -614,18 +469,11 @@ function Services({ t }) {
     return (
         <section id="prestations" aria-labelledby="services-title" className="scroll-mt-24">
             <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
-                <SectionIntro
-                    eyebrow={t.services.eyebrow}
-                    title={t.services.title}
-                    text={t.services.text}
-                />
+                <SectionIntro eyebrow={t.services.eyebrow} title={t.services.title} text={t.services.text} />
 
                 <div className="mt-14 space-y-10">
                     {t.services.items.map((service, index) => (
-                        <article
-                            key={service.title}
-                            className="grid items-center gap-8 rounded-3xl border border-ink/10 bg-blush/30 p-6 sm:p-8 lg:grid-cols-2 lg:gap-14"
-                        >
+                        <article key={service.title} className="grid items-center gap-8 rounded-3xl border border-ink/10 bg-blush/30 p-6 sm:p-8 lg:grid-cols-2 lg:gap-14">
                             <Photo
                                 image={service.image}
                                 ratio="aspect-[5/4]"
@@ -634,26 +482,13 @@ function Services({ t }) {
                             />
 
                             <div className="max-w-md">
-                                <p className="text-[10px] uppercase tracking-brand text-sage">
-                                    {service.phase}
-                                </p>
-
-                                <h3 className="mt-4 font-display text-2xl leading-snug">
-                                    {service.title}
-                                </h3>
-
-                                <p className="mt-4 text-sm leading-relaxed text-ink/70">
-                                    {service.text}
-                                </p>
+                                <p className="text-[10px] uppercase tracking-brand text-sage">{service.phase}</p>
+                                <h3 className="mt-4 font-display text-2xl leading-snug">{service.title}</h3>
+                                <p className="mt-4 text-sm leading-relaxed text-ink/70">{service.text}</p>
 
                                 <ul className="mt-6">
                                     {service.points.map((point) => (
-                                        <li
-                                            key={point}
-                                            className="border-t border-ink/15 py-3 text-sm last:border-b"
-                                        >
-                                            {point}
-                                        </li>
+                                        <li key={point} className="border-t border-ink/15 py-3 text-sm last:border-b">{point}</li>
                                     ))}
                                 </ul>
                             </div>
@@ -667,49 +502,56 @@ function Services({ t }) {
 
 function About({ t }) {
     return (
-        <section id="a-propos" aria-labelledby="about-title" className="scroll-mt-24 border-t border-ink/10">
+        <section
+            id="a-propos"
+            aria-labelledby="about-title"
+            className="scroll-mt-24 border-t border-ink/10"
+        >
             <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
-                <figure className="flex aspect-[4/5] flex-col items-center justify-center rounded-3xl bg-blush px-10 text-center">
-                    <img src="/logo-ldt.png" alt="" className="h-32 w-auto" width={285} height={560} />
-
-                    <blockquote className="mt-10 font-display text-xl italic leading-snug text-ink/80">
-                        «&nbsp;{t.about.quote}&nbsp;»
-                    </blockquote>
-                </figure>
+                <Photo
+                    image={IMAGES.jessica}
+                    ratio="aspect-[4/5]"
+                    rounded="rounded-3xl"
+                />
 
                 <div className="max-w-xl">
-                    <p className="text-[10px] uppercase tracking-brand text-sage">{t.about.eyebrow}</p>
+                    <p className="text-[10px] uppercase tracking-brand text-sage">
+                        {t.about.eyebrow}
+                    </p>
 
-                    <h2 id="about-title" className="mt-4 font-display text-2xl leading-snug sm:text-3xl">
+                    <h2
+                        id="about-title"
+                        className="mt-4 font-display text-2xl leading-snug sm:text-3xl"
+                    >
                         {t.about.title}
                     </h2>
 
-                    <p className="mt-6 text-base leading-relaxed text-ink/70">{t.about.first}</p>
+                    <p className="mt-6 text-base leading-relaxed text-ink/70">
+                        {t.about.first}
+                    </p>
 
-                    <p className="mt-5 text-base leading-relaxed text-ink/70">{t.about.second}</p>
+                    <p className="mt-5 text-base leading-relaxed text-ink/70">
+                        {t.about.second}
+                    </p>
                 </div>
             </div>
         </section>
     );
 }
-
 function ClientArea({ t }) {
     return (
         <section id="espace-client" aria-labelledby="client-area-title" className="scroll-mt-24 bg-blush">
             <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
                 <div className="max-w-sm">
-                    <h2 id="client-area-title" className="font-display text-2xl leading-snug sm:text-3xl">
-                        {t.client.title}
-                    </h2>
-
+                    <h2 id="client-area-title" className="font-display text-2xl leading-snug sm:text-3xl">{t.client.title}</h2>
                     <p className="mt-6 text-base leading-relaxed text-ink/70">{t.client.text}</p>
                 </div>
 
                 <ul className="grid gap-4 sm:grid-cols-2">
-                    {t.client.features.map((feature) => (
-                        <li key={feature.title} className="rounded-2xl border border-ink/10 bg-ivory p-6">
-                            <h3 className="font-display text-lg leading-snug">{feature.title}</h3>
-                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{feature.text}</p>
+                    {t.client.features.map(([title, text]) => (
+                        <li key={title} className="rounded-2xl border border-ink/10 bg-ivory p-6">
+                            <h3 className="font-display text-lg leading-snug">{title}</h3>
+                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{text}</p>
                         </li>
                     ))}
                 </ul>
@@ -723,31 +565,23 @@ function Access({ t, mailLink }) {
         <section id="access" aria-labelledby="access-title" className="scroll-mt-24 border-y border-ink/10">
             <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
                 <div className="max-w-xl">
-                    <h2 id="access-title" className="font-display text-2xl leading-snug sm:text-3xl">
-                        {t.access.title}
-                    </h2>
-
+                    <h2 id="access-title" className="font-display text-2xl leading-snug sm:text-3xl">{t.access.title}</h2>
                     <p className="mt-6 text-base leading-relaxed text-ink/70">{t.access.text}</p>
                 </div>
 
                 <ol className="mt-14 grid gap-5 sm:grid-cols-3 sm:gap-6">
-                    {t.access.steps.map((step) => (
-                        <li key={step.number} className="rounded-2xl border border-ink/10 bg-blush/40 p-6">
-                            <p className="font-display text-sm text-sage">{step.number}</p>
-                            <h3 className="mt-3 font-display text-lg leading-snug">{step.title}</h3>
-                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{step.text}</p>
+                    {t.access.steps.map(([number, title, text]) => (
+                        <li key={number} className="rounded-2xl border border-ink/10 bg-blush/40 p-6">
+                            <p className="font-display text-sm text-sage">{number}</p>
+                            <h3 className="mt-3 font-display text-lg leading-snug">{title}</h3>
+                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{text}</p>
                         </li>
                     ))}
                 </ol>
 
                 <div className="mt-14 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                    <a href={mailLink} className={primaryButton}>
-                        {t.access.request}
-                    </a>
-
-                    <Link href={route('login')} className={secondaryButton}>
-                        {t.access.login}
-                    </Link>
+                    <a href={mailLink} className={primaryButton}>{t.access.request}</a>
+                    <Link href={route('login')} className={secondaryButton}>{t.access.login}</Link>
                 </div>
             </div>
         </section>
@@ -759,24 +593,23 @@ function Contact({ t, mailLink }) {
         <section id="contact" aria-labelledby="contact-title" className="scroll-mt-24 bg-blush">
             <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 sm:px-10 md:grid-cols-[1fr_1fr] md:items-end">
                 <div className="max-w-md">
-                    <h2 id="contact-title" className="font-display text-2xl leading-snug sm:text-3xl">
-                        {t.contact.title}
-                    </h2>
-
+                    <h2 id="contact-title" className="font-display text-2xl leading-snug sm:text-3xl">{t.contact.title}</h2>
                     <p className="mt-5 text-sm leading-relaxed text-ink/70">{t.contact.text}</p>
 
-                    <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row">
-                        <a href={mailLink} className={primaryButton}>
-                            {t.contact.button}
+                    <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap">
+                        <a href={mailLink} className={primaryButton}>{t.contact.button}</a>
+
+                        <a
+                            href={CONTACT.instagram}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={secondaryButton}
+                        >
+                            {t.contact.instagram}
                         </a>
 
                         {CONTACT.whatsapp.length > 0 && (
-                            <a
-                                href={`https://wa.me/${CONTACT.whatsapp}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={secondaryButton}
-                            >
+                            <a href={`https://wa.me/${CONTACT.whatsapp}`} target="_blank" rel="noreferrer" className={secondaryButton}>
                                 WhatsApp
                             </a>
                         )}
@@ -788,29 +621,19 @@ function Contact({ t, mailLink }) {
 
                     <ul className="mt-6 space-y-4 text-sm leading-relaxed">
                         <li>
-                            <a
-                                href={`mailto:${CONTACT.email}`}
-                                className={`${focusRing} transition-colors hover:text-sage`}
-                            >
+                            <a href={`mailto:${CONTACT.email}`} className={`${focusRing} transition-colors hover:text-sage}`}>
                                 {CONTACT.email}
                             </a>
                         </li>
-
                         <li>
-                            <a
-                                href={CONTACT.phoneLink}
-                                className={`${focusRing} transition-colors hover:text-sage`}
-                            >
+                            <a href={CONTACT.phoneLink} className={`${focusRing} transition-colors hover:text-sage}`}>
                                 {CONTACT.phone}
                             </a>
                         </li>
-
                         <li className="text-ink/70">{CONTACT.address}</li>
                     </ul>
 
-                    <p className="mt-6 border-t border-ink/10 pt-6 text-xs leading-relaxed text-ink/50">
-                        {t.contact.note}
-                    </p>
+                    <p className="mt-6 border-t border-ink/10 pt-6 text-xs leading-relaxed text-ink/50">{t.contact.note}</p>
                 </address>
             </div>
         </section>
@@ -833,7 +656,6 @@ function Footer({ t }) {
 
                     <div className="max-w-xs">
                         <p className="font-display text-sm tracking-[0.18em]">LA DERNIÈRE TOUCHE</p>
-
                         <p className="mt-3 text-sm leading-relaxed text-ink/70">{t.footer}</p>
                     </div>
                 </div>
@@ -842,10 +664,7 @@ function Footer({ t }) {
                     <ul className="flex flex-col gap-2 text-[11px] uppercase tracking-[0.18em] text-sage">
                         {navItems.map((item) => (
                             <li key={item.href}>
-                                <a
-                                    href={item.href}
-                                    className={`${focusRing} transition-colors hover:text-ink`}
-                                >
+                                <a href={item.href} className={`${focusRing} transition-colors hover:text-ink`}>
                                     {item.label}
                                 </a>
                             </li>
@@ -854,26 +673,14 @@ function Footer({ t }) {
                 </nav>
 
                 <div className="flex flex-col gap-2 text-sm text-ink/70 md:items-end">
-                    <a
-                        href={`mailto:${CONTACT.email}`}
-                        className={`${focusRing} transition-colors hover:text-ink`}
-                    >
-                        {CONTACT.email}
+                    <a href={`mailto:${CONTACT.email}`} className={`${focusRing} transition-colors hover:text-ink}`}>{CONTACT.email}</a>
+                    <a href={CONTACT.phoneLink} className={`${focusRing} transition-colors hover:text-ink}`}>{CONTACT.phone}</a>
+
+                    <a href={CONTACT.instagram} target="_blank" rel="noreferrer" className={`${focusRing} transition-colors hover:text-ink}`}>
+                        Instagram
                     </a>
 
-                    <a
-                        href={CONTACT.phoneLink}
-                        className={`${focusRing} transition-colors hover:text-ink`}
-                    >
-                        {CONTACT.phone}
-                    </a>
-
-                    <a
-                        href={CONTACT.website}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={`${focusRing} transition-colors hover:text-ink`}
-                    >
+                    <a href={CONTACT.website} target="_blank" rel="noreferrer" className={`${focusRing} transition-colors hover:text-ink}`}>
                         {t.portfolio}
                     </a>
                 </div>

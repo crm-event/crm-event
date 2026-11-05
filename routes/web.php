@@ -18,6 +18,51 @@ Route::middleware(['auth', 'role:couple'])
     ->name('couple.')
     ->group(function () {
         Route::get('/', CoupleHomeController::class)->name('home');
+        Route::get('/design', function () {
+            return Inertia::render('Couple/Design', [
+                'project' => [
+                    'couple' => 'Clémence & Alexandre',
+                    'date' => '28 juin 2025',
+                    'venue' => 'Château de Sannes · Lubéron',
+                    'status' => 'En cours de conception',
+                    'step' => 3,
+                ],
+                'brief' => [
+                    'title' => 'Un jardin méditerranéen au coucher du soleil',
+                    'description' => 'Nous imaginons un mariage élégant et naturel dans un domaine provençal. Nous aimons les tons ivoire, sable, vert sauge et terracotta très doux. Nous souhaitons une atmosphère chaleureuse, avec beaucoup de fleurs blanches, des matières naturelles et une décoration raffinée sans être trop chargée.',
+                    'moodboard' => ['src' => '/images/landing/wedding-design.jpg', 'alt' => 'Moodboard du mariage de Clémence et Alexandre'],
+                    'colors' => ['Ivoire', 'Lin', 'Vert sauge', 'Argile'],
+                    'avoid' => 'Les couleurs trop vives et les compositions trop symétriques.',
+                    'images' => [
+                        ['id' => 1, 'src' => '/images/landing/wedding-design.jpg', 'alt' => 'Décoration de mariage naturelle'],
+                        ['id' => 2, 'src' => '/images/landing/accueil2.jpg', 'alt' => 'Détails floraux et matières naturelles'],
+                        ['id' => 3, 'src' => '/images/landing/accueil1.jpg', 'alt' => 'Cérémonie en extérieur'],
+                    ],
+                ],
+                'versions' => [
+                    [
+                        'id' => 1,
+                        'number' => '01',
+                        'title' => 'Jardin méditerranéen',
+                        'date' => '12 février 2025',
+                        'status' => 'À découvrir',
+                        'description' => 'Une direction artistique inspirée des jardins méditerranéens au coucher du soleil. La palette reste lumineuse et naturelle, avec des textures apportées par le bois clair, la céramique artisanale et des compositions florales souples.',
+                        'colors' => ['Ivoire', 'Sauge', 'Argile douce'],
+                        'images' => ['/images/landing/wedding-design.jpg', '/images/landing/coordination.jpg', '/images/landing/accueil2.jpg'],
+                    ],
+                    [
+                        'id' => 2,
+                        'number' => '02',
+                        'title' => 'La douceur des matières',
+                        'date' => 'En préparation',
+                        'status' => 'Bientôt disponible',
+                        'description' => 'Jessica prépare une seconde proposition à partir de vos premières inspirations et de vos retours.',
+                        'colors' => [],
+                        'images' => [],
+                    ],
+                ],
+            ]);
+        })->name('design.index');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');
         Route::post('/communaute', [CommunityController::class, 'store'])->name('community.store');
