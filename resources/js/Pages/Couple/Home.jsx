@@ -1,6 +1,7 @@
 import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { secondaryButton } from '@/brand';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
     weekday: 'long',
@@ -84,7 +85,48 @@ function UnreadMessages({ count }) {
                 {count === 1 && 'Nouveau message'}
                 {count > 1 && 'Nouveaux messages'}
             </p>
+            <div className="mt-auto pt-6">
+                <Link href={route('couple.messages.index')} className={`${secondaryButton} w-full`}>
+                    Accéder aux messages
+                </Link>
+            </div>
         </div>
+    );
+}
+
+/**
+ * Key figures about the documents of the couple, grouped in their own panel
+ * so they are not mistaken for the appointment and messages cards above.
+ */
+function DocumentsSummary({ documents }) {
+    const stats = [
+        { label: 'Documents disponibles', value: documents.total },
+        { label: 'Documents non consultés', value: documents.unseen },
+        { label: 'Documents à signer', value: documents.to_sign },
+    ];
+
+    return (
+        <section aria-labelledby="documents-summary-title" className="mt-14">
+            <h2
+                id="documents-summary-title"
+                className="border-b border-ink/10 pb-4 font-display text-xl"
+            >
+                Vos documents
+            </h2>
+
+            <dl className="mt-6 grid divide-y divide-ink/10 rounded-lg bg-blush/40 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                {stats.map((stat) => (
+                    <div key={stat.label} className="flex flex-col-reverse p-6">
+                        <dt className="mt-2 text-sm text-ink/70">{stat.label}</dt>
+                        <dd className="font-display text-4xl">{stat.value}</dd>
+                    </div>
+                ))}
+            </dl>
+
+            <Link href={route('couple.documents.index')} className={`${secondaryButton} mt-6`}>
+                Voir vos documents
+            </Link>
+        </section>
     );
 }
 
@@ -104,12 +146,6 @@ export default function Home({ couple, nextAppointment, unreadMessages, document
             .filter(Boolean)
             .join(' et ')
         : user.name;
-
-    const stats = [
-        { label: 'Documents disponibles', value: documents.total },
-        { label: 'Documents non consultés', value: documents.unseen },
-        { label: 'Documents à signer', value: documents.to_sign },
-    ];
 
     return (
         <CoupleLayout active="home">
@@ -132,17 +168,7 @@ export default function Home({ couple, nextAppointment, unreadMessages, document
                 <UnreadMessages count={unreadMessages} />
             </section>
 
-            <section className="mt-4 grid gap-4 sm:grid-cols-3">
-                {stats.map((stat) => (
-                    <div
-                        key={stat.label}
-                        className="rounded-lg border border-ink/10 p-6"
-                    >
-                        <p className="font-display text-4xl">{stat.value}</p>
-                        <p className="mt-2 text-sm text-ink/70">{stat.label}</p>
-                    </div>
-                ))}
-            </section>
+            <DocumentsSummary documents={documents} />
         </CoupleLayout>
     );
 }
