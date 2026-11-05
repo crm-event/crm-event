@@ -119,6 +119,26 @@ class MessageControllerTest extends TestCase
         Storage::assertExists($message->voice_note_path);
     }
 
+    public function test_jessica_can_edit_and_delete_her_own_message(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $message = Message::factory()
+            ->for(Wedding::factory()->for($couple))
+            ->create(['sender_id' => $this->jessica->id, 'body' => 'Ancien texte']);
+
+        $this->actingAs($this->jessica)
+            ->patch(route('admin.messages.update', $message), ['body' => 'Nouveau texte'])
+            ->assertRedirect(route('admin.messages.show', $couple));
+
+        $this->assertSame('Nouveau texte', $message->fresh()->body);
+
+        $this->actingAs($this->jessica)
+            ->delete(route('admin.messages.destroy', $message))
+            ->assertRedirect(route('admin.messages.show', $couple));
+
+        $this->assertDatabaseMissing('messages', ['id' => $message->id]);
+    }
+
     public function test_jessica_cannot_write_to_a_couple_without_wedding(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
