@@ -28,6 +28,8 @@ export default function Show({ couple, messages, canWrite, maxBodyLength }) {
                     messages={messages}
                     otherPartyName={couple.title}
                     postUrl={route('admin.messages.store', couple.id)}
+                    updateUrl={(id) => route('admin.messages.update', id)}
+                    deleteUrl={(id) => route('admin.messages.destroy', id)}
                     canWrite={canWrite}
                     cannotWriteText="Ce couple n’a pas encore de mariage enregistré : créez-le avant de lui écrire."
                     maxBodyLength={maxBodyLength}
