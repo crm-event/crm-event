@@ -7,46 +7,19 @@ import MetriquesMois from '@/Pages/Calendrier/Partials/MetriquesMois';
 import TiroirFiche from '@/Pages/Calendrier/Partials/TiroirFiche';
 import VueChronologique from '@/Pages/Calendrier/Partials/VueChronologique';
 import VueSemaine from '@/Pages/Calendrier/Partials/VueSemaine';
-import { ANNEE, AUJOURD_HUI, EVENEMENTS, FICHES, MOIS } from '@/Pages/Calendrier/donnees';
+import { ANNEE, AUJOURD_HUI, FICHES, MOIS } from '@/Pages/Calendrier/donnees';
+import {
+    CLE_MODIFICATIONS,
+    CLE_STOCKAGE,
+    CLE_SUPPRESSIONS,
+    composerEvenements,
+    lireEvenementsCalendrier,
+    lireJalonsEnregistres,
+    lireModifications,
+    lireSuppressions,
+} from '@/Pages/Calendrier/stockage';
 import { Head } from '@inertiajs/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-
-const CLE_STOCKAGE = 'crm-event.calendrier.jalons.v1';
-const CLE_MODIFICATIONS = 'crm-event.calendrier.modifications.v1';
-const CLE_SUPPRESSIONS = 'crm-event.calendrier.suppressions.v1';
-
-function lireJalonsEnregistres() {
-    try {
-        const jalons = JSON.parse(window.localStorage.getItem(CLE_STOCKAGE) ?? '[]');
-        return Array.isArray(jalons)
-            ? jalons.filter((jalon) => jalon?.id && jalon?.date && jalon?.titre)
-            : [];
-    } catch {
-        return [];
-    }
-}
-
-function lireModifications() {
-    try {
-        const modifications = JSON.parse(window.localStorage.getItem(CLE_MODIFICATIONS) ?? '{}');
-        return modifications && typeof modifications === 'object' && !Array.isArray(modifications)
-            ? modifications
-            : {};
-    } catch {
-        return {};
-    }
-}
-
-function lireSuppressions() {
-    try {
-        const suppressions = JSON.parse(window.localStorage.getItem(CLE_SUPPRESSIONS) ?? '[]');
-        return Array.isArray(suppressions)
-            ? suppressions.filter((id) => typeof id === 'string')
-            : [];
-    } catch {
-        return [];
-    }
-}
 
 function construireFiche(evenement) {
     if (!evenement.modifie && FICHES[evenement.detail]) {
@@ -85,13 +58,34 @@ function formaterDate(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+function lireDateNavigation() {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const valeur = new URLSearchParams(window.location.search).get('date');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(valeur ?? '')) {
+        return null;
+    }
+
+    const date = new Date(`${valeur}T12:00:00`);
+    return !Number.isNaN(date.getTime()) && formaterDate(date) === valeur ? date : null;
+}
+
 export default function Calendrier() {
     const positionDefilement = useRef(null);
     const [dateActive, setDateActive] = useState(
-        () => new Date(ANNEE, MOIS - 1, AUJOURD_HUI),
+        () => lireDateNavigation() ?? new Date(ANNEE, MOIS - 1, AUJOURD_HUI),
     );
     const [vue, setVue] = useState('Mois');
-    const [evenementSelectionne, setEvenementSelectionne] = useState(null);
+    const [evenementSelectionne, setEvenementSelectionne] = useState(() => {
+        if (typeof window === 'undefined') {
+            return null;
+        }
+
+        const id = new URLSearchParams(window.location.search).get('event');
+        return id ? lireEvenementsCalendrier().find((evenement) => evenement.id === id) ?? null : null;
+    });
     const [formulaireOuvert, setFormulaireOuvert] = useState(false);
     const [dateAjout, setDateAjout] = useState(null);
     const [typeAjout, setTypeAjout] = useState('jalon');
@@ -129,9 +123,7 @@ export default function Calendrier() {
     const annee = dateActive.getFullYear();
     const mois = dateActive.getMonth() + 1;
     const evenementsTous = useMemo(
-        () => [...EVENEMENTS.map((evenement) => modifications[evenement.id]
-            ? { ...evenement, ...modifications[evenement.id], modifie: true }
-            : evenement), ...jalonsEnregistres].filter((evenement) => !suppressions.includes(evenement.id)),
+        () => composerEvenements(jalonsEnregistres, modifications, suppressions),
         [jalonsEnregistres, modifications, suppressions],
     );
 
