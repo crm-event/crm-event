@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMessageRequest;
+use App\Http\Requests\UpdateMessageRequest;
 use App\Models\Couple;
 use App\Models\Message;
 use Illuminate\Http\RedirectResponse;
@@ -108,5 +109,35 @@ class MessageController extends Controller
         abort_unless($message->voice_note_path !== null, 404);
 
         return Storage::response($message->voice_note_path);
+    }
+
+    /**
+     * Update a text message sent by Jessica.
+     */
+    public function update(UpdateMessageRequest $request, Message $message): RedirectResponse
+    {
+        abort_unless($message->sender_id === $request->user()->id, 403);
+        abort_if($message->body === null, 422, 'Un message vocal ne peut pas être modifié.');
+
+        $message->update(['body' => $request->validated('body')]);
+
+        return to_route('admin.messages.show', $message->wedding->couple);
+    }
+
+    /**
+     * Delete a message sent by Jessica.
+     */
+    public function destroy(Request $request, Message $message): RedirectResponse
+    {
+        abort_unless($message->sender_id === $request->user()->id, 403);
+
+        if ($message->voice_note_path !== null) {
+            Storage::delete($message->voice_note_path);
+        }
+
+        $couple = $message->wedding->couple;
+        $message->delete();
+
+        return to_route('admin.messages.show', $couple);
     }
 }

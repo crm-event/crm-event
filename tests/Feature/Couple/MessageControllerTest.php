@@ -97,6 +97,43 @@ class MessageControllerTest extends TestCase
             ->assertOk();
     }
 
+    public function test_a_couple_can_edit_and_delete_its_own_message(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $message = Message::factory()
+            ->for(Wedding::factory()->for($couple))
+            ->create(['sender_id' => $couple->user_id, 'body' => 'Ancien texte']);
+
+        $this->actingAs($couple->user)
+            ->patch(route('couple.messages.update', $message), ['body' => 'Nouveau texte'])
+            ->assertRedirect(route('couple.messages.index'));
+
+        $this->assertSame('Nouveau texte', $message->fresh()->body);
+
+        $this->actingAs($couple->user)
+            ->delete(route('couple.messages.destroy', $message))
+            ->assertRedirect(route('couple.messages.index'));
+
+        $this->assertDatabaseMissing('messages', ['id' => $message->id]);
+    }
+
+    public function test_a_couple_cannot_edit_or_delete_someone_elses_message(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $otherCouple = Couple::factory()->withPortalAccess()->create();
+        $message = Message::factory()
+            ->for(Wedding::factory()->for($otherCouple))
+            ->create(['sender_id' => $otherCouple->user_id]);
+
+        $this->actingAs($couple->user)
+            ->patch(route('couple.messages.update', $message), ['body' => 'Intrusion'])
+            ->assertForbidden();
+
+        $this->actingAs($couple->user)
+            ->delete(route('couple.messages.destroy', $message))
+            ->assertForbidden();
+    }
+
     public function test_a_couple_without_wedding_cannot_write_yet(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();

@@ -26,6 +26,8 @@ export default function Messages({ messages, canWrite, maxBodyLength }) {
                     messages={messages}
                     otherPartyName="Jessica"
                     postUrl={route('couple.messages.store')}
+                    updateUrl={(id) => route('couple.messages.update', id)}
+                    deleteUrl={(id) => route('couple.messages.destroy', id)}
                     canWrite={canWrite}
                     cannotWriteText="Votre dossier n’est pas encore ouvert : Jessica vous préviendra dès que la messagerie sera disponible."
                     maxBodyLength={maxBodyLength}
