@@ -58,6 +58,10 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/demandes', function () {
+    return Inertia::render('Demandes');
+})->middleware(['auth', 'verified'])->name('demandes');
+
 Route::get('/calendrier', function () {
     return Inertia::render('Calendrier');
 })->middleware(['auth', 'verified'])->name('calendrier');
