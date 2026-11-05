@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Client record of a couple, created from the first inquiry.
@@ -77,13 +78,36 @@ class Couple extends Model
     }
 
     /**
-     * The messages of all the weddings of this couple.
+     * The most recent wedding of this couple, the one new messages are
+     * attached to.
+     *
+     * @return HasOne<Wedding, $this>
+     */
+    public function latestWedding(): HasOne
+    {
+        return $this->hasOne(Wedding::class)->latestOfMany();
+    }
+
+    /**
+     * The private thread with Jessica: the messages of all the weddings of
+     * this couple, oldest first. Messages are stored per wedding (`messages`
+     * has a `wedding_id`, no `couple_id`).
      *
      * @return HasManyThrough<Message, Wedding, $this>
      */
     public function messages(): HasManyThrough
     {
-        return $this->hasManyThrough(Message::class, Wedding::class);
+        return $this->hasManyThrough(Message::class, Wedding::class)->oldest('messages.created_at')->oldest('messages.id');
+    }
+
+    /**
+     * Title of the thread in Jessica's inbox: "Marie & Paul".
+     */
+    public function threadTitle(): string
+    {
+        return collect([$this->partner1_first_name, $this->partner2_first_name])
+            ->filter()
+            ->join(' & ');
     }
 
     /**

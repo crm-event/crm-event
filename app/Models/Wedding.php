@@ -79,8 +79,7 @@ class Wedding extends Model
     }
 
     /**
-     * The messages of the thread between Jessica and the couple for this
-     * wedding.
+     * The private messages exchanged with Jessica about this wedding.
      *
      * @return HasMany<Message, $this>
      */

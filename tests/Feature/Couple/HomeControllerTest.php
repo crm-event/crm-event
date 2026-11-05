@@ -142,14 +142,15 @@ class HomeControllerTest extends TestCase
 
     public function test_the_home_page_counts_the_messages_the_couple_has_not_read(): void
     {
+        $jessica = User::factory()->admin()->create();
         $couple = Couple::factory()->withPortalAccess()->create();
         $wedding = Wedding::factory()->for($couple)->create();
 
-        Message::factory()->count(2)->for($wedding)->create();
+        Message::factory()->count(2)->for($wedding)->create(['sender_id' => $jessica->id]);
         Message::factory()->for(Wedding::factory()->for($couple))->create(['sender_id' => null]);
-        Message::factory()->for($wedding)->read()->create();
-        Message::factory()->for($wedding)->sentBy($couple->user)->create();
-        Message::factory()->create();
+        Message::factory()->for($wedding)->read()->create(['sender_id' => $jessica->id]);
+        Message::factory()->for($wedding)->create(['sender_id' => $couple->user_id]);
+        Message::factory()->create(['sender_id' => $jessica->id]);
 
         $response = $this->actingAs($couple->user)->get(route('couple.home'));
 

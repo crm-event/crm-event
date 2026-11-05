@@ -22,7 +22,7 @@ class HomeController extends Controller
                 'partner2_first_name',
             ]),
             'nextAppointment' => $this->nextAppointment($couple),
-            'unreadMessages' => $couple?->messages()->unreadBy($request->user())->count() ?? 0,
+            'unreadMessages' => $couple?->messages()->unreadFor($request->user())->count() ?? 0,
             'documents' => [
                 'total' => $couple?->documents()->count() ?? 0,
                 'unseen' => $couple?->documents()->unseen()->count() ?? 0,
