@@ -25,8 +25,12 @@ export default function MessageThread({
     cannotWriteText,
     maxBodyLength,
     emptyText,
+    updateUrl,
+    deleteUrl,
 }) {
     const endOfThread = useRef(null);
+    const [editingMessageId, setEditingMessageId] = useState(null);
+    const editForm = useForm({ body: '' });
 
     useEffect(() => {
         endOfThread.current?.scrollIntoView({ block: 'end' });
@@ -52,7 +56,41 @@ export default function MessageThread({
                         <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-sage">
                             {message.is_own ? 'Vous' : otherPartyName}
                         </p>
-                        {message.body && (
+                        {editingMessageId === message.id ? (
+                            <div className="w-full min-w-64">
+                                <textarea
+                                    value={editForm.data.body}
+                                    rows={3}
+                                    maxLength={maxBodyLength}
+                                    onChange={(event) => editForm.setData('body', event.target.value)}
+                                    className="block w-full border border-ink/20 bg-ivory px-3 py-2 text-sm text-ink focus:border-ink focus:ring-0"
+                                    aria-label="Modifier le message"
+                                />
+                                <FieldError message={editForm.errors.body} />
+                                <div className="mt-2 flex justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingMessageId(null)}
+                                        className="text-xs text-sage underline"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            editForm.patch(updateUrl(message.id), {
+                                                preserveScroll: true,
+                                                onSuccess: () => setEditingMessageId(null),
+                                            })
+                                        }
+                                        disabled={editForm.processing || !editForm.data.body.trim()}
+                                        className={`${primaryButton} px-3 py-2 text-xs disabled:opacity-50`}
+                                    >
+                                        {editForm.processing ? 'Enregistrement…' : 'Enregistrer'}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : message.body ? (
                             <p
                                 className={`whitespace-pre-line px-4 py-3 text-[15px] leading-relaxed ${
                                     message.is_own ? 'bg-ink text-ivory' : 'bg-blush text-ink'
@@ -60,7 +98,7 @@ export default function MessageThread({
                             >
                                 {message.body}
                             </p>
-                        )}
+                        ) : null}
                         {message.voice_note_url && (
                             <audio
                                 controls
@@ -76,6 +114,36 @@ export default function MessageThread({
                             </time>
                             {message.is_own && message.read_at && ' · Lu'}
                         </p>
+                        {message.is_own && editingMessageId !== message.id && (
+                            <div className="mt-1 flex gap-3 text-xs text-sage">
+                                {message.body && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            editForm.setData('body', message.body);
+                                            editForm.clearErrors();
+                                            setEditingMessageId(message.id);
+                                        }}
+                                        className="underline hover:text-ink"
+                                    >
+                                        Modifier
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (window.confirm('Supprimer ce message ?')) {
+                                            editForm.delete(deleteUrl(message.id), {
+                                                preserveScroll: true,
+                                            });
+                                        }
+                                    }}
+                                    className="underline hover:text-ink"
+                                >
+                                    Supprimer
+                                </button>
+                            </div>
+                        )}
                     </li>
                 ))}
                 <li ref={endOfThread} aria-hidden="true" />
