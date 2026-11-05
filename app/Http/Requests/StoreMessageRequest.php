@@ -28,7 +28,8 @@ class StoreMessageRequest extends FormRequest
                 'nullable',
                 'file',
                 'required_without:body',
-                'mimes:aac,m4a,mp3,mp4,ogg,wav,webm',
+                // "weba" is the extension guessed for audio/webm (Chrome recordings).
+                'mimes:aac,m4a,mp3,mp4,ogg,wav,weba,webm',
                 'max:10240',
             ],
         ];
@@ -54,11 +55,15 @@ class StoreMessageRequest extends FormRequest
 
     /**
      * Remove surrounding spaces so that a message made of blanks is empty.
+     * An empty body becomes null: a voice message is stored without text, and
+     * the controllers rely on `body === null` to recognise it.
      */
     protected function prepareForValidation(): void
     {
+        $body = trim((string) $this->input('body'));
+
         $this->merge([
-            'body' => trim((string) $this->input('body')),
+            'body' => $body === '' ? null : $body,
         ]);
     }
 }

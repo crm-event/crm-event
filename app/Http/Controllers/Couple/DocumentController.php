@@ -22,11 +22,12 @@ class DocumentController extends Controller
     public function index(Request $request): Response
     {
         $couple = $request->user()->couple;
-        $documents = $couple?->documents()->latest('documents.created_at')->get() ?? collect();
 
-        if ($documents->isNotEmpty()) {
-            $couple->documents()->whereNull('documents.viewed_at')->update(['viewed_at' => now()]);
-        }
+        // Opening the page counts as viewing the documents: mark them first so
+        // that the page already shows them as viewed.
+        $couple?->documents()->whereNull('documents.viewed_at')->update(['viewed_at' => now()]);
+
+        $documents = $couple?->documents()->latest('documents.created_at')->get() ?? collect();
 
         return Inertia::render('Couple/Documents', [
             'categories' => $documents
@@ -68,10 +69,11 @@ class DocumentController extends Controller
 
         abort_unless($document->requires_approval, 422, 'Ce document ne nécessite pas d’approbation.');
 
-        $document->update([
+        // viewed_at and approved_at are not mass assignable: a request must never set them.
+        $document->forceFill([
             'viewed_at' => $document->viewed_at ?? now(),
             'approved_at' => now(),
-        ]);
+        ])->save();
 
         return to_route('couple.documents.index');
     }
