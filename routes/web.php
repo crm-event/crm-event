@@ -66,6 +66,10 @@ Route::get('/wedding', function () {
     return Inertia::render('Wedding');
 })->middleware(['auth', 'verified'])->name('wedding');
 
+Route::get('/demandes', function () {
+    return Inertia::render('Demandes');
+})->middleware(['auth', 'verified'])->name('demandes');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

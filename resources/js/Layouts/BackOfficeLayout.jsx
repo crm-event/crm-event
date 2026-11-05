@@ -8,12 +8,12 @@ import { useState } from 'react';
  * Coque du back-office de Jessica : barre latérale de navigation à gauche,
  * bandeau de recherche en haut, contenu au centre.
  *
- * Seuls le tableau de bord et les paramètres (profil) existent pour l'instant ;
+ * Le tableau de bord, les demandes et les paramètres (profil) existent ;
  * les autres entrées sont affichées comme dans la maquette mais sans lien.
  */
 const NAVIGATION = [
     { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
-    { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread' },
+    { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread', route: 'demandes' },
     { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'wedding' },
     { cle: 'messages', libelle: 'Messages', icone: 'chat', route: 'admin.messages.index' },
     { cle: 'documents', libelle: 'Documents', icone: 'description', route: 'admin.documents.index' },
@@ -155,6 +155,7 @@ function MenuUtilisateur({ utilisateur }) {
 export default function BackOfficeLayout({
     actif = 'dashboard',
     filAriane = 'Atelier de Production',
+    policeStitch = false,
     children,
 }) {
     const utilisateur = usePage().props.auth.user;
@@ -168,7 +169,10 @@ export default function BackOfficeLayout({
     });
 
     return (
-        <div className="min-h-screen bg-blush font-sans text-ink antialiased">
+        <div
+            className="min-h-screen bg-blush font-sans text-ink antialiased"
+            style={policeStitch ? { fontFamily: 'Inter, sans-serif', '--font-display': 'Playfair Display, serif' } : undefined}
+        >
             <aside className="fixed left-0 top-0 z-50 hidden h-screen w-sidebar overflow-y-auto border-r border-hairline lg:block">
                 <BarreLaterale actif={actif} utilisateur={utilisateur} />
             </aside>
