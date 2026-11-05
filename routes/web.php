@@ -23,6 +23,7 @@ Route::middleware(['auth', 'role:couple'])
 
         Route::get('/messages', [CoupleMessageController::class, 'index'])->name('messages.index');
         Route::post('/messages', [CoupleMessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/{message}/voice', [CoupleMessageController::class, 'voice'])->name('messages.voice');
     });
 
 Route::middleware(['auth', 'role:admin'])
@@ -32,6 +33,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/', [AdminMessageController::class, 'index'])->name('index');
         Route::get('/{couple}', [AdminMessageController::class, 'show'])->name('show');
         Route::post('/{couple}', [AdminMessageController::class, 'store'])->name('store');
+        Route::get('/{message}/voice', [AdminMessageController::class, 'voice'])->name('voice');
     });
 
 Route::get('/dashboard', function () {
