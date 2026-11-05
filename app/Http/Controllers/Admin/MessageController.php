@@ -8,9 +8,11 @@ use App\Models\Couple;
 use App\Models\Message;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
-use Inertia\Response;
+use Inertia\Response as InertiaResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Jessica's inbox: one private thread per couple.
@@ -21,7 +23,7 @@ class MessageController extends Controller
      * List the couples who have access to their space, the threads with the
      * most recent activity first.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): InertiaResponse
     {
         $admin = $request->user();
 
@@ -40,7 +42,8 @@ class MessageController extends Controller
                     'couple_id' => $couple->id,
                     'title' => $couple->threadTitle(),
                     'unread_count' => $couple->unread_count,
-                    'last_message' => $lastMessage?->body,
+                    'last_message' => $lastMessage?->body
+                        ?? ($lastMessage?->voice_note_path !== null ? 'Message vocal' : null),
                     'last_message_at' => $lastMessage?->created_at->toIso8601String(),
                 ];
             })
@@ -55,7 +58,7 @@ class MessageController extends Controller
     /**
      * Display the thread with a couple and mark the couple's messages as read.
      */
-    public function show(Request $request, Couple $couple): Response
+    public function show(Request $request, Couple $couple): InertiaResponse
     {
         $admin = $request->user();
         $messages = $couple->messages()->with('sender')->get();
@@ -91,8 +94,19 @@ class MessageController extends Controller
         $wedding->messages()->create([
             'sender_id' => $request->user()->id,
             'body' => $request->validated('body'),
+            'voice_note_path' => $request->file('voice_note')?->store('voice-notes'),
         ]);
 
         return to_route('admin.messages.show', $couple);
+    }
+
+    /**
+     * Stream a voice note to Jessica.
+     */
+    public function voice(Message $message): Response
+    {
+        abort_unless($message->voice_note_path !== null, 404);
+
+        return Storage::response($message->voice_note_path);
     }
 }

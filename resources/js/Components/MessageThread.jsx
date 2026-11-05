@@ -1,7 +1,7 @@
 import FieldError from '@/Components/FieldError';
 import { primaryButton } from '@/brand';
 import { useForm } from '@inertiajs/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
@@ -52,13 +52,24 @@ export default function MessageThread({
                         <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-sage">
                             {message.is_own ? 'Vous' : otherPartyName}
                         </p>
-                        <p
-                            className={`whitespace-pre-line px-4 py-3 text-[15px] leading-relaxed ${
-                                message.is_own ? 'bg-ink text-ivory' : 'bg-blush text-ink'
-                            }`}
-                        >
-                            {message.body}
-                        </p>
+                        {message.body && (
+                            <p
+                                className={`whitespace-pre-line px-4 py-3 text-[15px] leading-relaxed ${
+                                    message.is_own ? 'bg-ink text-ivory' : 'bg-blush text-ink'
+                                }`}
+                            >
+                                {message.body}
+                            </p>
+                        )}
+                        {message.voice_note_url && (
+                            <audio
+                                controls
+                                preload="metadata"
+                                src={message.voice_note_url}
+                                className="mt-2 max-w-full"
+                                aria-label="Message vocal"
+                            />
+                        )}
                         <p className="mt-1 text-[11px] text-ink/45">
                             <time dateTime={message.sent_at}>
                                 {dateFormatter.format(new Date(message.sent_at))}
@@ -82,15 +93,91 @@ export default function MessageThread({
 }
 
 function Composer({ postUrl, maxBodyLength }) {
-    const { data, setData, post, processing, errors, reset } = useForm({ body: '' });
+    const { data, setData, post, processing, errors, reset } = useForm({
+        body: '',
+        voice_note: null,
+    });
+    const recorder = useRef(null);
+    const chunks = useRef([]);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingError, setRecordingError] = useState('');
+    const [previewUrl, setPreviewUrl] = useState(null);
+
+    useEffect(() => {
+        if (!data.voice_note) {
+            setPreviewUrl(null);
+            return undefined;
+        }
+
+        const url = URL.createObjectURL(data.voice_note);
+        setPreviewUrl(url);
+
+        return () => URL.revokeObjectURL(url);
+    }, [data.voice_note]);
 
     const submit = (e) => {
         e.preventDefault();
 
         post(postUrl, {
             preserveScroll: true,
-            onSuccess: () => reset('body'),
+            forceFormData: true,
+            onSuccess: () => {
+                reset('body', 'voice_note');
+                setRecordingError('');
+            },
         });
+    };
+
+    const startRecording = async () => {
+        if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+            setRecordingError("L’enregistrement vocal n’est pas disponible sur ce navigateur.");
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mimeType = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4']
+                .find((type) => MediaRecorder.isTypeSupported(type));
+            const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+
+            chunks.current = [];
+            recorder.current = mediaRecorder;
+            setRecordingError('');
+            setIsRecording(true);
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.current.push(event.data);
+                }
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks.current, {
+                    type: mediaRecorder.mimeType || 'audio/webm',
+                });
+                const extension = blob.type.includes('ogg')
+                    ? 'ogg'
+                    : blob.type.includes('mp4')
+                      ? 'mp4'
+                      : 'webm';
+
+                setData('voice_note', new File([blob], `message-vocal.${extension}`, { type: blob.type }));
+                stream.getTracks().forEach((track) => track.stop());
+                recorder.current = null;
+                setIsRecording(false);
+            };
+            mediaRecorder.start();
+        } catch {
+            setRecordingError("L’accès au microphone a été refusé ou n’est pas disponible.");
+        }
+    };
+
+    const stopRecording = () => {
+        recorder.current?.stop();
+    };
+
+    const removeRecording = () => {
+        setData('voice_note', null);
+        setRecordingError('');
     };
 
     // Ctrl + Enter (or Cmd + Enter) sends the message, Enter adds a new line.
@@ -110,7 +197,6 @@ function Composer({ postUrl, maxBodyLength }) {
                 value={data.body}
                 rows={3}
                 maxLength={maxBodyLength}
-                required
                 placeholder="Écrivez votre message…"
                 aria-invalid={Boolean(errors.body)}
                 aria-describedby={errors.body ? 'message-body-error' : 'message-body-hint'}
@@ -120,18 +206,53 @@ function Composer({ postUrl, maxBodyLength }) {
             />
             <FieldError id="message-body-error" message={errors.body} />
 
-            <div className="mt-3 flex items-center justify-between gap-4">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <span id="message-body-hint" className="text-xs text-ink/40">
                     Ctrl + Entrée pour envoyer
                 </span>
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className={`${primaryButton} disabled:cursor-wait disabled:opacity-50`}
-                >
-                    {processing ? 'Envoi…' : 'Envoyer'}
-                </button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    {!isRecording && !data.voice_note && (
+                        <button
+                            type="button"
+                            onClick={startRecording}
+                            disabled={processing}
+                            className="border border-ink/20 px-3 py-2 text-sm text-ink transition-colors hover:border-ink disabled:opacity-50"
+                        >
+                            Enregistrer un vocal
+                        </button>
+                    )}
+                    {isRecording && (
+                        <button
+                            type="button"
+                            onClick={stopRecording}
+                            className="border border-ink bg-blush px-3 py-2 text-sm text-ink"
+                        >
+                            Arrêter l’enregistrement
+                        </button>
+                    )}
+                    {data.voice_note && !isRecording && (
+                        <button
+                            type="button"
+                            onClick={removeRecording}
+                            className="text-sm text-sage underline"
+                        >
+                            Supprimer le vocal
+                        </button>
+                    )}
+                    <button
+                        type="submit"
+                        disabled={processing || isRecording || (!data.body.trim() && !data.voice_note)}
+                        className={`${primaryButton} disabled:cursor-wait disabled:opacity-50`}
+                    >
+                        {processing ? 'Envoi…' : 'Envoyer'}
+                    </button>
+                </div>
             </div>
+            {previewUrl && (
+                <audio controls src={previewUrl} className="mt-3 max-w-full" aria-label="Aperçu du message vocal" />
+            )}
+            {recordingError && <p className="mt-2 text-sm text-red-700">{recordingError}</p>}
+            <FieldError id="message-voice-error" message={errors.voice_note} />
         </form>
     );
 }

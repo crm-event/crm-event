@@ -7,6 +7,8 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -48,6 +50,22 @@ class MessageControllerTest extends TestCase
         );
     }
 
+    public function test_the_inbox_labels_a_voice_message(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+        Message::factory()->for($wedding)->create([
+            'body' => null,
+            'voice_note_path' => 'voice-notes/message.webm',
+        ]);
+
+        $this->actingAs($this->jessica)
+            ->get(route('admin.messages.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('threads.0.last_message', 'Message vocal')
+            );
+    }
+
     public function test_opening_a_thread_marks_the_couple_s_messages_as_read(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
@@ -80,6 +98,25 @@ class MessageControllerTest extends TestCase
             'sender_id' => $this->jessica->id,
             'body' => 'Bonjour, voici le devis mis à jour.',
         ]);
+    }
+
+    public function test_jessica_can_send_a_voice_message(): void
+    {
+        Storage::fake();
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+
+        $response = $this->actingAs($this->jessica)->post(route('admin.messages.store', $couple), [
+            'voice_note' => UploadedFile::fake()->create('message.webm', 500, 'audio/webm'),
+        ]);
+
+        $response->assertRedirect(route('admin.messages.show', $couple));
+        $message = Message::query()->latest('id')->firstOrFail();
+
+        $this->assertNull($message->body);
+        $this->assertSame($wedding->id, $message->wedding_id);
+        $this->assertNotNull($message->voice_note_path);
+        Storage::assertExists($message->voice_note_path);
     }
 
     public function test_jessica_cannot_write_to_a_couple_without_wedding(): void
