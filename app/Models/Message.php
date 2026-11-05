@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Private message between a couple and Jessica.
@@ -63,14 +64,22 @@ class Message extends Model
     /**
      * Data of the message as sent to a thread page, seen by `$viewer`.
      *
-     * @return array{id: int, body: string|null, voice_note_url: string|null, is_own: bool, sender_is_admin: bool, sent_at: string, read_at: string|null}
+     * `voice_note_url` is null when the audio file is missing from the storage
+     * disk, while `has_voice_note` stays true so that the page can say so. In
+     * development the database is shared but each computer has its own
+     * storage: a voice message recorded on another computer cannot be played.
+     *
+     * @return array{id: int, body: string|null, has_voice_note: bool, voice_note_url: string|null, is_own: bool, sender_is_admin: bool, sent_at: string, read_at: string|null}
      */
     public function toThreadItem(User $viewer): array
     {
+        $hasVoiceNote = $this->voice_note_path !== null;
+
         return [
             'id' => $this->id,
             'body' => $this->body,
-            'voice_note_url' => $this->voice_note_path === null
+            'has_voice_note' => $hasVoiceNote,
+            'voice_note_url' => ! $hasVoiceNote || ! Storage::exists($this->voice_note_path)
                 ? null
                 : route(
                     $viewer->hasRole(UserRole::Admin) ? 'admin.messages.voice' : 'couple.messages.voice',

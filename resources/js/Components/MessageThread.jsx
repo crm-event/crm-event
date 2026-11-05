@@ -100,11 +100,17 @@ export default function MessageThread({
                                 {message.body}
                             </p>
                         ) : null}
-                        {message.voice_note_url && (
+                        {message.voice_note_url ? (
                             <VoiceMessagePlayer
                                 src={message.voice_note_url}
                                 isOwn={message.is_own}
                             />
+                        ) : (
+                            message.has_voice_note && (
+                                <p className="border border-dashed border-ink/20 px-4 py-3 text-sm italic text-ink/55">
+                                    Message vocal indisponible sur cet appareil
+                                </p>
+                            )
                         )}
                         <p className="mt-1 text-[11px] text-ink/45">
                             <time dateTime={message.sent_at}>

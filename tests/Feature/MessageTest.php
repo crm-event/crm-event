@@ -7,6 +7,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class MessageTest extends TestCase
@@ -69,5 +70,20 @@ class MessageTest extends TestCase
         $this->assertFalse($item['is_own']);
         $this->assertTrue($item['sender_is_admin']);
         $this->assertTrue($message->toThreadItem($jessica)['is_own']);
+    }
+
+    public function test_a_voice_message_whose_file_is_missing_has_no_url(): void
+    {
+        Storage::fake();
+        Storage::put('voice-notes/here.webm', 'audio');
+        $viewer = User::factory()->create();
+        $playable = Message::factory()->create(['body' => null, 'voice_note_path' => 'voice-notes/here.webm']);
+        $missing = Message::factory()->create(['body' => null, 'voice_note_path' => 'voice-notes/elsewhere.webm']);
+
+        $this->assertNotNull($playable->toThreadItem($viewer)['voice_note_url']);
+
+        $item = $missing->toThreadItem($viewer);
+        $this->assertTrue($item['has_voice_note']);
+        $this->assertNull($item['voice_note_url']);
     }
 }
