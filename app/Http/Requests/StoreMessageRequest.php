@@ -23,7 +23,14 @@ class StoreMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['required', 'string', 'max:'.self::MAX_BODY_LENGTH],
+            'body' => ['nullable', 'string', 'required_without:voice_note', 'max:'.self::MAX_BODY_LENGTH],
+            'voice_note' => [
+                'nullable',
+                'file',
+                'required_without:body',
+                'mimes:aac,m4a,mp3,mp4,ogg,wav,webm',
+                'max:10240',
+            ],
         ];
     }
 
@@ -37,6 +44,11 @@ class StoreMessageRequest extends FormRequest
         return [
             'body.required' => 'Votre message est vide.',
             'body.max' => 'Votre message ne peut pas dépasser '.self::MAX_BODY_LENGTH.' caractères.',
+            'body.required_without' => 'Ajoutez un message écrit ou un message vocal.',
+            'voice_note.required_without' => 'Ajoutez un message écrit ou un message vocal.',
+            'voice_note.file' => 'Le message vocal est invalide.',
+            'voice_note.mimes' => 'Le message vocal doit être un fichier audio accepté.',
+            'voice_note.max' => 'Le message vocal ne peut pas dépasser 10 Mo.',
         ];
     }
 
