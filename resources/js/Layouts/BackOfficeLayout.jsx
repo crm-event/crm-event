@@ -8,8 +8,8 @@ import { useState } from 'react';
  * Coque du back-office de Jessica : barre latérale de navigation à gauche,
  * bandeau de recherche en haut, contenu au centre.
  *
- * Seuls le tableau de bord et les paramètres (profil) existent pour l'instant ;
- * les autres entrées sont affichées comme dans la maquette mais sans lien.
+ * Les écrans disponibles sont reliés à la navigation ; les autres entrées
+ * restent affichées comme bientôt disponibles.
  */
 const NAVIGATION = [
     { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
@@ -17,7 +17,7 @@ const NAVIGATION = [
     { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'mariages.prestations' },
     { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today' },
     { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long', route: 'facturation.index' },
-    { cle: 'depenses', libelle: 'Dépenses', icone: 'payments' },
+    { cle: 'depenses', libelle: 'Dépenses', icone: 'payments', route: 'depenses.index' },
     { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
     { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up' },
     { cle: 'parametres', libelle: 'Paramètres', icone: 'settings', route: 'profile.edit' },
