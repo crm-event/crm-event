@@ -24,7 +24,7 @@ const NAVIGATION_GROUPS = [
         entries: [
             { key: 'home', label: 'Accueil', icon: 'home', route: 'couple.home' },
             { key: 'wedding', label: 'Notre mariage', icon: 'favorite' },
-            { key: 'design', label: 'Design', icon: 'palette' },
+            { key: 'design', label: 'Design', icon: 'palette', route: 'couple.design.index' },
             {
                 key: 'documents',
                 label: 'Documents',
