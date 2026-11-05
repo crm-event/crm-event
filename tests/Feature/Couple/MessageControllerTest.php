@@ -7,6 +7,8 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -59,6 +61,40 @@ class MessageControllerTest extends TestCase
             'body' => 'Bonjour Jessica, une question sur le devis.',
             'read_at' => null,
         ]);
+    }
+
+    public function test_a_couple_can_send_a_voice_message(): void
+    {
+        Storage::fake();
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+
+        $response = $this->actingAs($couple->user)->post(route('couple.messages.store'), [
+            'voice_note' => UploadedFile::fake()->create('message.webm', 500, 'audio/webm'),
+        ]);
+
+        $response->assertRedirect(route('couple.messages.index'));
+        $message = Message::query()->latest('id')->firstOrFail();
+
+        $this->assertNull($message->body);
+        $this->assertNotNull($message->voice_note_path);
+        $this->assertSame($wedding->id, $message->wedding_id);
+        Storage::assertExists($message->voice_note_path);
+    }
+
+    public function test_a_couple_can_stream_a_voice_message_from_its_thread(): void
+    {
+        Storage::fake();
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $message = Message::factory()->for(Wedding::factory()->for($couple))->create([
+            'voice_note_path' => 'voice-notes/message.webm',
+            'body' => null,
+        ]);
+        Storage::put($message->voice_note_path, 'audio');
+
+        $this->actingAs($couple->user)
+            ->get(route('couple.messages.voice', $message))
+            ->assertOk();
     }
 
     public function test_a_couple_without_wedding_cannot_write_yet(): void
