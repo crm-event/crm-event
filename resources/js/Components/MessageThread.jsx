@@ -1,4 +1,5 @@
 import FieldError from '@/Components/FieldError';
+import Icone from '@/Components/Icone';
 import { primaryButton } from '@/brand';
 import { useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
@@ -100,12 +101,9 @@ export default function MessageThread({
                             </p>
                         ) : null}
                         {message.voice_note_url && (
-                            <audio
-                                controls
-                                preload="metadata"
+                            <VoiceMessagePlayer
                                 src={message.voice_note_url}
-                                className="mt-2 max-w-full"
-                                aria-label="Message vocal"
+                                isOwn={message.is_own}
                             />
                         )}
                         <p className="mt-1 text-[11px] text-ink/45">
@@ -124,9 +122,11 @@ export default function MessageThread({
                                             editForm.clearErrors();
                                             setEditingMessageId(message.id);
                                         }}
-                                        className="underline hover:text-ink"
+                                        className="inline-flex items-center gap-1 underline hover:text-ink"
+                                        aria-label="Modifier le message"
+                                        title="Modifier le message"
                                     >
-                                        Modifier
+                                        <Icone nom="edit" className="!text-[11px] leading-none" />
                                     </button>
                                 )}
                                 <button
@@ -138,9 +138,11 @@ export default function MessageThread({
                                             });
                                         }
                                     }}
-                                    className="underline hover:text-ink"
+                                    className="inline-flex items-center gap-1 underline hover:text-ink"
+                                    aria-label="Supprimer le message"
+                                    title="Supprimer le message"
                                 >
-                                    Supprimer
+                                    <Icone nom="delete" className="!text-[11px] leading-none" />
                                 </button>
                             </div>
                         )}
@@ -160,6 +162,108 @@ export default function MessageThread({
     );
 }
 
+function VoiceMessagePlayer({ src, isOwn }) {
+    const audio = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+
+    const togglePlayback = async () => {
+        if (!audio.current) {
+            return;
+        }
+
+        if (isPlaying) {
+            audio.current.pause();
+        } else {
+            await audio.current.play();
+        }
+
+        setIsPlaying(!isPlaying);
+    };
+
+    const seek = (event) => {
+        const time = Number(event.target.value);
+
+        if (audio.current) {
+            audio.current.currentTime = time;
+        }
+
+        setCurrentTime(time);
+    };
+
+    return (
+        <div
+            className={`mt-2 flex w-full min-w-64 items-center gap-3 px-3 py-2.5 ${
+                isOwn ? 'bg-ink text-ivory' : 'bg-blush text-ink'
+            }`}
+        >
+            <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                    isOwn ? 'bg-ivory/15' : 'bg-white/60'
+                }`}
+            >
+                <Icone
+                    nom="mic"
+                    className={`!text-[15px] leading-none ${isOwn ? 'text-ivory' : 'text-ink'}`}
+                />
+            </span>
+            <div className="min-w-0 flex-1">
+                <audio
+                    ref={audio}
+                    preload="metadata"
+                    src={src}
+                    onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+                    onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => setIsPlaying(false)}
+                    className="hidden"
+                    aria-label="Message vocal"
+                />
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={togglePlayback}
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                            isOwn ? 'bg-ivory text-ink' : 'bg-ink text-ivory'
+                        }`}
+                        aria-label={isPlaying ? 'Mettre le message vocal en pause' : 'Écouter le message vocal'}
+                    >
+                        <Icone
+                            nom={isPlaying ? 'pause' : 'play_arrow'}
+                            className="!text-[16px] leading-none"
+                        />
+                    </button>
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 0}
+                        step="0.1"
+                        value={currentTime}
+                        onChange={seek}
+                        className={`h-1 min-w-0 flex-1 cursor-pointer ${
+                            isOwn ? 'accent-ivory' : 'accent-ink'
+                        }`}
+                        aria-label="Progression du message vocal"
+                    />
+                    <span className="w-20 text-right font-mono text-[10px] opacity-70">
+                        {formatAudioTime(currentTime)} / {formatAudioTime(duration)}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function formatAudioTime(seconds) {
+    if (!Number.isFinite(seconds)) {
+        return '0:00';
+    }
+
+    return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+}
+
 function Composer({ postUrl, maxBodyLength }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         body: '',
@@ -168,6 +272,7 @@ function Composer({ postUrl, maxBodyLength }) {
     const recorder = useRef(null);
     const chunks = useRef([]);
     const [isRecording, setIsRecording] = useState(false);
+    const [recordingSeconds, setRecordingSeconds] = useState(0);
     const [recordingError, setRecordingError] = useState('');
     const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -182,6 +287,18 @@ function Composer({ postUrl, maxBodyLength }) {
 
         return () => URL.revokeObjectURL(url);
     }, [data.voice_note]);
+
+    useEffect(() => {
+        if (!isRecording) {
+            return undefined;
+        }
+
+        const timer = window.setInterval(() => {
+            setRecordingSeconds((seconds) => seconds + 1);
+        }, 1000);
+
+        return () => window.clearInterval(timer);
+    }, [isRecording]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -211,6 +328,7 @@ function Composer({ postUrl, maxBodyLength }) {
             chunks.current = [];
             recorder.current = mediaRecorder;
             setRecordingError('');
+            setRecordingSeconds(0);
             setIsRecording(true);
 
             mediaRecorder.ondataavailable = (event) => {
@@ -284,19 +402,33 @@ function Composer({ postUrl, maxBodyLength }) {
                             type="button"
                             onClick={startRecording}
                             disabled={processing}
-                            className="border border-ink/20 px-3 py-2 text-sm text-ink transition-colors hover:border-ink disabled:opacity-50"
+                            className="inline-flex items-center gap-2 border border-ink/20 px-3 py-2 text-sm text-ink transition-colors hover:border-ink disabled:opacity-50"
                         >
-                            Enregistrer un vocal
+                            <Icone nom="mic" className="!text-[14px] leading-none" />
+                            Enregistrer
                         </button>
                     )}
                     {isRecording && (
-                        <button
-                            type="button"
-                            onClick={stopRecording}
-                            className="border border-ink bg-blush px-3 py-2 text-sm text-ink"
-                        >
-                            Arrêter l’enregistrement
-                        </button>
+                        <div className="flex items-center gap-3 border border-ink bg-blush px-3 py-2 text-sm text-ink">
+                            <span className="flex items-center gap-2" role="status" aria-live="polite">
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-ink" />
+                                Enregistrement en cours
+                                <span className="font-mono text-xs">
+                                    {String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:
+                                    {String(recordingSeconds % 60).padStart(2, '0')}
+                                </span>
+                            </span>
+                            <button
+                                type="button"
+                                onClick={stopRecording}
+                                className="inline-flex items-center gap-1 underline underline-offset-2"
+                                aria-label="Arrêter l’enregistrement"
+                                title="Arrêter l’enregistrement"
+                            >
+                                <Icone nom="stop" className="!text-[14px] leading-none" />
+                                Arrêter
+                            </button>
+                        </div>
                     )}
                     {data.voice_note && !isRecording && (
                         <button
