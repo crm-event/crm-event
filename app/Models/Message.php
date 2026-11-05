@@ -25,6 +25,7 @@ class Message extends Model
         'wedding_id',
         'sender_id',
         'body',
+        'voice_note_path',
     ];
 
     /**
@@ -62,13 +63,19 @@ class Message extends Model
     /**
      * Data of the message as sent to a thread page, seen by `$viewer`.
      *
-     * @return array{id: int, body: string|null, is_own: bool, sender_is_admin: bool, sent_at: string, read_at: string|null}
+     * @return array{id: int, body: string|null, voice_note_url: string|null, is_own: bool, sender_is_admin: bool, sent_at: string, read_at: string|null}
      */
     public function toThreadItem(User $viewer): array
     {
         return [
             'id' => $this->id,
             'body' => $this->body,
+            'voice_note_url' => $this->voice_note_path === null
+                ? null
+                : route(
+                    $viewer->hasRole(UserRole::Admin) ? 'admin.messages.voice' : 'couple.messages.voice',
+                    $this,
+                ),
             'is_own' => $this->sender_id === $viewer->id,
             'sender_is_admin' => $this->sender?->hasRole(UserRole::Admin) ?? false,
             'sent_at' => $this->created_at->toIso8601String(),
