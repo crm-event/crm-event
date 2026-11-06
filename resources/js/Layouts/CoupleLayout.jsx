@@ -1,4 +1,5 @@
 import Icone from '@/Components/Icone';
+import Dropdown from '@/Components/Dropdown';
 import { focusRing } from '@/brand';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
@@ -61,6 +62,71 @@ const PREFETCH_CACHE_DURATION = '10s';
 const entryClasses =
     'flex items-center gap-3 border-l-2 px-4 py-2.5 text-[15px] transition-colors';
 
+const PAGE_LABELS = {
+    home: 'Accueil',
+    wedding: 'Notre mariage',
+    design: 'Design',
+    documents: 'Documents',
+    appointments: 'Rendez-vous',
+    messages: 'Messages',
+    community: 'Communauté',
+};
+
+const NOTIFICATIONS = [
+    {
+        key: 'documents',
+        icon: 'description',
+        title: 'Un document vous attend',
+        text: 'Vous avez 1 document à consulter.',
+        time: 'Il y a 2 heures',
+        route: 'couple.documents.index',
+    },
+    {
+        key: 'messages',
+        icon: 'chat_bubble',
+        title: 'Nouveau message de Jessica',
+        text: 'Jessica vous a envoyé un message concernant votre projet.',
+        time: 'Hier',
+        route: 'couple.messages.index',
+    },
+    {
+        key: 'wedding',
+        icon: 'event',
+        title: 'Votre prochain rendez-vous',
+        text: 'Votre rendez-vous approche. Retrouvez les détails de votre mariage.',
+        time: 'Il y a 3 jours',
+        route: 'couple.wedding.show',
+    },
+];
+
+const NOTIFICATIONS_STORAGE_KEY = 'couple-space-notifications';
+
+function getStoredNotifications() {
+    if (typeof window === 'undefined') {
+        return NOTIFICATIONS;
+    }
+
+    const storedNotifications = window.localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
+
+    if (!storedNotifications) {
+        return NOTIFICATIONS;
+    }
+
+    try {
+        const storedKeys = JSON.parse(storedNotifications);
+
+        if (!Array.isArray(storedKeys)) {
+            return NOTIFICATIONS;
+        }
+
+        return NOTIFICATIONS.filter((notification) => storedKeys.includes(notification.key));
+    } catch (error) {
+        console.error('Impossible de charger les notifications sauvegardées.', error);
+
+        return NOTIFICATIONS;
+    }
+}
+
 function NavigationEntry({ entry, isActive }) {
     const content = (
         <>
@@ -99,7 +165,7 @@ function NavigationEntry({ entry, isActive }) {
     );
 }
 
-function Sidebar({ activeKey, user }) {
+function Sidebar({ activeKey }) {
     return (
         <div className="flex h-full flex-col bg-blush">
             <Link
@@ -145,28 +211,244 @@ function Sidebar({ activeKey, user }) {
                 ))}
             </nav>
 
-            <div className="shrink-0 border-t border-ink/10 px-6 py-5">
-                <p className="truncate font-display text-base">{user.name}</p>
-                <div className="mt-3 flex items-center gap-5 text-[10px] uppercase tracking-[0.18em] text-sage">
-                    <Link
-                        href={route('profile.edit')}
-                        prefetch
-                        cacheFor={PREFETCH_CACHE_DURATION}
-                        className={`${focusRing} transition-colors hover:text-ink`}
-                    >
-                        Mon compte
-                    </Link>
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        className={`${focusRing} uppercase tracking-[0.18em] transition-colors hover:text-ink`}
-                    >
-                        Se déconnecter
-                    </Link>
+        </div>
+    );
+}
+
+function NotificationsMenu() {
+    const [notifications, setNotifications] = useState(getStoredNotifications);
+
+    useEffect(() => {
+        window.localStorage.setItem(
+            NOTIFICATIONS_STORAGE_KEY,
+            JSON.stringify(notifications.map((notification) => notification.key)),
+        );
+    }, [notifications]);
+
+    const removeNotification = (notificationKey) => {
+        setNotifications((currentNotifications) =>
+            currentNotifications.filter(
+                (notification) => notification.key !== notificationKey,
+            ),
+        );
+    };
+
+    return (
+        <Dropdown>
+            <Dropdown.Trigger>
+                <button
+                    type="button"
+                    aria-label="Notifications"
+                    className={`${focusRing} relative rounded-lg p-2 text-sage transition-colors hover:bg-blush hover:text-ink`}
+                >
+                    <Icone nom="notifications" className="text-[20px]" />
+                    {notifications.length > 0 && (
+                        <span className="absolute -right-1 -top-1 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-sage px-1 text-[9px] font-medium leading-none text-ivory">
+                            {notifications.length}
+                        </span>
+                    )}
+                </button>
+            </Dropdown.Trigger>
+
+            <Dropdown.Content width="96" contentClasses="bg-white p-0">
+                <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
+                    <div>
+                        <p className="text-[10px] uppercase tracking-brand text-sage">
+                            Votre actualité
+                        </p>
+                        <p className="mt-1 font-display text-xl text-ink">
+                            Notifications
+                        </p>
+                    </div>
+                    <span className="rounded-full bg-blush px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-sage">
+                        {notifications.length}{' '}
+                        {notifications.length === 1 ? 'nouvelle' : 'nouvelles'}
+                    </span>
+                </div>
+
+                {notifications.length > 0 ? (
+                    <div className="divide-y divide-ink/10">
+                        {notifications.map((notification) => (
+                            <div
+                                key={notification.key}
+                                className="group flex gap-3 px-5 py-4 transition-colors hover:bg-blush/60"
+                            >
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blush text-sage">
+                                    <Icone
+                                        nom={notification.icon}
+                                        className="text-[19px]"
+                                    />
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <p className="text-sm font-medium text-ink">
+                                            {notification.title}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            aria-label={`Supprimer « ${notification.title} »`}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                removeNotification(notification.key);
+                                            }}
+                                            className={`${focusRing} -mr-1 -mt-1 rounded p-1 text-sage opacity-70 transition-opacity hover:bg-white hover:text-ink sm:opacity-0 sm:group-hover:opacity-100`}
+                                        >
+                                            <Icone nom="close" className="text-[17px]" />
+                                        </button>
+                                    </div>
+                                    <p className="mt-1 text-sm leading-relaxed text-ink/65">
+                                        {notification.text}
+                                    </p>
+                                    <div className="mt-3 flex items-center justify-between gap-3">
+                                        <span className="text-[10px] uppercase tracking-[0.12em] text-sage">
+                                            {notification.time}
+                                        </span>
+                                        <Link
+                                            href={route(notification.route)}
+                                            onClick={() => removeNotification(notification.key)}
+                                            className={`${focusRing} inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] text-ink transition-colors hover:text-sage`}
+                                        >
+                                            Y aller
+                                            <Icone
+                                                nom="arrow_forward"
+                                                className="text-[15px]"
+                                            />
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="px-5 py-10 text-center">
+                        <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blush text-sage">
+                            <Icone nom="done_all" className="text-[21px]" />
+                        </span>
+                        <p className="mt-4 font-display text-lg text-ink">
+                            Tout est à jour
+                        </p>
+                        <p className="mt-1 text-sm text-ink/65">
+                            Vous n’avez aucune notification en attente.
+                        </p>
+                    </div>
+                )}
+
+                <div className="border-t border-ink/10 px-5 py-3">
+                    <p className="text-center text-[10px] uppercase tracking-[0.14em] text-sage">
+                        {notifications.length > 0
+                            ? 'Les notifications seront bientôt personnalisées'
+                            : 'Aucune notification en attente'}
+                    </p>
+                </div>
+            </Dropdown.Content>
+        </Dropdown>
+    );
+}
+
+function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
+    const pageLabel = PAGE_LABELS[active] || 'Espace client';
+    const initials = user.name
+        .split(' ')
+        .map((name) => name[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+
+    return (
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 bg-white/90 px-4 shadow-[0_4px_18px_rgba(31,27,24,0.05)] backdrop-blur-md sm:px-6 lg:fixed lg:left-sidebar lg:right-0 lg:h-20 lg:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+                <button
+                    type="button"
+                    aria-label="Ouvrir la navigation"
+                    aria-expanded={isMenuOpen}
+                    onClick={onOpenMenu}
+                    className={`${focusRing} rounded-lg p-2 text-sage transition-colors hover:bg-blush hover:text-ink lg:hidden`}
+                >
+                    <Icone nom="menu" className="text-[22px]" />
+                </button>
+
+                <div className="min-w-0">
+                    <p className="hidden text-[10px] uppercase tracking-brand text-sage sm:block">
+                        Espace client
+                    </p>
+                    <p className="truncate font-display text-lg text-ink sm:mt-0.5 sm:text-xl">
+                        {pageLabel}
+                    </p>
                 </div>
             </div>
-        </div>
+
+            <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+                <button
+                    type="button"
+                    aria-label="Changer de langue"
+                    title="Bientôt disponible"
+                    className={`${focusRing} inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[10px] uppercase tracking-[0.16em] text-sage transition-colors hover:bg-blush hover:text-ink`}
+                >
+                    <Icone nom="language" className="text-[18px]" />
+                    <span className="hidden sm:inline">FR</span>
+                </button>
+
+                <span className="hidden h-6 w-px bg-ink/10 sm:block" />
+
+                <NotificationsMenu />
+
+                <Dropdown>
+                    <Dropdown.Trigger>
+                        <button
+                            type="button"
+                            aria-label={`Profil de ${user.name}`}
+                            className={`${focusRing} flex items-center gap-2 rounded-lg p-1.5 text-left transition-colors hover:bg-blush`}
+                        >
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink font-display text-xs text-ivory">
+                                {initials}
+                            </span>
+                            <span className="hidden max-w-32 truncate text-sm text-ink lg:block">
+                                {user.name}
+                            </span>
+                        </button>
+                    </Dropdown.Trigger>
+
+                    <Dropdown.Content contentClasses="bg-white p-2">
+                        <div className="border-b border-ink/10 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-brand text-sage">
+                                Votre espace
+                            </p>
+                            <p className="mt-1 truncate font-display text-base text-ink">
+                                {user.name}
+                            </p>
+                        </div>
+                        <Dropdown.Link
+                            href={route('profile.edit')}
+                            prefetch
+                            cacheFor={PREFETCH_CACHE_DURATION}
+                            className="mt-1 rounded-md px-3 py-2 text-ink hover:bg-blush focus:bg-blush"
+                        >
+                            <span className="flex items-center gap-3">
+                                <Icone
+                                    nom="person"
+                                    className="text-[18px] text-sage"
+                                />
+                                Mon compte
+                            </span>
+                        </Dropdown.Link>
+                        <Dropdown.Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className="rounded-md px-3 py-2 text-ink hover:bg-blush focus:bg-blush"
+                        >
+                            <span className="flex items-center gap-3">
+                                <Icone
+                                    nom="logout"
+                                    className="text-[18px] text-sage"
+                                />
+                                Se déconnecter
+                            </span>
+                        </Dropdown.Link>
+                    </Dropdown.Content>
+                </Dropdown>
+            </div>
+        </header>
     );
 }
 
@@ -205,7 +487,7 @@ export default function CoupleLayout({ active = 'home', children }) {
     return (
         <div className="min-h-screen bg-ivory font-sans text-ink antialiased">
             <aside className="fixed left-0 top-0 z-40 hidden h-screen w-sidebar border-r border-ink/10 lg:block">
-                <Sidebar activeKey={active} user={user} />
+                <Sidebar activeKey={active} />
             </aside>
 
             {isMenuOpen && (
@@ -223,37 +505,20 @@ export default function CoupleLayout({ active = 'home', children }) {
                         >
                             <Icone nom="close" className="text-[22px]" />
                         </button>
-                        <Sidebar activeKey={active} user={user} />
+                        <Sidebar activeKey={active} />
                     </aside>
                 </div>
             )}
 
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-ink/10 bg-ivory/95 px-4 backdrop-blur-md sm:px-6 lg:hidden">
-                <Link href={route('couple.home')} className={`${focusRing} flex items-center gap-3`}>
-                    <img
-                        src="/logo-ldt.png"
-                        alt=""
-                        className="h-9 w-auto"
-                        width={285}
-                        height={560}
-                    />
-                    <span className="font-display text-[12px] tracking-[0.16em]">
-                        LA DERNIÈRE TOUCHE
-                    </span>
-                </Link>
-                <button
-                    type="button"
-                    aria-label="Ouvrir la navigation"
-                    aria-expanded={isMenuOpen}
-                    onClick={() => setIsMenuOpen(true)}
-                    className={`${focusRing} p-2 text-sage hover:text-ink`}
-                >
-                    <Icone nom="menu" className="text-[24px]" />
-                </button>
-            </header>
+            <ClientHeader
+                active={active}
+                user={user}
+                isMenuOpen={isMenuOpen}
+                onOpenMenu={() => setIsMenuOpen(true)}
+            />
 
             <main className="lg:pl-sidebar">
-                <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-10 lg:py-16">
+                <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-10 lg:pt-36 lg:pb-16">
                     {children}
                 </div>
             </main>
