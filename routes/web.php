@@ -61,7 +61,7 @@ Route::middleware(['auth', 'role:admin'])
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
 
 Route::get('/demandes', function () {
     return Inertia::render('Demandes');

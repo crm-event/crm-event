@@ -34,6 +34,13 @@ class UserFactory extends Factory
         ];
     }
 
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Admin,
+        ]);
+    }
+
     /**
      * Indicate that the user is the administrator (Jessica).
      */
