@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\RentabiliteController;
@@ -37,6 +38,15 @@ Route::middleware(['auth', 'role:couple'])
         Route::get('/messages/{message}/voice', [CoupleMessageController::class, 'voice'])->name('messages.voice');
         Route::patch('/messages/{message}', [CoupleMessageController::class, 'update'])->name('messages.update');
         Route::delete('/messages/{message}', [CoupleMessageController::class, 'destroy'])->name('messages.destroy');
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin/couples')
+    ->name('admin.couples.')
+    ->group(function () {
+        Route::get('/', [AdminCoupleController::class, 'index'])->name('index');
+        Route::post('/', [AdminCoupleController::class, 'store'])->name('store');
+        Route::post('/{couple}/temporary-code', [AdminCoupleController::class, 'issueTemporaryCode'])->name('temporary-code');
     });
 
 Route::middleware(['auth', 'role:admin'])
