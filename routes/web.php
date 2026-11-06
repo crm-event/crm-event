@@ -75,10 +75,6 @@ Route::get('/wedding', function () {
     return Inertia::render('Wedding');
 })->middleware(['auth', 'verified'])->name('wedding');
 
-Route::get('/demandes', function () {
-    return Inertia::render('Demandes');
-})->middleware(['auth', 'verified'])->name('demandes');
-
 Route::middleware(['auth', 'role:admin'])
     ->prefix('rentabilite')
     ->name('rentabilite.')
