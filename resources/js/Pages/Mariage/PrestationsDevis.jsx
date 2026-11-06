@@ -27,7 +27,7 @@ export default function PrestationsDevis() {
         window.setTimeout(() => setNotification(''), 4000);
     }
 
-    return <BackOfficeLayout actif="mariages" filAriane="Dossiers / Mariage Provence Haute Couture">
+    return <BackOfficeLayout actif="prestations" filAriane="Dossiers / Mariage Provence Haute Couture">
         <Head title="Prestations & devis" />
         <div className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-2 text-caps uppercase text-sage"><span>Dossiers <span className="mx-2 text-subtle">/</span><strong className="text-ink">Mariage Provence Haute Couture</strong><span className="mx-2 text-subtle">/</span>Réf. #2025-06-CA</span><span className="rounded-full bg-ivory px-3 py-1">Mariage : 28 Juin 2025 <span className="ml-3 rounded-full bg-ink px-3 py-1 text-white">● Contrat engagé</span></span></div>

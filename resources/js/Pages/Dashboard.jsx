@@ -6,7 +6,7 @@ import CartesIndicateurs from '@/Pages/Dashboard/Partials/CartesIndicateurs';
 import GraphiqueChiffreAffaires from '@/Pages/Dashboard/Partials/GraphiqueChiffreAffaires';
 import RappelsPrioritaires from '@/Pages/Dashboard/Partials/RappelsPrioritaires';
 import { anneauFocus } from '@/charte';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 /**
  * Tableau de bord de Jessica (maquette Figma « Dashboard — La Dernière Touche »).
@@ -40,13 +40,13 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                        <button
-                            type="button"
+                        <Link
+                            href={`${route('demandes')}?nouvelle=1`}
                             className={`${anneauFocus} inline-flex items-center gap-2 rounded-lg border border-hairline bg-white px-4 py-2 text-label text-ink shadow-sm transition-colors hover:bg-ivory`}
                         >
                             <Icone nom="add_circle" className="text-[17px] text-sage" />
                             <span>Nouvelle demande</span>
-                        </button>
+                        </Link>
                         <button
                             type="button"
                             className={`${anneauFocus} inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-label text-white shadow-sm transition-opacity hover:opacity-80`}

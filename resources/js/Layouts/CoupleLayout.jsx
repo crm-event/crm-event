@@ -1,6 +1,6 @@
 import Icone from '@/Components/Icone';
 import { focusRing } from '@/brand';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 /**
@@ -12,26 +12,51 @@ import { useEffect, useState } from 'react';
  *
  * Entries without a `route` are not built yet: they are displayed, but
  * disabled, so the couple can already see what the space will contain.
+ *
+ * Pages are prefetched so that navigating feels instant, the database being
+ * remote in development. Entries with `prefetchOnPress` mark data as read when
+ * they are opened (messages, documents): they are only prefetched when the
+ * button is pressed, never on a mere hover.
  */
 const NAVIGATION_GROUPS = [
     {
         label: 'Votre mariage',
         entries: [
             { key: 'home', label: 'Accueil', icon: 'home', route: 'couple.home' },
-            { key: 'wedding', label: 'Notre mariage', icon: 'favorite' },
-            { key: 'design', label: 'Design', icon: 'palette' },
-            { key: 'documents', label: 'Documents', icon: 'description' },
+            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.wedding.show' },
+            { key: 'design', label: 'Design', icon: 'palette', route: 'couple.design.index' },
+            {
+                key: 'documents',
+                label: 'Documents',
+                icon: 'description',
+                route: 'couple.documents.index',
+                prefetchOnPress: true,
+            },
             { key: 'appointments', label: 'Rendez-vous', icon: 'event' },
-            { key: 'messages', label: 'Messages', icon: 'chat_bubble' },
+            {
+                key: 'messages',
+                label: 'Messages',
+                icon: 'chat_bubble',
+                route: 'couple.messages.index',
+                prefetchOnPress: true,
+            },
         ],
     },
     {
         label: 'Entre couples',
         entries: [
-            { key: 'community', label: 'Communauté', icon: 'diversity_1' },
+            {
+                key: 'community',
+                label: 'Communauté',
+                icon: 'diversity_1',
+                route: 'couple.community.index',
+            },
         ],
     },
 ];
+
+/** How long a prefetched page may be shown before being fetched again. */
+const PREFETCH_CACHE_DURATION = '10s';
 
 const entryClasses =
     'flex items-center gap-3 border-l-2 px-4 py-2.5 text-[15px] transition-colors';
@@ -60,6 +85,8 @@ function NavigationEntry({ entry, isActive }) {
     return (
         <Link
             href={route(entry.route)}
+            prefetch={entry.prefetchOnPress ? 'click' : 'hover'}
+            cacheFor={PREFETCH_CACHE_DURATION}
             aria-current={isActive ? 'page' : undefined}
             className={`${focusRing} ${entryClasses} ${
                 isActive
@@ -77,6 +104,8 @@ function Sidebar({ activeKey, user }) {
         <div className="flex h-full flex-col bg-blush">
             <Link
                 href={route('couple.home')}
+                prefetch
+                cacheFor={PREFETCH_CACHE_DURATION}
                 className={`${focusRing} flex h-24 shrink-0 items-center gap-4 border-b border-ink/10 px-6`}
             >
                 <img
@@ -121,6 +150,8 @@ function Sidebar({ activeKey, user }) {
                 <div className="mt-3 flex items-center gap-5 text-[10px] uppercase tracking-[0.18em] text-sage">
                     <Link
                         href={route('profile.edit')}
+                        prefetch
+                        cacheFor={PREFETCH_CACHE_DURATION}
                         className={`${focusRing} transition-colors hover:text-ink`}
                     >
                         Mon compte
@@ -142,6 +173,18 @@ function Sidebar({ activeKey, user }) {
 export default function CoupleLayout({ active = 'home', children }) {
     const user = usePage().props.auth.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // Inertia keeps prefetched pages even after a form is sent: forget them so
+    // that a page never shows data older than the message or post just sent.
+    useEffect(
+        () =>
+            router.on('finish', (event) => {
+                if (event.detail.visit.method !== 'get') {
+                    router.flushAll();
+                }
+            }),
+        [],
+    );
 
     useEffect(() => {
         if (!isMenuOpen) {

@@ -60,11 +60,11 @@ function ChiffreAffairesEncaisse() {
                 </span>
             </EnTeteCarte>
             <div className="my-2">
-                <div className="flex items-baseline justify-between">
-                    <span className="font-display text-kpi text-ink">
+                <div className="flex items-baseline justify-between gap-2">
+                    <span className="shrink-0 whitespace-nowrap font-display text-kpi text-ink">
                         {formaterEuros(CA_ENCAISSE)}
                     </span>
-                    <span className="text-body-sm text-sage">
+                    <span className="min-w-0 text-body-sm text-sage">
                         sur {formaterEuros(CA_PREVU)} prév.
                     </span>
                 </div>
