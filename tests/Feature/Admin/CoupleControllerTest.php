@@ -6,9 +6,12 @@ use App\Enums\UserRole;
 use App\Models\Couple;
 use App\Models\User;
 use App\Models\Wedding;
+use App\Notifications\TemporaryAccessCodeNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
+use RuntimeException;
 use Tests\TestCase;
 
 class CoupleControllerTest extends TestCase
@@ -172,6 +175,151 @@ class CoupleControllerTest extends TestCase
         $user = $couple->user->fresh();
         $this->assertTrue(Hash::check('son-mot-de-passe', $user->password));
         $this->assertFalse($user->must_change_password);
+    }
+
+    private function accessRequest(): Couple
+    {
+        $couple = Couple::factory()->create([
+            'partner1_first_name' => 'Nina',
+            'partner2_first_name' => 'Hugo',
+            'email' => 'nina.hugo@example.test',
+        ]);
+        Wedding::factory()->for($couple)->create(['status' => 'inquiry']);
+
+        return $couple;
+    }
+
+    public function test_the_page_lists_only_the_pending_requests(): void
+    {
+        $pending = $this->accessRequest();
+        Wedding::factory()->for(Couple::factory())->create(['status' => 'cancelled']);
+        Wedding::factory()->for(Couple::factory()->state(['email' => null]))->create(['status' => 'inquiry']);
+        Wedding::factory()->for(Couple::factory()->withPortalAccess())->create(['status' => 'inquiry']);
+
+        $this->actingAs($this->jessica)
+            ->get(route('admin.couples.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('accessRequests', 1)
+                ->where('accessRequests.0.id', $pending->id)
+                ->where('accessRequests.0.names', 'Nina & Hugo')
+                ->where('accessRequests.0.email', 'nina.hugo@example.test')
+            );
+    }
+
+    public function test_accepting_a_request_opens_the_space_and_emails_the_code(): void
+    {
+        Notification::fake();
+        $couple = $this->accessRequest();
+
+        $this->actingAs($this->jessica)
+            ->post(route('admin.couples.accept', $couple))
+            ->assertRedirect(route('admin.couples.index'))
+            ->assertSessionHas('temporaryCode.is_email_sent', true);
+
+        $couple->refresh();
+        $user = $couple->user;
+        $this->assertSame('nina.hugo@example.test', $user->email);
+        $this->assertSame(UserRole::Couple, $user->role);
+        $this->assertTrue($user->must_change_password);
+        $this->assertSame('quote_sent', $couple->latestWedding->status);
+
+        Notification::assertSentTo($user, TemporaryAccessCodeNotification::class, function (TemporaryAccessCodeNotification $notification) use ($user) {
+            $mail = $notification->toMail($user);
+            $html = (string) $mail->render();
+
+            $this->assertTrue(Hash::check($notification->temporaryCode, $user->password));
+            $this->assertStringContainsString($notification->temporaryCode, $html);
+            $this->assertStringContainsString('nina.hugo@example.test', $html);
+            $this->assertSame('La Dernière Touche', $mail->from[1]);
+
+            return true;
+        });
+    }
+
+    public function test_when_the_email_fails_the_space_stays_open_and_jessica_sees_the_code(): void
+    {
+        $couple = $this->accessRequest();
+        Notification::shouldReceive('send')->once()->andThrow(new RuntimeException('SMTP indisponible'));
+
+        $this->actingAs($this->jessica)
+            ->post(route('admin.couples.accept', $couple))
+            ->assertRedirect(route('admin.couples.index'))
+            ->assertSessionHas('temporaryCode.is_email_sent', false);
+
+        $this->assertTrue(Hash::check(session('temporaryCode')['code'], $couple->fresh()->user->password));
+    }
+
+    public function test_a_request_cannot_be_accepted_when_the_address_has_got_an_account(): void
+    {
+        Notification::fake();
+        $couple = $this->accessRequest();
+        User::factory()->create(['email' => 'nina.hugo@example.test']);
+
+        $this->actingAs($this->jessica)
+            ->post(route('admin.couples.accept', $couple))
+            ->assertSessionHasErrors('access_request');
+
+        $this->assertNull($couple->fresh()->user_id);
+        Notification::assertNothingSent();
+    }
+
+    public function test_refusing_a_request_keeps_the_record_without_opening_anything(): void
+    {
+        Notification::fake();
+        $couple = $this->accessRequest();
+
+        $this->actingAs($this->jessica)
+            ->post(route('admin.couples.refuse', $couple))
+            ->assertRedirect(route('admin.couples.index'));
+
+        $couple->refresh();
+        $this->assertNull($couple->user_id);
+        $this->assertSame('cancelled', $couple->latestWedding->status);
+        $this->assertSame('Accès refusé', $couple->latestWedding->cancellation_reason);
+        $this->assertSame(0, Couple::query()->awaitingAccess()->count());
+        Notification::assertNothingSent();
+    }
+
+    public function test_a_request_already_answered_cannot_be_answered_again(): void
+    {
+        Notification::fake();
+        $couple = $this->accessRequest();
+        $couple->latestWedding->update(['status' => 'cancelled']);
+
+        $this->actingAs($this->jessica)->post(route('admin.couples.accept', $couple))->assertStatus(422);
+        $this->post(route('admin.couples.refuse', $couple))->assertStatus(422);
+
+        $this->assertNull($couple->fresh()->user_id);
+    }
+
+    public function test_opening_a_space_or_replacing_a_code_emails_the_code_too(): void
+    {
+        Notification::fake();
+
+        $this->actingAs($this->jessica)->post(route('admin.couples.store'), [
+            'partner1_first_name' => 'Carla',
+            'email' => 'carla@example.test',
+        ]);
+        $user = User::query()->where('email', 'carla@example.test')->firstOrFail();
+
+        $this->post(route('admin.couples.temporary-code', $user->couple));
+
+        Notification::assertSentToTimes($user, TemporaryAccessCodeNotification::class, 2);
+    }
+
+    public function test_couples_and_guests_cannot_answer_a_request(): void
+    {
+        $couple = $this->accessRequest();
+        $otherCouple = Couple::factory()->withPortalAccess()->create();
+
+        $this->actingAs($otherCouple->user);
+        $this->post(route('admin.couples.accept', $couple))->assertForbidden();
+        $this->post(route('admin.couples.refuse', $couple))->assertForbidden();
+
+        auth()->logout();
+
+        $this->post(route('admin.couples.accept', $couple))->assertRedirect(route('login'));
+        $this->assertNull($couple->fresh()->user_id);
     }
 
     public function test_couples_and_guests_cannot_manage_the_spaces(): void

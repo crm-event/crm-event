@@ -2,7 +2,7 @@ import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
 import BackOfficeLayout from '@/Layouts/BackOfficeLayout';
 import { anneauFocus } from '@/charte';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
@@ -14,10 +14,13 @@ const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
 const inputClasses = 'w-full border border-hairline bg-ivory px-3 py-3 text-body';
 
 /**
- * Client spaces: Jessica opens the space of a couple, then gives them the
- * temporary code displayed here, which they replace at their first login.
+ * Client spaces: Jessica accepts the requests sent from the public site, or
+ * opens a space herself. The couple receives a temporary code by e-mail, which
+ * they replace at their first login.
  */
-export default function Index({ couples, temporaryCode }) {
+export default function Index({ accessRequests, couples, temporaryCode }) {
+    const accessRequestError = usePage().props.errors.access_request;
+
     return (
         <BackOfficeLayout actif="espaces-clients" filAriane="Espaces clients">
             <Head title="Espaces clients" />
@@ -26,11 +29,31 @@ export default function Index({ couples, temporaryCode }) {
                 <header>
                     <h1 className="font-display text-3xl tracking-tight text-ink">Espaces clients</h1>
                     <p className="mt-2 text-body text-sage">
-                        Ouvrez l’espace d’un couple, puis transmettez-lui son code provisoire.
+                        Répondez aux demandes d’accès ou ouvrez vous-même l’espace d’un couple.
                     </p>
                 </header>
 
                 {temporaryCode && <TemporaryCode key={temporaryCode.code} temporaryCode={temporaryCode} />}
+
+                <section aria-labelledby="access-requests-title">
+                    <h2 id="access-requests-title" className="font-display text-xl text-ink">
+                        Demandes d’accès
+                    </h2>
+
+                    <FieldError message={accessRequestError} />
+
+                    {accessRequests.length === 0 ? (
+                        <p className="mt-4 rounded-lg border border-hairline bg-white px-6 py-8 text-center text-body text-sage">
+                            Aucune demande en attente.
+                        </p>
+                    ) : (
+                        <ul className="mt-4 divide-y divide-hairline overflow-hidden rounded-lg border border-hairline bg-white">
+                            {accessRequests.map((accessRequest) => (
+                                <AccessRequestRow key={accessRequest.id} accessRequest={accessRequest} />
+                            ))}
+                        </ul>
+                    )}
+                </section>
 
                 <NewCoupleForm />
 
@@ -83,10 +106,64 @@ function TemporaryCode({ temporaryCode }) {
                 </button>
             </div>
             <p className="mt-4 text-body-sm text-sage">
-                Identifiant : {temporaryCode.email}. Notez ce code et transmettez-le au couple : il ne sera plus
-                affiché. Il devra le remplacer par son propre mot de passe à sa première connexion.
+                Identifiant : {temporaryCode.email}.{' '}
+                {temporaryCode.is_email_sent ? (
+                    'Ce code vient d’être envoyé au couple par e-mail. Il ne sera plus affiché ici.'
+                ) : (
+                    <strong className="font-semibold text-ink">
+                        L’e-mail n’a pas pu partir : notez ce code et transmettez-le vous-même, il ne sera plus affiché.
+                    </strong>
+                )}{' '}
+                Le couple devra le remplacer par son propre mot de passe à sa première connexion.
             </p>
         </section>
+    );
+}
+
+function AccessRequestRow({ accessRequest }) {
+    const accept = () => {
+        if (window.confirm(`Ouvrir l’espace de ${accessRequest.names} et lui envoyer un code par e-mail ?`)) {
+            router.post(route('admin.couples.accept', accessRequest.id));
+        }
+    };
+
+    const refuse = () => {
+        if (window.confirm(`Refuser la demande de ${accessRequest.names} ? Le couple n’en sera pas prévenu automatiquement.`)) {
+            router.post(route('admin.couples.refuse', accessRequest.id));
+        }
+    };
+
+    return (
+        <li className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+            <div className="min-w-0">
+                <p className="text-body text-ink">{accessRequest.names}</p>
+                <p className="break-all text-body-sm text-sage">
+                    {accessRequest.email}
+                    {accessRequest.wedding_date &&
+                        ` · mariage le ${dateFormatter.format(new Date(`${accessRequest.wedding_date}T12:00:00`))}`}
+                </p>
+                <p className="mt-1 text-[11px] text-sage">
+                    Demande du {dateFormatter.format(new Date(accessRequest.requested_at))}
+                </p>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3">
+                <button
+                    type="button"
+                    onClick={refuse}
+                    className={`${anneauFocus} border border-hairline px-3 py-2 text-label text-ink hover:bg-ivory`}
+                >
+                    Refuser
+                </button>
+                <button
+                    type="button"
+                    onClick={accept}
+                    className={`${anneauFocus} bg-ink px-3 py-2 text-label text-white hover:opacity-80`}
+                >
+                    Accepter
+                </button>
+            </div>
+        </li>
     );
 }
 

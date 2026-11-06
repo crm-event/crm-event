@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
+Route::post('/demande-acces', AccessRequestController::class)->name('access-request.store');
 
 Route::middleware(['auth', 'role:couple'])
     ->prefix('espace')
@@ -46,6 +48,8 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::get('/', [AdminCoupleController::class, 'index'])->name('index');
         Route::post('/', [AdminCoupleController::class, 'store'])->name('store');
+        Route::post('/{couple}/accept', [AdminCoupleController::class, 'accept'])->name('accept');
+        Route::post('/{couple}/refuse', [AdminCoupleController::class, 'refuse'])->name('refuse');
         Route::post('/{couple}/temporary-code', [AdminCoupleController::class, 'issueTemporaryCode'])->name('temporary-code');
     });
 

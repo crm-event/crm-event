@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\CoupleFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -98,6 +99,19 @@ class Couple extends Model
     public function messages(): HasManyThrough
     {
         return $this->hasManyThrough(Message::class, Wedding::class)->oldest('messages.created_at')->oldest('messages.id');
+    }
+
+    /**
+     * Only keep the couples whose request for a space is waiting for Jessica's
+     * answer: no account yet, an address to create it with and a new inquiry.
+     *
+     * @param  Builder<Couple>  $query
+     */
+    public function scopeAwaitingAccess(Builder $query): void
+    {
+        $query->whereNull('user_id')
+            ->whereNotNull('email')
+            ->whereHas('latestWedding', fn (Builder $wedding) => $wedding->where('status', 'inquiry'));
     }
 
     /**
