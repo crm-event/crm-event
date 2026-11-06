@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class WeddingFactory extends Factory
 {
     /**
-     * Define the model's default state: a booked wedding of a new couple.
+     * Define the model's default state: a new inquiry, as it exists from the
+     * first contact.
      *
      * @return array<string, mixed>
      */
@@ -21,14 +22,24 @@ class WeddingFactory extends Factory
         return [
             'couple_id' => Couple::factory(),
             'venue_id' => null,
-            'status' => 'booked',
+            'status' => 'inquiry',
             'wedding_date' => fake()->dateTimeBetween('+6 months', '+2 years'),
-            'first_contact_at' => null,
-            'lead_source' => null,
-            'guest_count' => null,
-            'estimated_budget' => null,
+            'first_contact_at' => fake()->dateTimeBetween('-6 months'),
+            'lead_source' => fake()->randomElement(['Site', 'Insta', 'Bouche-à-oreille']),
+            'guest_count' => fake()->numberBetween(30, 200),
+            'estimated_budget' => fake()->randomFloat(2, 5000, 40000),
             'cancellation_reason' => null,
             'notes' => null,
         ];
+    }
+
+    /**
+     * Indicate that the contract has been signed.
+     */
+    public function booked(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'booked',
+        ]);
     }
 }
