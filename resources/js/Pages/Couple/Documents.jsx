@@ -1,7 +1,7 @@
 import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton } from '@/brand';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
@@ -65,13 +65,13 @@ function DocumentCard({ document }) {
                 <div className="flex shrink-0 items-center gap-2">
                     <StatusBadge status={document.status} label={document.status_label} />
                     {document.downloadable ? (
-                        <Link
+                        <a
                             href={document.download_url}
                             className={`${focusRing} inline-flex items-center gap-1 border border-ink/15 px-3 py-2 text-[11px] text-ink transition-colors hover:border-ink`}
                         >
                             <Icone nom="download" className="!text-[14px] leading-none" />
                             Télécharger
-                        </Link>
+                        </a>
                     ) : (
                         <span className="inline-flex cursor-not-allowed items-center gap-1 border border-ink/10 px-3 py-2 text-[11px] text-ink/35">
                             <Icone nom="download" className="!text-[14px] leading-none" />
