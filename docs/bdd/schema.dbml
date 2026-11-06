@@ -24,6 +24,7 @@ Table users {
   email varchar [not null, unique, note: 'identifiant de connexion']
   email_verified_at timestamp
   password varchar [not null]
+  must_change_password boolean [not null, default: false, note: 'true = code provisoire à remplacer à la 1re connexion']
   role user_role [not null, default: 'couple']
   last_login_at timestamp [note: 'null = jamais connecté (en attente de 1re connexion)']
   suspended_at timestamp [note: 'null = compte actif']
