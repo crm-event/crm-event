@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import { focusRing, primaryButton, secondaryButton } from '@/brand';
+import { Head, Link, useForm } from '@inertiajs/react';
+import FieldError from '@/Components/FieldError';
+import { fieldLabel, focusRing, primaryButton, secondaryButton, textField } from '@/brand';
 
 const CONTACT = {
     email: 'ladernieretouche.event@gmail.com',
@@ -139,10 +140,19 @@ const CONTENT = {
             request: 'Demander mon accès',
             login: 'J’ai déjà un identifiant',
             steps: [
-                ['01', 'Vous nous écrivez', 'Un simple message suffit. Nous vérifions que votre dossier est bien ouvert.'],
+                ['01', 'Vous faites votre demande', 'Vos prénoms et votre e-mail suffisent. Nous vérifions que votre dossier est bien ouvert.'],
                 ['02', 'Nous ouvrons votre accès', 'Votre compte est créé par nos soins, une fois votre devis et votre contrat signés.'],
-                ['03', 'Vous choisissez votre mot de passe', 'Vous recevez un identifiant et un code provisoire, à remplacer dès la première connexion.'],
+                ['03', 'Vous choisissez votre mot de passe', 'Vous recevez par e-mail un identifiant et un code provisoire, à remplacer dès la première connexion.'],
             ],
+            form: {
+                title: 'Demander votre accès',
+                firstName: 'Votre prénom',
+                partnerFirstName: 'Le prénom de votre conjoint (facultatif)',
+                email: 'Votre adresse e-mail',
+                weddingDate: 'Date du mariage (facultative)',
+                sending: 'Envoi…',
+                sent: 'Merci, votre demande est bien transmise à Jessica. Si votre accès est ouvert, vous recevrez votre identifiant et votre code provisoire par e-mail.',
+            },
         },
 
         contact: {
@@ -256,10 +266,19 @@ const CONTENT = {
             request: 'Request access',
             login: 'I already have an account',
             steps: [
-                ['01', 'You contact us', 'A simple message is all it takes. We check that your file has been opened.'],
+                ['01', 'You send your request', 'Your first names and email are all it takes. We check that your file has been opened.'],
                 ['02', 'We create your access', 'Your account is created once your quote and contract have been signed.'],
-                ['03', 'You choose your password', 'You receive a username and temporary code, which you replace after your first login.'],
+                ['03', 'You choose your password', 'You receive a username and temporary code by email, which you replace after your first login.'],
             ],
+            form: {
+                title: 'Request your access',
+                firstName: 'Your first name',
+                partnerFirstName: 'Your partner’s first name (optional)',
+                email: 'Your email address',
+                weddingDate: 'Wedding date (optional)',
+                sending: 'Sending…',
+                sent: 'Thank you, your request has been passed on to Jessica. If your access is opened, you will receive your username and temporary code by email.',
+            },
         },
 
         contact: {
@@ -279,14 +298,6 @@ const CONTENT = {
 function createMailLinks(language) {
     const english = language === 'en';
 
-    const accessSubject = english
-        ? 'Request for access to our client area'
-        : 'Demande d’accès à notre espace client';
-
-    const accessBody = english
-        ? ['Hello Jessica,', '', 'We would like to access our client area.', '', 'Our names:', 'Wedding date:', 'Venue:', 'Contact email:', 'Phone number:', '', 'Thank you,'].join('\n')
-        : ['Bonjour Jessica,', '', 'Nous souhaitons accéder à notre espace client.', '', 'Nos prénoms :', 'Date du mariage :', 'Lieu :', 'E-mail de contact :', 'Téléphone :', '', 'Merci beaucoup,'].join('\n');
-
     const projectSubject = english ? 'Our wedding project' : 'Notre projet de mariage';
 
     const projectBody = english
@@ -294,7 +305,6 @@ function createMailLinks(language) {
         : ['Bonjour Jessica,', '', 'Nous souhaitons vous présenter notre projet de mariage.', '', 'Nos prénoms :', 'Date du mariage :', 'Lieu :', 'Nombre d’invités (environ) :', 'Prestations qui nous intéressent (décoration, coordination, officiante) :', 'Comment nous vous avons connue :', 'Téléphone :', '', 'Nous pouvons vous envoyer quelques inspirations.', '', 'Merci beaucoup,'].join('\n');
 
     return {
-        access: `mailto:${CONTACT.email}?subject=${encodeURIComponent(accessSubject)}&body=${encodeURIComponent(accessBody)}`,
         project: `mailto:${CONTACT.email}?subject=${encodeURIComponent(projectSubject)}&body=${encodeURIComponent(projectBody)}`,
     };
 }
@@ -329,7 +339,7 @@ export default function Landing({ auth }) {
                     <Services t={t} />
                     <About t={t} />
                     <ClientArea t={t} />
-                    <Access t={t} mailLink={mailLinks.access} />
+                    <Access t={t} language={language} />
                     <Contact t={t} mailLink={mailLinks.project} />
                 </main>
 
@@ -560,7 +570,88 @@ function ClientArea({ t }) {
     );
 }
 
-function Access({ t, mailLink }) {
+/**
+ * Form to request a client space. Jessica accepts or refuses each request; the
+ * confirmation is the same whatever the address, so that the form does not tell
+ * who already has an account. `website` is a field only robots fill in.
+ */
+function AccessRequestForm({ t, language }) {
+    const { data, setData, post, transform, processing, errors, wasSuccessful } = useForm({
+        partner1_first_name: '',
+        partner2_first_name: '',
+        email: '',
+        wedding_date: '',
+        website: '',
+    });
+
+    const submit = (event) => {
+        event.preventDefault();
+        transform((fields) => ({ ...fields, language }));
+        post(route('access-request.store'), { preserveScroll: true });
+    };
+
+    if (wasSuccessful) {
+        return (
+            <p role="status" className="mt-14 max-w-2xl rounded-2xl border border-ink/10 bg-white p-6 text-base leading-relaxed sm:p-8">
+                {t.access.form.sent}
+            </p>
+        );
+    }
+
+    const fields = [
+        { name: 'partner1_first_name', label: t.access.form.firstName, autoComplete: 'given-name' },
+        { name: 'partner2_first_name', label: t.access.form.partnerFirstName, autoComplete: 'off' },
+        { name: 'email', label: t.access.form.email, type: 'email', autoComplete: 'email' },
+        { name: 'wedding_date', label: t.access.form.weddingDate, type: 'date', autoComplete: 'off' },
+    ];
+
+    return (
+        <form onSubmit={submit} className="mt-14 max-w-2xl rounded-2xl border border-ink/10 bg-white p-6 sm:p-8">
+            <h3 className="font-display text-xl">{t.access.form.title}</h3>
+
+            <div className="mt-8 grid gap-8 sm:grid-cols-2">
+                {fields.map(({ name, label, type = 'text', autoComplete }) => (
+                    <div key={name}>
+                        <label htmlFor={`access-${name}`} className={fieldLabel}>{label}</label>
+                        <input
+                            id={`access-${name}`}
+                            type={type}
+                            value={data[name]}
+                            autoComplete={autoComplete}
+                            aria-invalid={Boolean(errors[name])}
+                            aria-describedby={errors[name] ? `access-${name}-error` : undefined}
+                            onChange={(event) => setData(name, event.target.value)}
+                            className={`${textField} mt-2`}
+                        />
+                        <FieldError id={`access-${name}-error`} message={errors[name]} />
+                    </div>
+                ))}
+            </div>
+
+            <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+                <label htmlFor="access-website">Website</label>
+                <input
+                    id="access-website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={data.website}
+                    onChange={(event) => setData('website', event.target.value)}
+                />
+            </div>
+
+            <button
+                type="submit"
+                disabled={processing}
+                className={`${primaryButton} mt-10 w-full disabled:cursor-wait disabled:opacity-50 sm:w-auto`}
+            >
+                {processing ? t.access.form.sending : t.access.request}
+            </button>
+        </form>
+    );
+}
+
+function Access({ t, language }) {
     return (
         <section id="access" aria-labelledby="access-title" className="scroll-mt-24 border-y border-ink/10">
             <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
@@ -579,8 +670,9 @@ function Access({ t, mailLink }) {
                     ))}
                 </ol>
 
-                <div className="mt-14 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                    <a href={mailLink} className={primaryButton}>{t.access.request}</a>
+                <AccessRequestForm t={t} language={language} />
+
+                <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                     <Link href={route('login')} className={secondaryButton}>{t.access.login}</Link>
                 </div>
             </div>
