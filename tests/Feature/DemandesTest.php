@@ -8,14 +8,21 @@ use Tests\TestCase;
 
 class DemandesTest extends TestCase
 {
-    public function test_an_authenticated_user_can_view_the_demandes_page(): void
+    public function test_the_admin_can_view_the_demandes_page(): void
     {
-        $user = User::factory()->make();
+        $admin = User::factory()->admin()->make();
 
-        $this->actingAs($user)
+        $this->actingAs($admin)
             ->get(route('demandes'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Demandes'));
+    }
+
+    public function test_a_couple_cannot_view_the_demandes_page(): void
+    {
+        $this->actingAs(User::factory()->make())
+            ->get(route('demandes'))
+            ->assertForbidden();
     }
 
     public function test_a_guest_is_redirected_to_login(): void
