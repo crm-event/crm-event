@@ -92,16 +92,17 @@ const ETAPES = [
 
 export default function Landing({ auth }) {
     const connecte = Boolean(auth?.user);
+    const urlEspace = auth?.homeUrl ?? route('login');
 
     return (
         <>
             <Head title="Espace client" />
 
             <div className="flex min-h-screen flex-col bg-ivory font-sans text-ink">
-                <EnTete connecte={connecte} />
+                <EnTete connecte={connecte} urlEspace={urlEspace} />
 
                 <main id="contenu" className="flex-1">
-                    <Hero connecte={connecte} />
+                    <Hero connecte={connecte} urlEspace={urlEspace} />
                     <Rubriques />
                     <Acces />
                     <Contact />
@@ -117,7 +118,7 @@ export default function Landing({ auth }) {
 /* Blocs de la page                                                           */
 /* -------------------------------------------------------------------------- */
 
-function EnTete({ connecte }) {
+function EnTete({ connecte, urlEspace }) {
     return (
         <header className="relative border-b border-ink/10">
             <a
@@ -138,7 +139,7 @@ function EnTete({ connecte }) {
                 </Link>
 
                 <Link
-                    href={connecte ? route('dashboard') : route('login')}
+                    href={urlEspace}
                     className={`${anneauFocus} shrink-0 border border-ink/20 px-5 py-3 text-[11px] uppercase tracking-[0.18em] transition-colors hover:border-ink hover:bg-ink hover:text-ivory`}
                 >
                     {connecte ? 'Mon espace' : 'Se connecter'}
@@ -148,7 +149,7 @@ function EnTete({ connecte }) {
     );
 }
 
-function Hero({ connecte }) {
+function Hero({ connecte, urlEspace }) {
     return (
         <section className="mx-auto max-w-3xl px-6 py-20 text-center sm:px-10 sm:py-28">
             <img
@@ -176,7 +177,7 @@ function Hero({ connecte }) {
 
             <div className="mt-12 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
                 <Link
-                    href={connecte ? route('dashboard') : route('login')}
+                    href={urlEspace}
                     className={boutonPrincipal}
                 >
                     {connecte ? 'Accéder à mon espace' : 'Se connecter'}
