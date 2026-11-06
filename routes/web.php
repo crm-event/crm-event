@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
+use App\Http\Controllers\Admin\RentabiliteController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DocumentController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
@@ -69,6 +70,14 @@ Route::get('/wedding', function () {
 Route::get('/demandes', function () {
     return Inertia::render('Demandes');
 })->middleware(['auth', 'verified'])->name('demandes');
+
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('rentabilite')
+    ->name('rentabilite.')
+    ->group(function () {
+        Route::get('/', [RentabiliteController::class, 'index'])->name('index');
+        Route::get('/rapport', [RentabiliteController::class, 'report'])->name('rapport');
+    });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
