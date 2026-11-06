@@ -59,6 +59,16 @@ class Wedding extends Model
     }
 
     /**
+     * The venue of the wedding, null while it is not known yet.
+     *
+     * @return BelongsTo<Venue, $this>
+     */
+    public function venue(): BelongsTo
+    {
+        return $this->belongsTo(Venue::class);
+    }
+
+    /**
      * The documents shared in the couple space for this wedding.
      *
      * @return HasMany<Document, $this>
