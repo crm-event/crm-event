@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\RentabiliteController;
+use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DesignController;
 use App\Http\Controllers\Couple\DocumentController;
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'role:couple'])
         Route::get('/', CoupleHomeController::class)->name('home');
         Route::get('/mariage', CoupleWeddingController::class)->name('wedding.show');
         Route::get('/design', [DesignController::class, 'index'])->name('design.index');
+        Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');
         Route::post('/communaute', [CommunityController::class, 'store'])->name('community.store');

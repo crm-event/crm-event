@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AppointmentMode;
 use App\Enums\AppointmentType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -16,6 +17,8 @@ class Appointment extends Model
      *
      * @return array<string, string>
      */
+    use HasFactory;
+
     protected function casts(): array
     {
         return [
