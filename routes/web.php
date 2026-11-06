@@ -15,11 +15,11 @@ Route::middleware(['auth', 'role:couple'])
         Route::get('/', CoupleHomeController::class)->name('home');
     });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/facturation', function () {
         return Inertia::render('Facturation');
     })->name('facturation.index');

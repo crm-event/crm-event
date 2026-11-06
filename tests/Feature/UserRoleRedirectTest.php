@@ -8,6 +8,13 @@ use Tests\TestCase;
 
 class UserRoleRedirectTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutVite();
+    }
+
     public function test_a_new_user_is_a_couple_by_default(): void
     {
         $user = new User;
@@ -35,5 +42,23 @@ class UserRoleRedirectTest extends TestCase
         $response = $this->actingAs(User::factory()->admin()->make())->get(route('login'));
 
         $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_a_couple_cannot_open_back_office_pages(): void
+    {
+        $this->actingAs(User::factory()->make());
+
+        foreach (['dashboard', 'facturation.index', 'depenses.index', 'mariages.prestations'] as $routeName) {
+            $this->get(route($routeName))->assertForbidden();
+        }
+    }
+
+    public function test_the_admin_can_open_back_office_pages(): void
+    {
+        $this->actingAs(User::factory()->admin()->make());
+
+        foreach (['dashboard', 'facturation.index', 'depenses.index', 'mariages.prestations'] as $routeName) {
+            $this->get(route($routeName))->assertOk();
+        }
     }
 }
