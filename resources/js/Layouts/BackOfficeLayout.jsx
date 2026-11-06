@@ -21,7 +21,7 @@ const NAVIGATION = [
     { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long' },
     { cle: 'depenses', libelle: 'Dépenses', icone: 'payments' },
     { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
-    { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up' },
+    { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up', route: 'rentabilite.index' },
     { cle: 'parametres', libelle: 'Paramètres', icone: 'settings', route: 'profile.edit' },
 ];
 
