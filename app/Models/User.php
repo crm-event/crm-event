@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -50,6 +51,23 @@ class User extends Authenticatable
     public function hasRole(UserRole ...$roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * Give the account a new temporary password, to be replaced at the next
+     * login, and return it: this is the only time it can be read.
+     */
+    public function assignTemporaryPassword(): string
+    {
+        $temporaryPassword = Str::password(12, symbols: false);
+
+        // must_change_password is not mass assignable: a request must never set it.
+        $this->forceFill([
+            'password' => $temporaryPassword,
+            'must_change_password' => true,
+        ])->save();
+
+        return $temporaryPassword;
     }
 
     /**
