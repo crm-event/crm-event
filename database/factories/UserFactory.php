@@ -34,6 +34,9 @@ class UserFactory extends Factory
         ];
     }
 
+    /**
+     * Indicate that the user is the administrator (Jessica).
+     */
     public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -42,12 +45,13 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the user is the administrator (Jessica).
+     * Indicate that the user still has a temporary password and must choose
+     * their own at the next login.
      */
-    public function admin(): static
+    public function mustChangePassword(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Admin,
+            'must_change_password' => true,
         ]);
     }
 
