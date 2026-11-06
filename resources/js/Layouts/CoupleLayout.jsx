@@ -23,7 +23,7 @@ const NAVIGATION_GROUPS = [
         label: 'Votre mariage',
         entries: [
             { key: 'home', label: 'Accueil', icon: 'home', route: 'couple.home' },
-            { key: 'wedding', label: 'Notre mariage', icon: 'favorite' },
+            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.wedding.show' },
             { key: 'design', label: 'Design', icon: 'palette', route: 'couple.design.index' },
             {
                 key: 'documents',

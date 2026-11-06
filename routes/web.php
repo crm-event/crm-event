@@ -6,6 +6,7 @@ use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DocumentController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
+use App\Http\Controllers\Couple\WeddingController as CoupleWeddingController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,7 @@ Route::middleware(['auth', 'role:couple'])
     ->name('couple.')
     ->group(function () {
         Route::get('/', CoupleHomeController::class)->name('home');
+        Route::get('/mariage', CoupleWeddingController::class)->name('wedding.show');
         Route::get('/design', function () {
             return Inertia::render('Couple/Design', [
                 'project' => [
