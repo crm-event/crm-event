@@ -24,6 +24,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         return Inertia::render('Facturation');
     })->name('facturation.index');
 
+Route::get('/wedding', function () {
+    return Inertia::render('Wedding');
+})->middleware(['auth', 'verified'])->name('wedding');
+    
     Route::get('/mariages/prestations-devis', function () {
         return Inertia::render('Mariage/PrestationsDevis');
     })->name('mariages.prestations');
