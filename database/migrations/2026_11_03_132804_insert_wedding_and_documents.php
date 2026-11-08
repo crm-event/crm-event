@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! DB::table('couples')->where('id', 1)->exists()) {
+            return;
+        }
+
         // Création du mariage
         $weddingId = DB::table('weddings')->insertGetId([
             'couple_id' => 1,

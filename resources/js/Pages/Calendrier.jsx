@@ -7,25 +7,11 @@ import MetriquesMois from '@/Pages/Calendrier/Partials/MetriquesMois';
 import TiroirFiche from '@/Pages/Calendrier/Partials/TiroirFiche';
 import VueChronologique from '@/Pages/Calendrier/Partials/VueChronologique';
 import VueSemaine from '@/Pages/Calendrier/Partials/VueSemaine';
-import { ANNEE, AUJOURD_HUI, FICHES, MOIS } from '@/Pages/Calendrier/donnees';
-import {
-    CLE_MODIFICATIONS,
-    CLE_STOCKAGE,
-    CLE_SUPPRESSIONS,
-    composerEvenements,
-    lireEvenementsCalendrier,
-    lireJalonsEnregistres,
-    lireModifications,
-    lireSuppressions,
-} from '@/Pages/Calendrier/stockage';
-import { Head } from '@inertiajs/react';
+import { lireJalonsEnregistres } from '@/Pages/Calendrier/stockage';
+import { Head, router } from '@inertiajs/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 function construireFiche(evenement) {
-    if (!evenement.modifie && FICHES[evenement.detail]) {
-        return FICHES[evenement.detail];
-    }
-
     const date = new Date(`${evenement.date}T12:00:00`).toLocaleDateString('fr-FR', {
         weekday: 'long',
         day: 'numeric',
@@ -35,7 +21,7 @@ function construireFiche(evenement) {
     const titre = evenement.titre ?? evenement.couple ?? evenement.libelle ?? evenement.categorie;
 
     return {
-        badge: evenement.type === 'jour-j' ? 'Mariage confirmé' : evenement.type === 'rdv' ? 'Rendez-vous' : 'Événement du calendrier',
+        badge: evenement.type === 'jour-j' ? 'Mariage confirmé' : evenement.type === 'rdv' ? 'Rendez-vous' : evenement.statut === 'en-attente' ? 'Date souhaitée' : 'Événement du calendrier',
         titre,
         sousTitre: date,
         lieu: evenement.lieu ?? 'Lieu à préciser',
@@ -72,10 +58,21 @@ function lireDateNavigation() {
     return !Number.isNaN(date.getTime()) && formaterDate(date) === valeur ? date : null;
 }
 
-export default function Calendrier() {
+function donneesEvenement(evenement, type) {
+    return {
+        type,
+        title: evenement.titre,
+        event_date: evenement.date,
+        event_time: evenement.heure || null,
+        location: evenement.lieu || null,
+        notes: evenement.notes || null,
+    };
+}
+
+export default function Calendrier({ evenementsTous, importedIds }) {
     const positionDefilement = useRef(null);
     const [dateActive, setDateActive] = useState(
-        () => lireDateNavigation() ?? new Date(ANNEE, MOIS - 1, AUJOURD_HUI),
+        () => lireDateNavigation() ?? new Date(),
     );
     const [vue, setVue] = useState('Mois');
     const [evenementSelectionne, setEvenementSelectionne] = useState(() => {
@@ -84,21 +81,16 @@ export default function Calendrier() {
         }
 
         const id = new URLSearchParams(window.location.search).get('event');
-        return id ? lireEvenementsCalendrier().find((evenement) => evenement.id === id) ?? null : null;
+        return id ? evenementsTous.find((evenement) => evenement.id === id) ?? null : null;
     });
     const [formulaireOuvert, setFormulaireOuvert] = useState(false);
     const [dateAjout, setDateAjout] = useState(null);
     const [typeAjout, setTypeAjout] = useState('jalon');
     const [evenementEnEdition, setEvenementEnEdition] = useState(null);
-    const [jalonsEnregistres, setJalonsEnregistres] = useState(() =>
-        typeof window === 'undefined' ? [] : lireJalonsEnregistres(),
-    );
-    const [modifications, setModifications] = useState(() =>
-        typeof window === 'undefined' ? {} : lireModifications(),
-    );
-    const [suppressions, setSuppressions] = useState(() =>
-        typeof window === 'undefined' ? [] : lireSuppressions(),
-    );
+    const [jalonsLocaux] = useState(lireJalonsEnregistres);
+    const [enCours, setEnCours] = useState(false);
+    const [erreur, setErreur] = useState(null);
+    const aImporter = jalonsLocaux.filter((jalon) => !importedIds.includes(jalon.id));
 
     useEffect(() => {
         const gouttiereInitiale = document.documentElement.style.scrollbarGutter;
@@ -122,35 +114,7 @@ export default function Calendrier() {
 
     const annee = dateActive.getFullYear();
     const mois = dateActive.getMonth() + 1;
-    const evenementsTous = useMemo(
-        () => composerEvenements(jalonsEnregistres, modifications, suppressions),
-        [jalonsEnregistres, modifications, suppressions],
-    );
-
-    useEffect(() => {
-        try {
-            window.localStorage.setItem(CLE_STOCKAGE, JSON.stringify(jalonsEnregistres));
-        } catch {
-            // Le jalon reste visible jusqu'au prochain rechargement si le stockage est indisponible.
-        }
-    }, [jalonsEnregistres]);
-
-    useEffect(() => {
-        try {
-            window.localStorage.setItem(CLE_MODIFICATIONS, JSON.stringify(modifications));
-        } catch {
-            // Les modifications restent visibles jusqu'au prochain rechargement si le stockage est indisponible.
-        }
-    }, [modifications]);
-
-    useEffect(() => {
-        try {
-            window.localStorage.setItem(CLE_SUPPRESSIONS, JSON.stringify(suppressions));
-        } catch {
-            // Les suppressions restent visibles jusqu'au prochain rechargement si le stockage est indisponible.
-        }
-    }, [suppressions]);
-
+    const annees = [...new Set([annee, annee + 1, ...evenementsTous.map((evenement) => Number(evenement.date.slice(0, 4)))])].sort((a, b) => a - b);
     const evenements = useMemo(
         () =>
             evenementsTous
@@ -218,6 +182,7 @@ export default function Calendrier() {
         setEvenementEnEdition(null);
         setTypeAjout('jalon');
         setDateAjout(date);
+        setErreur(null);
         setFormulaireOuvert(true);
     }, []);
 
@@ -225,57 +190,61 @@ export default function Calendrier() {
         setEvenementEnEdition(null);
         setTypeAjout('jour-j');
         setDateAjout(null);
+        setErreur(null);
         setFormulaireOuvert(true);
     }, []);
 
     const ouvrirEdition = useCallback(() => {
         setEvenementEnEdition(evenementSelectionne);
         setEvenementSelectionne(null);
+        setErreur(null);
         setFormulaireOuvert(true);
     }, [evenementSelectionne]);
 
-    const supprimerEvenement = useCallback(() => {
-        if (!evenementSelectionne) {
+    const optionsEnregistrement = (onSuccess) => {
+        setEnCours(true);
+        setErreur(null);
+        return {
+            preserveScroll: true,
+            onSuccess,
+            onError: (errors) => setErreur(Object.values(errors)[0]),
+            onFinish: () => setEnCours(false),
+        };
+    };
+
+    const supprimerEvenement = () => {
+        if (!evenementSelectionne?.editableId || enCours) {
             return;
         }
+        router.delete(
+            route('calendrier.events.destroy', evenementSelectionne.editableId),
+            optionsEnregistrement(() => setEvenementSelectionne(null)),
+        );
+    };
 
-        const { id, custom } = evenementSelectionne;
-        if (custom) {
-            setJalonsEnregistres((actuels) => actuels.filter((jalon) => jalon.id !== id));
-        } else {
-            setSuppressions((actuelles) => actuelles.includes(id) ? actuelles : [...actuelles, id]);
-            setModifications((actuelles) => {
-                const prochaines = { ...actuelles };
-                delete prochaines[id];
-                return prochaines;
-            });
+    const enregistrerJalon = (donnees) => {
+        if (enCours) {
+            return;
         }
-        setEvenementSelectionne(null);
-    }, [evenementSelectionne]);
-
-    const enregistrerJalon = useCallback((donnees) => {
-        if (evenementEnEdition) {
-            if (evenementEnEdition.custom) {
-                setJalonsEnregistres((actuels) => actuels.map((jalon) => jalon.id === evenementEnEdition.id
-                    ? { ...jalon, ...donnees }
-                    : jalon));
-            } else {
-                setModifications((actuelles) => ({
-                    ...actuelles,
-                    [evenementEnEdition.id]: donnees,
-                }));
-            }
+        const payload = donneesEvenement(donnees, evenementEnEdition?.type ?? typeAjout);
+        const options = optionsEnregistrement(() => {
             setEvenementEnEdition(null);
             setFormulaireOuvert(false);
-            return;
+        });
+        if (evenementEnEdition) {
+            router.patch(route('calendrier.events.update', evenementEnEdition.editableId), payload, options);
+        } else {
+            router.post(route('calendrier.events.store'), payload, options);
         }
-        const id = `${typeAjout}-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
-        setJalonsEnregistres((actuels) => [
-            ...actuels,
-            { ...donnees, id, detail: id, type: typeAjout, custom: true },
-        ]);
-        setFormulaireOuvert(false);
-    }, [evenementEnEdition, typeAjout]);
+    };
+
+    const importerJalons = () => {
+        const events = aImporter.slice(0, 500).map((jalon) => ({
+            ...donneesEvenement(jalon, jalon.type ?? 'jalon'),
+            legacy_id: jalon.id,
+        }));
+        router.post(route('calendrier.import'), { events }, optionsEnregistrement());
+    };
 
     const dateParDefaut = dateAjout ?? formaterDate(dateActive);
     const fiche = evenementSelectionne ? construireFiche(evenementSelectionne) : null;
@@ -288,6 +257,12 @@ export default function Calendrier() {
                 <EnteteCalendrier
                     annee={annee}
                 />
+                {erreur && !formulaireOuvert && <p role="alert" className="mb-4 text-body text-warning">{erreur}</p>}
+                {aImporter.length > 0 && (
+                    <button type="button" disabled={enCours} onClick={importerJalons} className="mb-4 rounded-lg border border-hairline bg-white px-4 py-2 text-label disabled:opacity-50">
+                        Importer les événements de ce navigateur ({aImporter.length})
+                    </button>
+                )}
                 <MetriquesMois
                     evenements={evenements}
                     annee={annee}
@@ -295,6 +270,7 @@ export default function Calendrier() {
                     jourRepere={dateActive.getDate()}
                 />
                 <CommandesCalendrier
+                    annees={annees}
                     annee={annee}
                     mois={mois}
                     vue={vue}
@@ -335,8 +311,10 @@ export default function Calendrier() {
                 fiche={fiche}
                 ouvert={Boolean(evenementSelectionne)}
                 onFermer={() => setEvenementSelectionne(null)}
-                onModifier={ouvrirEdition}
-                onSupprimer={supprimerEvenement}
+                onModifier={evenementSelectionne?.editableId ? ouvrirEdition : undefined}
+                onSupprimer={evenementSelectionne?.editableId ? supprimerEvenement : undefined}
+                enCours={enCours}
+                erreur={erreur}
             />
             <FormulaireJalon
                 ouvert={formulaireOuvert}
@@ -345,6 +323,8 @@ export default function Calendrier() {
                 typeAjout={typeAjout}
                 onFermer={() => setFormulaireOuvert(false)}
                 onEnregistrer={enregistrerJalon}
+                enCours={enCours}
+                erreur={erreur}
             />
         </BackOfficeLayout>
     );

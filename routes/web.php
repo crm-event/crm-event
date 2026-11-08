@@ -1,9 +1,13 @@
 <?php
 
+use App\Enums\UserRole;
+use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
+use App\Support\CalendarSchedule;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,13 +24,19 @@ Route::middleware(['auth', 'role:couple'])
         Route::delete('/communaute/{communityPost}', [CommunityController::class, 'destroy'])->name('community.destroy');
     });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+Route::get('/dashboard', function (Request $request, CalendarSchedule $calendar) {
+    return Inertia::render('Dashboard', [
+        'evenementsTous' => $request->user()->hasRole(UserRole::Admin) ? $calendar->events() : [],
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/calendrier', function () {
-    return Inertia::render('Calendrier');
-})->middleware(['auth', 'verified'])->name('calendrier');
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::get('/calendrier', [CalendarController::class, 'index'])->name('calendrier');
+    Route::post('/calendrier/evenements', [CalendarController::class, 'store'])->name('calendrier.events.store');
+    Route::post('/calendrier/import', [CalendarController::class, 'import'])->name('calendrier.import');
+    Route::patch('/calendrier/evenements/{calendarEvent}', [CalendarController::class, 'update'])->name('calendrier.events.update');
+    Route::delete('/calendrier/evenements/{calendarEvent}', [CalendarController::class, 'destroy'])->name('calendrier.events.destroy');
+});
 
 Route::get('/wedding', function () {
     return Inertia::render('Wedding');

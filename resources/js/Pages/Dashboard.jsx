@@ -14,7 +14,7 @@ import { Head, usePage } from '@inertiajs/react';
  * Les indicateurs, événements et montants affichés sont ceux de la maquette :
  * ils seront remplacés par les données de la base au fil des prochaines pages.
  */
-export default function Dashboard() {
+export default function Dashboard({ evenementsTous }) {
     const prenom = usePage().props.auth.user.name.split(' ')[0];
 
     return (
@@ -61,7 +61,7 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                     <div className="flex flex-col gap-6 lg:col-span-8">
-                        <CalendrierMensuel />
+                        <CalendrierMensuel evenementsTous={evenementsTous} />
                         <GraphiqueChiffreAffaires />
                     </div>
 
