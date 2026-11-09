@@ -3,6 +3,8 @@ import PasswordField from '@/Components/PasswordField';
 import AuthLayout, { StatusMessage } from '@/Layouts/AuthLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { fieldLabel, primaryButton, textField, textLink } from '@/brand';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import { translate } from '@/i18n';
 
 /**
  * Login page, following the project's brand guidelines.
@@ -16,6 +18,9 @@ import { fieldLabel, primaryButton, textField, textLink } from '@/brand';
  * only the presentation changes.
  */
 export default function Login({ status, canResetPassword }) {
+    const { language } = useLanguage();
+    const t = (key) => translate(language, key);
+
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -32,9 +37,9 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <AuthLayout
-            caption="Connexion"
-            title="Heureux de vous revoir."
-            intro="Connectez-vous avec l’adresse e-mail et le mot de passe de votre compte."
+            caption={t('login')}
+            title={t('loginTitle')}
+            intro={t('loginIntro')}
         >
             <Head title="Connexion" />
 
@@ -43,7 +48,7 @@ export default function Login({ status, canResetPassword }) {
             <form onSubmit={submit} className="mt-10">
                 <div>
                     <label htmlFor="email" className={fieldLabel}>
-                        Adresse e-mail
+                        {language === 'en' ? 'Email address' : 'Adresse e-mail'}
                     </label>
                     <input
                         id="email"
@@ -64,7 +69,7 @@ export default function Login({ status, canResetPassword }) {
                 <div className="mt-8">
                     <PasswordField
                         id="password"
-                        label="Mot de passe"
+                        label={t('password')}
                         value={data.password}
                         error={errors.password}
                         autoComplete="current-password"
@@ -81,12 +86,12 @@ export default function Login({ status, canResetPassword }) {
                             className="size-4 rounded-none border-ink/30 text-ink focus:ring-sage"
                             onChange={(e) => setData('remember', e.target.checked)}
                         />
-                        <span className="text-ink/70">Rester connecté</span>
+                        <span className="text-ink/70">{t('connected')}</span>
                     </label>
 
                     {canResetPassword && (
                         <Link href={route('password.request')} className={`${textLink} text-ink/70`}>
-                            Mot de passe oublié ?
+                            {t('forgotPassword')}
                         </Link>
                     )}
                 </div>
@@ -96,17 +101,22 @@ export default function Login({ status, canResetPassword }) {
                     className={`${primaryButton} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
                     disabled={processing}
                 >
-                    {processing ? 'Connexion…' : 'Se connecter'}
+                    {processing
+                        ? language === 'en'
+                            ? 'Signing in…'
+                            : 'Connexion…'
+                        : t('loginButton')}
                 </button>
             </form>
 
             <div className="mt-14 border-t border-ink/10 pt-8">
-                <p className="font-display text-lg leading-snug">Pas encore d’accès ?</p>
+                <p className="font-display text-lg leading-snug">{t('noAccess')}</p>
                 <p className="mt-3 text-sm leading-relaxed text-ink/70">
-                    Il n’y a pas d’inscription libre : chaque espace est ouvert par
-                    Jessica, pour un couple et un mariage.{' '}
+                    {language === 'en'
+                        ? 'There is no public registration: Jessica opens each space for a couple and a wedding.'
+                        : 'Il n’y a pas d’inscription libre : chaque espace est ouvert par Jessica, pour un couple et un mariage.'}{' '}
                     <a href={`${route('home')}#access`} className={`${textLink} text-ink`}>
-                        Demander le vôtre
+                        {t('requestAccess')}
                     </a>
                 </p>
             </div>

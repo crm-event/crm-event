@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import FieldError from '@/Components/FieldError';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { fieldLabel, focusRing, primaryButton, secondaryButton, textField } from '@/brand';
 
 const CONTACT = {
@@ -310,28 +312,18 @@ function createMailLinks(language) {
 }
 
 export default function Landing({ auth }) {
-    const [language, setLanguage] = useState(() => {
-        if (typeof window === 'undefined') return 'fr';
-
-        return window.localStorage.getItem('ldt-language') ?? 'fr';
-    });
+    const { language } = useLanguage();
 
     const homeUrl = auth?.homeUrl ?? null;
     const t = CONTENT[language];
     const mailLinks = createMailLinks(language);
-
-    function changeLanguage(nextLanguage) {
-        setLanguage(nextLanguage);
-        window.localStorage.setItem('ldt-language', nextLanguage);
-        document.documentElement.lang = CONTENT[nextLanguage].htmlLang;
-    }
 
     return (
         <>
             <Head title="La Dernière Touche · Wedding design & coordination en Provence" />
 
             <div className="flex min-h-screen flex-col bg-ivory font-sans text-ink">
-                <Header homeUrl={homeUrl} language={language} onLanguageChange={changeLanguage} t={t} />
+                <Header homeUrl={homeUrl} t={t} />
 
                 <main id="content" className="flex-1">
                     <Hero homeUrl={homeUrl} t={t} />
@@ -378,7 +370,7 @@ function SectionIntro({ eyebrow, title, text }) {
     );
 }
 
-function Header({ homeUrl, language, onLanguageChange, t }) {
+function Header({ homeUrl, t }) {
     return (
         <header className="sticky top-0 z-40 border-b border-ink/10 bg-ivory/95 backdrop-blur">
             <a
@@ -408,14 +400,7 @@ function Header({ homeUrl, language, onLanguageChange, t }) {
                 </nav>
 
                 <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => onLanguageChange(language === 'fr' ? 'en' : 'fr')}
-                        className={`${focusRing} border border-ink/20 px-4 py-3.5 text-[10px] uppercase tracking-[0.18em] transition hover:border-ink hover:bg-ink hover:text-ivory`}
-                        aria-label={`Switch language to ${t.switchLanguage}`}
-                    >
-                        {language === 'fr' ? 'EN' : 'FR'}
-                    </button>
+                    <LanguageSwitcher />
 
                     <Link
                         href={homeUrl ?? route('login')}

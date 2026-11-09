@@ -1,6 +1,8 @@
 import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
 import { primaryButton } from '@/brand';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import { translate } from '@/i18n';
 import { useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -29,6 +31,8 @@ export default function MessageThread({
     updateUrl,
     deleteUrl,
 }) {
+    const language = useLanguage().language;
+    const t = (key) => translate(language, key);
     const endOfThread = useRef(null);
     const [editingMessageId, setEditingMessageId] = useState(null);
     const editForm = useForm({ body: '' });
@@ -55,7 +59,7 @@ export default function MessageThread({
                         className={`flex max-w-[85%] flex-col ${message.is_own ? 'self-end items-end' : 'self-start items-start'}`}
                     >
                         <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-sage">
-                            {message.is_own ? 'Vous' : otherPartyName}
+                            {message.is_own ? (language === 'en' ? 'You' : 'Vous') : otherPartyName}
                         </p>
                         {editingMessageId === message.id ? (
                             <div className="w-full min-w-64">
@@ -65,7 +69,7 @@ export default function MessageThread({
                                     maxLength={maxBodyLength}
                                     onChange={(event) => editForm.setData('body', event.target.value)}
                                     className="block w-full border border-ink/20 bg-ivory px-3 py-2 text-sm text-ink focus:border-ink focus:ring-0"
-                                    aria-label="Modifier le message"
+                                    aria-label={language === 'en' ? 'Edit message' : 'Modifier le message'}
                                 />
                                 <FieldError message={editForm.errors.body} />
                                 <div className="mt-2 flex justify-end gap-2">
@@ -74,7 +78,7 @@ export default function MessageThread({
                                         onClick={() => setEditingMessageId(null)}
                                         className="text-xs text-sage underline"
                                     >
-                                        Annuler
+                                        {t('cancel')}
                                     </button>
                                     <button
                                         type="button"
@@ -87,7 +91,9 @@ export default function MessageThread({
                                         disabled={editForm.processing || !editForm.data.body.trim()}
                                         className={`${primaryButton} px-3 py-2 text-xs disabled:opacity-50`}
                                     >
-                                        {editForm.processing ? 'Enregistrement…' : 'Enregistrer'}
+                                        {editForm.processing
+                                            ? language === 'en' ? 'Saving…' : 'Enregistrement…'
+                                            : language === 'en' ? 'Save' : 'Enregistrer'}
                                     </button>
                                 </div>
                             </div>
@@ -116,7 +122,7 @@ export default function MessageThread({
                             <time dateTime={message.sent_at}>
                                 {dateFormatter.format(new Date(message.sent_at))}
                             </time>
-                            {message.is_own && message.read_at && ' · Lu'}
+                            {message.is_own && message.read_at && ` · ${language === 'en' ? 'Read' : 'Lu'}`}
                         </p>
                         {message.is_own && editingMessageId !== message.id && (
                             <div className="mt-1 flex gap-3 text-xs text-sage">
@@ -129,8 +135,8 @@ export default function MessageThread({
                                             setEditingMessageId(message.id);
                                         }}
                                         className="inline-flex items-center gap-1 underline hover:text-ink"
-                                        aria-label="Modifier le message"
-                                        title="Modifier le message"
+                                        aria-label={language === 'en' ? 'Edit message' : 'Modifier le message'}
+                                        title={language === 'en' ? 'Edit message' : 'Modifier le message'}
                                     >
                                         <Icone nom="edit" className="!text-[11px] leading-none" />
                                     </button>
@@ -138,7 +144,7 @@ export default function MessageThread({
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        if (window.confirm('Supprimer ce message ?')) {
+                                        if (window.confirm(language === 'en' ? 'Delete this message?' : 'Supprimer ce message ?')) {
                                             editForm.delete(deleteUrl(message.id), {
                                                 preserveScroll: true,
                                             });
@@ -159,7 +165,7 @@ export default function MessageThread({
 
             <div className="border-t border-ink/10 px-5 py-5 sm:px-8">
                 {canWrite ? (
-                    <Composer postUrl={postUrl} maxBodyLength={maxBodyLength} />
+                    <Composer postUrl={postUrl} maxBodyLength={maxBodyLength} language={language} />
                 ) : (
                     <p className="text-sm leading-relaxed text-ink/60">{cannotWriteText}</p>
                 )}
@@ -270,7 +276,7 @@ function formatAudioTime(seconds) {
     return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 }
 
-function Composer({ postUrl, maxBodyLength }) {
+function Composer({ postUrl, maxBodyLength, language }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         body: '',
         voice_note: null,
@@ -382,14 +388,14 @@ function Composer({ postUrl, maxBodyLength }) {
     return (
         <form onSubmit={submit}>
             <label htmlFor="message-body" className="sr-only">
-                Votre message
+                {language === 'en' ? 'Your message' : 'Votre message'}
             </label>
             <textarea
                 id="message-body"
                 value={data.body}
                 rows={3}
                 maxLength={maxBodyLength}
-                placeholder="Écrivez votre message…"
+                placeholder={language === 'en' ? 'Write your message…' : 'Écrivez votre message…'}
                 aria-invalid={Boolean(errors.body)}
                 aria-describedby={errors.body ? 'message-body-error' : 'message-body-hint'}
                 onChange={(e) => setData('body', e.target.value)}
@@ -400,7 +406,7 @@ function Composer({ postUrl, maxBodyLength }) {
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <span id="message-body-hint" className="text-xs text-ink/40">
-                    Ctrl + Entrée pour envoyer
+                    {language === 'en' ? 'Ctrl + Enter to send' : 'Ctrl + Entrée pour envoyer'}
                 </span>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                     {!isRecording && !data.voice_note && (
@@ -411,14 +417,14 @@ function Composer({ postUrl, maxBodyLength }) {
                             className="inline-flex items-center gap-2 border border-ink/20 px-3 py-2 text-sm text-ink transition-colors hover:border-ink disabled:opacity-50"
                         >
                             <Icone nom="mic" className="!text-[14px] leading-none" />
-                            Enregistrer
+                            {language === 'en' ? 'Record' : 'Enregistrer'}
                         </button>
                     )}
                     {isRecording && (
                         <div className="flex items-center gap-3 border border-ink bg-blush px-3 py-2 text-sm text-ink">
                             <span className="flex items-center gap-2" role="status" aria-live="polite">
                                 <span className="h-2 w-2 animate-pulse rounded-full bg-ink" />
-                                Enregistrement en cours
+                                {language === 'en' ? 'Recording' : 'Enregistrement en cours'}
                                 <span className="font-mono text-xs">
                                     {String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:
                                     {String(recordingSeconds % 60).padStart(2, '0')}
@@ -428,11 +434,11 @@ function Composer({ postUrl, maxBodyLength }) {
                                 type="button"
                                 onClick={stopRecording}
                                 className="inline-flex items-center gap-1 underline underline-offset-2"
-                                aria-label="Arrêter l’enregistrement"
-                                title="Arrêter l’enregistrement"
+                                aria-label={language === 'en' ? 'Stop recording' : 'Arrêter l’enregistrement'}
+                                title={language === 'en' ? 'Stop recording' : 'Arrêter l’enregistrement'}
                             >
                                 <Icone nom="stop" className="!text-[14px] leading-none" />
-                                Arrêter
+                                {language === 'en' ? 'Stop' : 'Arrêter'}
                             </button>
                         </div>
                     )}
@@ -442,7 +448,7 @@ function Composer({ postUrl, maxBodyLength }) {
                             onClick={removeRecording}
                             className="text-sm text-sage underline"
                         >
-                            Supprimer le vocal
+                            {language === 'en' ? 'Delete voice note' : 'Supprimer le vocal'}
                         </button>
                     )}
                     <button
@@ -450,7 +456,9 @@ function Composer({ postUrl, maxBodyLength }) {
                         disabled={processing || isRecording || (!data.body.trim() && !data.voice_note)}
                         className={`${primaryButton} disabled:cursor-wait disabled:opacity-50`}
                     >
-                        {processing ? 'Envoi…' : 'Envoyer'}
+                        {processing
+                            ? language === 'en' ? 'Sending…' : 'Envoi…'
+                            : language === 'en' ? 'Send' : 'Envoyer'}
                     </button>
                 </div>
             </div>

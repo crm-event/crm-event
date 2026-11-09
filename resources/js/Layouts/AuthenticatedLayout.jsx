@@ -1,4 +1,5 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
@@ -37,6 +38,8 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
+                            <LanguageSwitcher />
+                            <span className="mx-3 h-6 w-px bg-gray-200" />
                             <div className="relative ms-3">
                                 <Dropdown>
                                     <Dropdown.Trigger>

@@ -1,5 +1,7 @@
 import { focusRing } from '@/brand';
+import LanguageSwitcher, { useLanguage } from '@/Components/LanguageSwitcher';
 import { Link } from '@inertiajs/react';
+import { translate } from '@/i18n';
 
 /**
  * Shell of the authentication pages (login, forgotten password, password
@@ -10,16 +12,21 @@ import { Link } from '@inertiajs/react';
  * heading and `intro` the sentence below it.
  */
 export default function AuthLayout({ caption, title, intro, children }) {
+    const language = useLanguage().language;
+
     return (
         <div className="grid min-h-screen bg-ivory font-sans text-ink lg:grid-cols-[5fr_7fr]">
             <BrandPanel />
 
-            <main className="flex flex-col px-6 py-8 sm:px-10">
+            <main className="relative flex flex-col px-6 py-8 sm:px-10">
+                <div className="absolute right-6 top-8 sm:right-10">
+                    <LanguageSwitcher />
+                </div>
                 <Link
                     href={route('home')}
                     className={`${focusRing} self-start text-[11px] uppercase tracking-[0.18em] text-sage transition-colors hover:text-ink`}
                 >
-                    ← Accueil
+                    {translate(language, 'backHome')}
                 </Link>
 
                 <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-16">

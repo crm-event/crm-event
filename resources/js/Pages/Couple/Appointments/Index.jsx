@@ -1,5 +1,7 @@
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { Head } from '@inertiajs/react';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import { translate } from '@/i18n';
 
 const MODE_LABELS = {
     in_person: 'Sur place',
@@ -56,6 +58,9 @@ function AppointmentList({ appointments, emptyMessage }) {
  * Appointments of the couple, read-only: they come from Jessica's agenda.
  */
 export default function Index({ upcoming, past }) {
+    const language = useLanguage().language;
+    const t = (key) => translate(language, key);
+
     return (
         <CoupleLayout active="appointments">
             <Head title="Rendez-vous" />
@@ -69,26 +74,24 @@ export default function Index({ upcoming, past }) {
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/70">
-                Les points de suivi convenus avec Jessica. Pour un changement de
-                date, écrivez-lui directement.
+                {t('appointmentIntro')}
             </p>
 
-            <h2 className="mt-12 font-display text-2xl">À venir</h2>
+            <h2 className="mt-12 font-display text-2xl">{t('appointmentNext')}</h2>
             <AppointmentList
                 appointments={upcoming}
-                emptyMessage="Aucun rendez-vous à venir pour le moment."
+                emptyMessage={t('noUpcomingAppointments')}
             />
 
             {past.length > 0 && (
                 <>
-                    <h2 className="mt-12 font-display text-2xl">Passés</h2>
+                    <h2 className="mt-12 font-display text-2xl">{t('appointmentPast')}</h2>
                     <AppointmentList appointments={past} emptyMessage="" />
                 </>
             )}
 
             <p className="mt-8 text-sm text-ink/60">
-                Ces rendez-vous proviennent de l’agenda de Jessica. Ils sont
-                affichés ici pour information.
+                {t('appointmentsFromJessica')}
             </p>
         </CoupleLayout>
     );

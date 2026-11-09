@@ -4,6 +4,8 @@ import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import { translate } from '@/i18n';
 
 const steps = [
     { number: '01', label: 'Vos inspirations', icon: 'favorite' },
@@ -563,6 +565,8 @@ function Process({ activeStep }) {
  * shares with Jessica, then the versions of the design book she sends back.
  */
 export default function Design({ brief, moodboard, inspirations, versions = [], canEdit }) {
+    const language = useLanguage().language;
+    const t = (key) => translate(language, key);
     const sortedVersions = [...versions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const activeStep = sortedVersions.some((version) => version.approved_at) ? 3 : sortedVersions.length > 0 ? 2 : 0;
 
@@ -577,7 +581,7 @@ export default function Design({ brief, moodboard, inspirations, versions = [], 
                         Le design de votre mariage
                     </h1>
                     <p className="mt-5 max-w-xl text-sm leading-relaxed text-ink/65">
-                        Un espace pour rassembler vos inspirations, découvrir les propositions de Jessica et faire évoluer votre univers, étape après étape.
+                        {t('designIntro')}
                     </p>
                 </div>
                 <div className="absolute -bottom-16 -right-10 h-48 w-48 rounded-full border border-ivory/70 sm:h-64 sm:w-64" />

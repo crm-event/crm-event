@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { focusRing, primaryButton, secondaryButton } from '@/brand';
 
 /**
@@ -48,7 +49,10 @@ export default function Error({ status }) {
         <>
             <Head title={`Erreur ${status}`} />
 
-            <main className="flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-20 text-center font-sans text-ink">
+            <main className="relative flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-20 text-center font-sans text-ink">
+                <div className="absolute right-6 top-6">
+                    <LanguageSwitcher />
+                </div>
                 <Link href={route('home')} className={`${focusRing} block`}>
                     <img
                         src="/logo-ldt.png"

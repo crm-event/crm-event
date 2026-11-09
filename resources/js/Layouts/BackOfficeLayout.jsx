@@ -1,5 +1,6 @@
 import Dropdown from '@/Components/Dropdown';
 import Icone from '@/Components/Icone';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { anneauFocus } from '@/charte';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -240,6 +241,7 @@ export default function BackOfficeLayout({
                             <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-warning" />
                         </button>
 
+                        <LanguageSwitcher />
                         <MenuUtilisateur utilisateur={utilisateur} />
                     </div>
                 </header>

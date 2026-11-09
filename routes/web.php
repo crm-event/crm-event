@@ -15,11 +15,13 @@ use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
+Route::post('/locale', LocaleController::class)->name('locale.update');
 Route::post('/demande-acces', AccessRequestController::class)->name('access-request.store');
 
 Route::middleware(['auth', 'role:couple'])

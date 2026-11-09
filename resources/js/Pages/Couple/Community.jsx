@@ -3,6 +3,8 @@ import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import { translate } from '@/i18n';
 
 /**
  * Community space shared by all couples: a feed of messages, newest first,
@@ -12,29 +14,30 @@ import { useState } from 'react';
  * messages; deleting a message also deletes its replies.
  */
 export default function Community({ posts, maxBodyLength }) {
+    const language = useLanguage().language;
+    const t = (key) => translate(language, key);
+
     return (
         <CoupleLayout active="community">
             <Head title="Communauté" />
 
             <p className="text-[11px] uppercase tracking-brand text-sage">
-                Entre couples
+                {t('betweenCouples')}
             </p>
 
             <h1 className="mt-6 font-display text-3xl leading-snug sm:text-4xl">
-                Communauté
+                {t('community')}
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/70">
-                Un espace pour échanger avec les autres couples accompagnés par
-                Jessica : idées, bonnes adresses, questions… Seuls vos prénoms
-                apparaissent.
+                {t('communityIntro')}
             </p>
 
             <section aria-labelledby="new-post-title" className="mt-12 max-w-2xl">
                 <h2 id="new-post-title" className="sr-only">
                     Écrire un message
                 </h2>
-                <PostComposer maxBodyLength={maxBodyLength} />
+                <PostComposer maxBodyLength={maxBodyLength} language={language} />
             </section>
 
             <section aria-labelledby="feed-title" className="mt-16 max-w-2xl">
@@ -42,18 +45,18 @@ export default function Community({ posts, maxBodyLength }) {
                     id="feed-title"
                     className="border-b border-ink/10 pb-4 text-[11px] uppercase tracking-brand text-sage"
                 >
-                    Derniers messages
+                    {t('latestMessages')}
                 </h2>
 
                 {posts.data.length === 0 ? (
                     <p className="py-12 text-sm leading-relaxed text-ink/60">
-                        Aucun message pour l’instant. Soyez les premiers à écrire.
+                        {t('noCommunityMessages')}
                     </p>
                 ) : (
                     <ol className="divide-y divide-ink/10">
                         {posts.data.map((post) => (
                             <li key={post.id} className="py-8">
-                                <Post post={post} maxBodyLength={maxBodyLength} />
+                                <Post post={post} maxBodyLength={maxBodyLength} language={language} />
                             </li>
                         ))}
                     </ol>
@@ -68,7 +71,7 @@ export default function Community({ posts, maxBodyLength }) {
 /**
  * A top-level message, its replies and the reply form.
  */
-function Post({ post, maxBodyLength }) {
+function Post({ post, maxBodyLength, language }) {
     const [isReplying, setIsReplying] = useState(false);
 
     return (
@@ -82,9 +85,9 @@ function Post({ post, maxBodyLength }) {
                     onClick={() => setIsReplying((wasReplying) => !wasReplying)}
                     className={`${focusRing} uppercase tracking-[0.18em] transition-colors hover:text-ink`}
                 >
-                    {isReplying ? 'Annuler' : 'Répondre'}
+                    {isReplying ? translate(language, 'cancel') : translate(language, 'reply')}
                 </button>
-                {post.is_own && <DeleteButton post={post} />}
+                {post.is_own && <DeleteButton post={post} language={language} />}
             </div>
 
             {(post.replies.length > 0 || isReplying) && (
@@ -94,7 +97,7 @@ function Post({ post, maxBodyLength }) {
                             <PostContent post={reply} />
                             {reply.is_own && (
                                 <div className="mt-3 text-[10px] uppercase tracking-[0.18em] text-sage">
-                                    <DeleteButton post={reply} />
+                                    <DeleteButton post={reply} language={language} />
                                 </div>
                             )}
                         </article>
@@ -105,6 +108,7 @@ function Post({ post, maxBodyLength }) {
                             parentId={post.id}
                             maxBodyLength={maxBodyLength}
                             onPosted={() => setIsReplying(false)}
+                            language={language}
                         />
                     )}
                 </div>
@@ -150,7 +154,7 @@ function PostContent({ post }) {
 /**
  * Form to publish a message, or a reply when `parentId` is given.
  */
-function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
+function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {}, language = 'fr' }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         body: '',
         parent_id: parentId,
@@ -201,7 +205,9 @@ function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
                     disabled={processing}
                     className={`${isReply ? secondaryButton : primaryButton} disabled:cursor-wait disabled:opacity-50`}
                 >
-                    {processing ? 'Envoi…' : isReply ? 'Répondre' : 'Publier'}
+                    {processing
+                        ? language === 'en' ? 'Sending…' : 'Envoi…'
+                        : isReply ? translate(language, 'reply') : translate(language, 'publish')}
                 </button>
             </div>
         </form>
@@ -211,7 +217,7 @@ function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
 /**
  * Deletes one of the couple's own messages, after confirmation.
  */
-function DeleteButton({ post }) {
+function DeleteButton({ post, language = 'fr' }) {
     const deletePost = () => {
         const message = post.replies?.length
             ? 'Supprimer ce message et ses réponses ?'
@@ -230,7 +236,7 @@ function DeleteButton({ post }) {
             onClick={deletePost}
             className={`${focusRing} uppercase tracking-[0.18em] transition-colors hover:text-ink`}
         >
-            Supprimer
+            {translate(language, 'delete')}
         </button>
     );
 }

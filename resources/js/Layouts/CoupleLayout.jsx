@@ -1,6 +1,8 @@
 import Icone from '@/Components/Icone';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import Dropdown from '@/Components/Dropdown';
 import { focusRing } from '@/brand';
+import { translate } from '@/i18n';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -22,20 +24,21 @@ import { useEffect, useState } from 'react';
 const NAVIGATION_GROUPS = [
     {
         label: 'Votre mariage',
+        translationKey: 'yourWedding',
         entries: [
-            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.home' },
-            { key: 'design', label: 'Design', icon: 'palette', route: 'couple.design.index' },
+            { key: 'wedding', translationKey: 'myWedding', icon: 'favorite', route: 'couple.home' },
+            { key: 'design', translationKey: 'design', icon: 'palette', route: 'couple.design.index' },
             {
                 key: 'documents',
-                label: 'Documents',
+                translationKey: 'documents',
                 icon: 'description',
                 route: 'couple.documents.index',
                 prefetchOnPress: true,
             },
-            { key: 'appointments', label: 'Rendez-vous', icon: 'event', route: 'couple.appointments.index' },
+            { key: 'appointments', translationKey: 'appointments', icon: 'event', route: 'couple.appointments.index' },
             {
                 key: 'messages',
-                label: 'Messages',
+                translationKey: 'messages',
                 icon: 'chat_bubble',
                 route: 'couple.messages.index',
                 prefetchOnPress: true,
@@ -47,7 +50,7 @@ const NAVIGATION_GROUPS = [
         entries: [
             {
                 key: 'community',
-                label: 'Communauté',
+                translationKey: 'community',
                 icon: 'diversity_1',
                 route: 'couple.community.index',
             },
@@ -62,20 +65,22 @@ const entryClasses =
     'flex items-center gap-3 border-l-2 px-4 py-2.5 text-[15px] transition-colors';
 
 const PAGE_LABELS = {
-    wedding: 'Notre mariage',
-    design: 'Design',
-    documents: 'Documents',
-    appointments: 'Rendez-vous',
-    messages: 'Messages',
-    community: 'Communauté',
-    account: 'Mon compte',
+    wedding: 'myWedding',
+    design: 'design',
+    documents: 'documents',
+    appointments: 'appointments',
+    messages: 'messages',
+    community: 'community',
+    account: 'account',
 };
 
 function NavigationEntry({ entry, isActive }) {
+    const language = useLanguage().language;
+    const label = translate(language, entry.translationKey);
     const content = (
         <>
             <Icone nom={entry.icon} className="text-[20px]" />
-            <span className="flex-1">{entry.label}</span>
+            <span className="flex-1">{label}</span>
         </>
     );
 
@@ -110,6 +115,8 @@ function NavigationEntry({ entry, isActive }) {
 }
 
 function Sidebar({ activeKey }) {
+    const language = useLanguage().language;
+
     return (
         <div className="flex h-full flex-col bg-blush">
             <Link
@@ -139,7 +146,9 @@ function Sidebar({ activeKey }) {
                 {NAVIGATION_GROUPS.map((group) => (
                     <div key={group.label} className="mb-6 last:mb-0">
                         <p className="mb-2 px-6 text-[10px] uppercase tracking-brand text-sage">
-                            {group.label}
+                            {group.translationKey
+                                ? translate(language, group.translationKey)
+                                : group.label}
                         </p>
                         <ul className="space-y-0.5 px-2">
                             {group.entries.map((entry) => (
@@ -257,7 +266,10 @@ function NotificationsMenu() {
 }
 
 function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
-    const pageLabel = PAGE_LABELS[active] || 'Espace client';
+    const language = useLanguage().language;
+    const pageLabel = PAGE_LABELS[active]
+        ? translate(language, PAGE_LABELS[active])
+        : translate(language, 'clientArea');
     const initials = user.name
         .split(' ')
         .map((name) => name[0])
@@ -280,7 +292,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
 
                 <div className="min-w-0">
                     <p className="hidden text-[10px] uppercase tracking-brand text-sage sm:block">
-                        Espace client
+                        {translate(language, 'clientArea')}
                     </p>
                     <p className="truncate font-display text-lg text-ink sm:mt-0.5 sm:text-xl">
                         {pageLabel}
@@ -289,15 +301,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
             </div>
 
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-                <button
-                    type="button"
-                    aria-label="Changer de langue"
-                    title="Bientôt disponible"
-                    className={`${focusRing} inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[10px] uppercase tracking-[0.16em] text-sage transition-colors hover:bg-blush hover:text-ink`}
-                >
-                    <Icone nom="language" className="text-[18px]" />
-                    <span className="hidden sm:inline">FR</span>
-                </button>
+                <LanguageSwitcher />
 
                 <span className="hidden h-6 w-px bg-ink/10 sm:block" />
 
@@ -339,7 +343,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
                                     nom="person"
                                     className="text-[18px] text-sage"
                                 />
-                                Mon compte
+                                {translate(language, 'account')}
                             </span>
                         </Dropdown.Link>
                         <Dropdown.Link
@@ -353,7 +357,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
                                     nom="logout"
                                     className="text-[18px] text-sage"
                                 />
-                                Se déconnecter
+                                {translate(language, 'signingOut')}
                             </span>
                         </Dropdown.Link>
                     </Dropdown.Content>

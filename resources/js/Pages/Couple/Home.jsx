@@ -2,6 +2,8 @@ import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { secondaryButton } from '@/brand';
 import { Head, Link } from '@inertiajs/react';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import { translate } from '@/i18n';
 
 // The wedding date has no time: read it as UTC so it never shifts by one day.
 const weddingDateFormatter = new Intl.DateTimeFormat('fr-FR', {
@@ -263,14 +265,17 @@ function DocumentsSummary({ documents }) {
  * progress, then what comes next (appointment, messages, documents).
  */
 export default function Home({ coupleNames, wedding, nextAppointment, unreadMessages, documents }) {
+    const language = useLanguage().language;
+    const t = (key) => translate(language, key);
+
     return (
         <CoupleLayout active="wedding">
-            <Head title="Notre mariage" />
+            <Head title={t('myWedding')} />
 
             {wedding === null ? (
                 <>
                     <h1 className="font-display text-3xl leading-snug sm:text-4xl">
-                        Notre mariage
+                        {t('myWedding')}
                     </h1>
                     <div className="mt-10 border border-ink/10 bg-white px-6 py-10 text-center text-sm text-ink/60">
                         Les informations de votre mariage seront bientôt disponibles.
