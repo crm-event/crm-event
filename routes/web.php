@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\RentabiliteController;
+use App\Http\Controllers\Admin\WeddingSelectionController;
 use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DesignController;
@@ -25,7 +26,7 @@ Route::middleware(['auth', 'role:couple'])
     ->name('couple.')
     ->group(function () {
         Route::get('/', CoupleHomeController::class)->name('home');
-        Route::get('/mariage', CoupleWeddingController::class)->name('wedding.show');
+        Route::get('/mariage', CoupleWeddingController::class)->name('weddings.show');
         Route::get('/design', [DesignController::class, 'index'])->name('design.index');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
 
@@ -87,9 +88,14 @@ Route::get('/calendrier', function () {
     return Inertia::render('Calendrier');
 })->middleware(['auth', 'verified'])->name('calendrier');
 
-Route::get('/wedding', function () {
-    return Inertia::render('Wedding');
-})->middleware(['auth', 'verified'])->name('wedding');
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('weddings')
+    ->name('admin.weddings.')
+    ->group(function () {
+
+    Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');
+    Route::get('/{id}', [WeddingSelectionController::class, 'show'])->whereNumber('id')->name('show');
+    });
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('rentabilite')
