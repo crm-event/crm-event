@@ -23,8 +23,7 @@ const NAVIGATION_GROUPS = [
     {
         label: 'Votre mariage',
         entries: [
-            { key: 'home', label: 'Accueil', icon: 'home', route: 'couple.home' },
-            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.wedding.show' },
+            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.home' },
             { key: 'design', label: 'Design', icon: 'palette', route: 'couple.design.index' },
             {
                 key: 'documents',
@@ -63,7 +62,6 @@ const entryClasses =
     'flex items-center gap-3 border-l-2 px-4 py-2.5 text-[15px] transition-colors';
 
 const PAGE_LABELS = {
-    home: 'Accueil',
     wedding: 'Notre mariage',
     design: 'Design',
     documents: 'Documents',
@@ -95,7 +93,7 @@ const NOTIFICATIONS = [
         title: 'Votre prochain rendez-vous',
         text: 'Votre rendez-vous approche. Retrouvez les détails de votre mariage.',
         time: 'Il y a 3 jours',
-        route: 'couple.wedding.show',
+        route: 'couple.home',
     },
 ];
 
@@ -452,7 +450,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
     );
 }
 
-export default function CoupleLayout({ active = 'home', children }) {
+export default function CoupleLayout({ active = 'wedding', children }) {
     const user = usePage().props.auth.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 

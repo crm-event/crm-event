@@ -11,7 +11,6 @@ use App\Http\Controllers\Couple\DesignController;
 use App\Http\Controllers\Couple\DocumentController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
-use App\Http\Controllers\Couple\WeddingController as CoupleWeddingController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +24,6 @@ Route::middleware(['auth', 'role:couple'])
     ->name('couple.')
     ->group(function () {
         Route::get('/', CoupleHomeController::class)->name('home');
-        Route::get('/mariage', CoupleWeddingController::class)->name('wedding.show');
         Route::get('/design', [DesignController::class, 'index'])->name('design.index');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
 
