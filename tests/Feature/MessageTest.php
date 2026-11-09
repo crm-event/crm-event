@@ -72,6 +72,42 @@ class MessageTest extends TestCase
         $this->assertTrue($message->toThreadItem($jessica)['is_own']);
     }
 
+    public function test_every_admin_sees_the_messages_of_any_admin_as_their_own(): void
+    {
+        $jessica = User::factory()->admin()->create();
+        $otherAdmin = User::factory()->admin()->create();
+        $fromJessica = Message::factory()->create(['sender_id' => $jessica->id]);
+        $fromCouple = Message::factory()->create(['sender_id' => User::factory()]);
+        $fromDeletedAccount = Message::factory()->create(['sender_id' => null]);
+
+        $this->assertTrue($fromJessica->toThreadItem($otherAdmin)['is_own']);
+        $this->assertFalse($fromCouple->toThreadItem($otherAdmin)['is_own']);
+        $this->assertFalse($fromDeletedAccount->toThreadItem($otherAdmin)['is_own']);
+    }
+
+    public function test_for_an_admin_only_the_messages_of_couples_are_unread(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $fromCouple = Message::factory()->create(['sender_id' => User::factory()]);
+        $fromDeletedAccount = Message::factory()->create(['sender_id' => null]);
+        Message::factory()->create(['sender_id' => User::factory()->admin()]);
+
+        $this->assertEqualsCanonicalizing(
+            [$fromCouple->id, $fromDeletedAccount->id],
+            Message::unreadFor($admin)->pluck('id')->all(),
+        );
+    }
+
+    public function test_an_admin_opening_a_thread_does_not_mark_another_admin_s_messages_as_read(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $fromAnotherAdmin = Message::factory()->create(['sender_id' => User::factory()->admin()]);
+
+        Message::markAsReadBy($admin, [$fromAnotherAdmin]);
+
+        $this->assertNull($fromAnotherAdmin->fresh()->read_at);
+    }
+
     public function test_a_voice_message_whose_file_is_missing_has_no_url(): void
     {
         Storage::fake();

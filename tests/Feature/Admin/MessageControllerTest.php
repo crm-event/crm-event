@@ -139,6 +139,45 @@ class MessageControllerTest extends TestCase
         $this->assertDatabaseMissing('messages', ['id' => $message->id]);
     }
 
+    public function test_any_admin_account_can_edit_and_delete_a_message_sent_by_another_admin(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $message = Message::factory()
+            ->for(Wedding::factory()->for($couple))
+            ->create(['sender_id' => $this->jessica->id, 'body' => 'Ancien texte']);
+        $otherAdmin = User::factory()->admin()->create();
+
+        $this->actingAs($otherAdmin)
+            ->get(route('admin.messages.show', $couple))
+            ->assertInertia(fn (Assert $page) => $page->where('messages.0.is_own', true));
+
+        $this->actingAs($otherAdmin)
+            ->patch(route('admin.messages.update', $message), ['body' => 'Nouveau texte'])
+            ->assertRedirect(route('admin.messages.show', $couple));
+
+        $this->assertSame('Nouveau texte', $message->fresh()->body);
+
+        $this->actingAs($otherAdmin)
+            ->delete(route('admin.messages.destroy', $message))
+            ->assertRedirect(route('admin.messages.show', $couple));
+
+        $this->assertDatabaseMissing('messages', ['id' => $message->id]);
+    }
+
+    public function test_jessica_cannot_edit_a_message_sent_by_a_couple(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $message = Message::factory()
+            ->for(Wedding::factory()->for($couple))
+            ->create(['sender_id' => $couple->user_id, 'body' => 'Message du couple']);
+
+        $this->actingAs($this->jessica)
+            ->patch(route('admin.messages.update', $message), ['body' => 'Modifié'])
+            ->assertForbidden();
+
+        $this->assertSame('Message du couple', $message->fresh()->body);
+    }
+
     public function test_jessica_cannot_write_to_a_couple_without_wedding(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
