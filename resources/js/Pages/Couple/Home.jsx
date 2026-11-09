@@ -1,9 +1,18 @@
 import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { secondaryButton } from '@/brand';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
+// The wedding date has no time: read it as UTC so it never shifts by one day.
+const weddingDateFormatter = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+});
+
+const appointmentDateFormatter = new Intl.DateTimeFormat('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -19,6 +28,27 @@ const MODE_LABELS = {
 };
 
 /**
+ * Days left before the wedding, sent by the server (negative once the day has
+ * passed, null while the date is not set): the figure, then its caption on the
+ * next line.
+ */
+function countdownLines({ date, days_until: daysUntil }) {
+    if (date === null) {
+        return ['Date à définir', 'pour le grand jour'];
+    }
+
+    if (daysUntil >= 1) {
+        return [`${daysUntil} jour${daysUntil > 1 ? 's' : ''}`, 'avant le grand jour'];
+    }
+
+    if (daysUntil === 0) {
+        return ['Aujourd’hui', 'c’est le grand jour !'];
+    }
+
+    return ['Mariage célébré', 'merci pour votre confiance'];
+}
+
+/**
  * Time left before an appointment, as sent by the server: whole days, whole
  * hours when less than a day remains, or less than an hour.
  */
@@ -32,6 +62,103 @@ function formatStartsIn({ unit, value }) {
     }
 
     return 'Dans moins d’une heure';
+}
+
+function HeroDetail({ label, children }) {
+    return (
+        <div>
+            <dt className="text-[11px] uppercase tracking-brand text-sage">{label}</dt>
+            <dd className="mt-2 text-base">{children}</dd>
+        </div>
+    );
+}
+
+/**
+ * Venue of the wedding as shown in the main frame: its name, full address and
+ * access notes.
+ */
+function HeroVenue({ venue }) {
+    if (!venue) {
+        return 'À définir';
+    }
+
+    const cityLine = [venue.postal_code, venue.city].filter(Boolean).join(' ');
+
+    return (
+        <>
+            <span className="block">{venue.name}</span>
+            {(venue.address || cityLine) && (
+                <address className="mt-1 text-sm not-italic text-ink/70">
+                    {venue.address && <span className="block">{venue.address}</span>}
+                    {cityLine && <span className="block">{cityLine}</span>}
+                </address>
+            )}
+            {venue.access_notes && (
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink/70">
+                    {venue.access_notes}
+                </p>
+            )}
+        </>
+    );
+}
+
+/**
+ * Main frame of the page: names of the couple, countdown to the big day, then
+ * the date, the venue and the services booked with Jessica.
+ */
+function WeddingHero({ coupleNames, wedding }) {
+    const [figure, caption] = countdownLines(wedding);
+    const { services } = wedding;
+
+    return (
+        <section className="rounded-lg bg-blush p-8 sm:p-10">
+            <p className="text-[11px] uppercase tracking-brand text-sage">Notre mariage</p>
+            <h1 className="mt-4 font-display text-3xl leading-snug sm:text-4xl">
+                {coupleNames || 'Votre grand jour'}
+            </h1>
+
+            <p className="mt-8 font-display text-5xl sm:text-6xl">{figure}</p>
+            <p className="mt-2 text-base text-ink/70">{caption}</p>
+
+            <dl className="mt-10 grid gap-6 border-t border-ink/10 pt-6 sm:grid-cols-3">
+                <HeroDetail label="Date">
+                    {wedding.date === null ? (
+                        'À définir'
+                    ) : (
+                        <span className="block first-letter:uppercase">
+                            {weddingDateFormatter.format(new Date(wedding.date))}
+                        </span>
+                    )}
+                </HeroDetail>
+                <HeroDetail label="Lieu">
+                    <HeroVenue venue={wedding.venue} />
+                </HeroDetail>
+                <HeroDetail label="Prestations">
+                    {services.length === 0 ? (
+                        'À définir'
+                    ) : (
+                        <ul>
+                            {services.map((service) => (
+                                <li key={service}>{service}</li>
+                            ))}
+                        </ul>
+                    )}
+                </HeroDetail>
+            </dl>
+        </section>
+    );
+}
+
+function Detail({ icon, label, children }) {
+    return (
+        <div className="flex gap-4 rounded-lg border border-ink/10 p-6">
+            <Icone nom={icon} className="text-[24px] text-sage" />
+            <div>
+                <dt className="text-[11px] uppercase tracking-brand text-sage">{label}</dt>
+                <dd className="mt-2 text-base">{children}</dd>
+            </div>
+        </div>
+    );
 }
 
 function NextAppointment({ appointment }) {
@@ -51,7 +178,7 @@ function NextAppointment({ appointment }) {
     const details = [MODE_LABELS[appointment.mode], appointment.location].filter(Boolean);
 
     return (
-        <div className="rounded-lg bg-blush p-6 sm:col-span-2">
+        <div className="rounded-lg border border-ink/10 p-6 sm:col-span-2">
             <p className="text-[11px] uppercase tracking-brand text-sage">
                 Prochain rendez-vous
             </p>
@@ -60,7 +187,7 @@ function NextAppointment({ appointment }) {
             </p>
             <p className="mt-3 text-base">{appointment.title}</p>
             <p className="mt-1 text-sm text-ink/70">
-                {dateFormatter.format(new Date(appointment.starts_at))}
+                {appointmentDateFormatter.format(new Date(appointment.starts_at))}
             </p>
             {details.length > 0 && (
                 <p className="mt-1 text-sm text-ink/70">{details.join(' · ')}</p>
@@ -131,39 +258,42 @@ function DocumentsSummary({ documents }) {
 }
 
 /**
- * Home page of the couple space: a summary of the project.
- *
- * Greets the couple by the first names of the two partners, then shows what
- * comes next (the next appointment and the unread messages) before the key
- * figures about their documents (available, not viewed yet, waiting for a
- * signature).
+ * "Notre mariage" tab, the page a couple lands on after logging in: the main
+ * frame (names, countdown, date, venue and services), the guests and the
+ * progress, then what comes next (appointment, messages, documents).
  */
-export default function Home({ couple, nextAppointment, unreadMessages, documents }) {
-    const user = usePage().props.auth.user;
-
-    const names = couple
-        ? [couple.partner1_first_name, couple.partner2_first_name]
-            .filter(Boolean)
-            .join(' et ')
-        : user.name;
-
+export default function Home({ coupleNames, wedding, nextAppointment, unreadMessages, documents }) {
     return (
-        <CoupleLayout active="home">
-            <Head title="Mon espace" />
+        <CoupleLayout active="wedding">
+            <Head title="Notre mariage" />
 
-            <p className="text-[11px] uppercase tracking-brand text-sage">
-                Espace client
-            </p>
+            {wedding === null ? (
+                <>
+                    <h1 className="font-display text-3xl leading-snug sm:text-4xl">
+                        Notre mariage
+                    </h1>
+                    <div className="mt-10 border border-ink/10 bg-white px-6 py-10 text-center text-sm text-ink/60">
+                        Les informations de votre mariage seront bientôt disponibles.
+                    </div>
+                </>
+            ) : (
+                <>
+                    <WeddingHero coupleNames={coupleNames} wedding={wedding} />
 
-            <h1 className="mt-6 font-display text-3xl leading-snug sm:text-4xl">
-                Bonjour {names}.
-            </h1>
+                    <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <Detail icon="groups" label="Invités">
+                            {wedding.guest_count === null
+                                ? 'Nombre à préciser'
+                                : `${wedding.guest_count} invité${wedding.guest_count > 1 ? 's' : ''}`}
+                        </Detail>
+                        <Detail icon="task_alt" label="Avancement">
+                            {wedding.status_label}
+                        </Detail>
+                    </dl>
+                </>
+            )}
 
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/70">
-                Voici le récapitulatif de votre projet.
-            </p>
-
-            <section className="mt-10 grid gap-4 sm:grid-cols-3">
+            <section className="mt-14 grid gap-4 sm:grid-cols-3">
                 <NextAppointment appointment={nextAppointment} />
                 <UnreadMessages count={unreadMessages} />
             </section>
