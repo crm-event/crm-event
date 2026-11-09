@@ -12,9 +12,9 @@ use App\Http\Controllers\Couple\DesignController;
 use App\Http\Controllers\Couple\DocumentController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
-use App\Support\CalendarSchedule;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -79,11 +79,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/{message}', [AdminMessageController::class, 'destroy'])->name('destroy');
     });
 
-Route::get('/dashboard', function (CalendarSchedule $calendar) {
-    return Inertia::render('Dashboard', [
-        'evenementsTous' => $calendar->events(),
-    ]);
-})->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
 
 Route::get('/demandes', function () {
     return Inertia::render('Demandes');
