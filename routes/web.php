@@ -27,6 +27,10 @@ Route::middleware(['auth', 'role:couple'])
         Route::get('/', CoupleHomeController::class)->name('home');
         Route::get('/mariage', CoupleWeddingController::class)->name('wedding.show');
         Route::get('/design', [DesignController::class, 'index'])->name('design.index');
+        Route::put('/design/brief', [DesignController::class, 'updateBrief'])->name('design.brief.update');
+        Route::post('/design/images', [DesignController::class, 'storeMedia'])->name('design.media.store');
+        Route::get('/design/images/{mediaItem}', [DesignController::class, 'showMedia'])->name('design.media.show');
+        Route::delete('/design/images/{mediaItem}', [DesignController::class, 'destroyMedia'])->name('design.media.destroy');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');

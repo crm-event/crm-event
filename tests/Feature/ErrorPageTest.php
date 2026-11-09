@@ -18,6 +18,7 @@ class ErrorPageTest extends TestCase
 
         Route::middleware('web')->group(function () {
             Route::get('/_test/forbidden', fn () => abort(403));
+            Route::get('/_test/expired', fn () => abort(419));
             Route::get('/_test/server-error', fn () => throw new RuntimeException('Test failure'));
         });
     }
@@ -68,6 +69,24 @@ class ErrorPageTest extends TestCase
             $response->original instanceof View && $response->original->name() === 'app',
             'The 500 error should not be rendered by the Inertia root view in local.',
         );
+    }
+
+    public function test_an_expired_session_renders_the_custom_419_page(): void
+    {
+        $response = $this->get('/_test/expired');
+
+        $response->assertStatus(419);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Error')
+            ->where('status', 419)
+        );
+    }
+
+    public function test_a_wrong_method_renders_the_custom_page(): void
+    {
+        $this->get(route('logout'))
+            ->assertStatus(405)
+            ->assertInertia(fn (Assert $page) => $page->component('Error')->where('status', 405));
     }
 
     public function test_json_requests_keep_the_json_error_response(): void

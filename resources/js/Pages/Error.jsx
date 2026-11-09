@@ -18,6 +18,14 @@ const MESSAGES = {
         title: 'Cette page ne vous est pas accessible.',
         text: 'Votre compte n’a pas accès à cette partie du site. Si cela vous semble anormal, dites-le à Jessica.',
     },
+    405: {
+        title: 'Cette page n’existe pas.',
+        text: 'Le lien que vous avez suivi ne mène à aucune page.',
+    },
+    419: {
+        title: 'Votre session a expiré.',
+        text: 'Pour protéger votre compte, la page s’est fermée après un moment d’inactivité. Rechargez-la, puis recommencez.',
+    },
     500: {
         title: 'Quelque chose s’est mal passé.',
         text: 'La page n’a pas pu s’afficher. Réessayez dans un instant ; si cela se reproduit, prévenez Jessica.',
