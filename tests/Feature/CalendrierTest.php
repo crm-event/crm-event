@@ -71,7 +71,7 @@ class CalendrierTest extends TestCase
         $this->postJson(route('calendrier.import'), [])->assertForbidden();
     }
 
-    public function test_the_dashboard_does_not_expose_calendar_events_to_a_couple(): void
+    public function test_a_couple_cannot_view_the_dashboard(): void
     {
         $this->withoutVite();
         CalendarEvent::query()->create([
@@ -81,7 +81,7 @@ class CalendrierTest extends TestCase
         ]);
 
         $this->actingAs(User::factory()->create())->get(route('dashboard'))
-            ->assertInertia(fn (Assert $page) => $page->has('evenementsTous', 0));
+            ->assertForbidden();
     }
 
     public function test_calendar_data_and_import_markers_are_loaded_in_one_database_query(): void

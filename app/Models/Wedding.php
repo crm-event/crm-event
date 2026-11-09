@@ -6,7 +6,9 @@ use Database\Factories\WeddingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Wedding project of a couple, created at the first contact.
@@ -59,6 +61,47 @@ class Wedding extends Model
     }
 
     /**
+     * The venue of the wedding, null while it is not known yet.
+     *
+     * @return BelongsTo<Venue, $this>
+     */
+    public function venue(): BelongsTo
+    {
+        return $this->belongsTo(Venue::class);
+    }
+
+    /**
+     * The services sold for this wedding (wedding design, coordination,
+     * officiant...), through `wedding_services`.
+     *
+     * @return BelongsToMany<Service, $this>
+     */
+    public function services(): BelongsToMany
+    {
+        return $this->belongsToMany(Service::class, 'wedding_services')->withTimestamps();
+    }
+
+    /**
+     * The creative brief written by the couple on the Design page.
+     *
+     * @return HasOne<DesignBrief, $this>
+     */
+    public function designBrief(): HasOne
+    {
+        return $this->hasOne(DesignBrief::class);
+    }
+
+    /**
+     * The inspiration photos and moodboards added for this wedding.
+     *
+     * @return HasMany<MediaItem, $this>
+     */
+    public function mediaItems(): HasMany
+    {
+        return $this->hasMany(MediaItem::class);
+    }
+
+    /**
      * The documents shared in the couple space for this wedding.
      *
      * @return HasMany<Document, $this>
@@ -66,5 +109,25 @@ class Wedding extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
+    }
+
+    /**
+     * The appointments scheduled for this wedding.
+     *
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * The private messages exchanged with Jessica about this wedding.
+     *
+     * @return HasMany<Message, $this>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
     }
 }
