@@ -1,24 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
-
-const inspirationDefaults = [
-    { id: 'one', src: '/images/landing/wedding-design.jpg', alt: 'Décoration naturelle et lumineuse' },
-    { id: 'two', src: '/images/landing/accueil2.jpg', alt: 'Composition florale blanche' },
-    { id: 'three', src: '/images/landing/accueil1.jpg', alt: 'Cérémonie en extérieur' },
-];
-
-const briefDefaults = {
-    title: 'Un jardin méditerranéen au coucher du soleil',
-    description:
-        'Nous imaginons un mariage élégant et naturel dans un domaine provençal. Nous aimons les tons ivoire, sable, vert sauge et terracotta très doux. Nous souhaitons une atmosphère chaleureuse, avec beaucoup de fleurs blanches, des matières naturelles et une décoration raffinée sans être trop chargée.',
-    palette: ['Ivoire', 'Lin', 'Vert sauge', 'Argile douce'],
-    avoid: 'Les couleurs trop vives et les compositions trop symétriques.',
-    moodboard: '/images/Design/moodboard.jpg',
-    inspirationImages: inspirationDefaults,
-};
 
 const steps = [
     { number: '01', label: 'Vos inspirations', icon: 'favorite' },
@@ -34,21 +19,6 @@ const processStepStyles = [
     'bg-ivory',
 ];
 
-const proposalImages = [
-    {
-        src: '/images/landing/wedding-design.jpg',
-        alt: 'Table de réception imaginée par Jessica',
-    },
-    {
-        src: '/images/landing/coordination.jpg',
-        alt: 'Mise en scène de la réception',
-    },
-    {
-        src: '/images/landing/accueil2.jpg',
-        alt: 'Détails floraux de la proposition',
-    },
-];
-
 function formatDate(value) {
     if (!value) return 'Date à préciser';
 
@@ -60,6 +30,17 @@ function formatDate(value) {
         month: 'long',
         year: 'numeric',
     }).format(date);
+}
+
+/**
+ * Send an image to the server: an inspiration photo, or the new moodboard.
+ */
+function uploadImage(collection, file) {
+    router.post(
+        route('couple.design.media.store'),
+        { collection, file },
+        { forceFormData: true, preserveScroll: true },
+    );
 }
 
 function Pill({ children, muted = false }) {
@@ -87,131 +68,149 @@ function SectionTitle({ eyebrow, title, children }) {
     );
 }
 
-function Moodboard({ src, editable, onReplace }) {
+function UnavailableImage({ className = '' }) {
+    return (
+        <div className={`flex flex-col items-center justify-center gap-2 bg-blush px-3 text-center text-[11px] italic text-ink/50 ${className}`}>
+            <Icone nom="image_not_supported" className="text-[22px] not-italic text-sage/70" />
+            Image indisponible sur cet appareil
+        </div>
+    );
+}
+
+function Moodboard({ moodboard, canEdit }) {
     const inputRef = useRef(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
     function replace(event) {
         const file = event.target.files?.[0];
-        if (file) onReplace(URL.createObjectURL(file));
+        if (file) uploadImage('moodboards', file);
         event.target.value = '';
     }
 
-    return (
-        <>
-            <div className="group relative overflow-hidden bg-blush">
-                <button
-                    type="button"
-                    onClick={() => setIsPreviewOpen(true)}
-                    className={`${focusRing} block w-full cursor-zoom-in text-left`}
-                    aria-label="Agrandir le moodboard"
-                >
-                    <img src={src} alt="Moodboard du projet" className="aspect-[5/4] w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-                </button>
-            {editable && (
-                <>
-                    <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={replace} />
+    const fileInput = canEdit && (
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={replace} />
+    );
+
+    if (!moodboard) {
+        return (
+            <>
+                {fileInput}
+                {canEdit ? (
                     <button
                         type="button"
                         onClick={() => inputRef.current?.click()}
-                        className={`${focusRing} absolute bottom-3 right-3 inline-flex items-center gap-2 bg-ivory/95 px-3 py-2 text-[10px] uppercase tracking-[0.1em] opacity-0 transition-opacity group-hover:opacity-100`}
+                        className={`${focusRing} flex aspect-[5/4] w-full flex-col items-center justify-center gap-3 border border-dashed border-ink/20 bg-white/60 text-ink/55 transition-colors hover:border-ink/50 hover:text-ink`}
                     >
-                        <Icone nom="upload" className="text-[15px]" />
-                        Remplacer
+                        <Icone nom="add_photo_alternate" className="text-[28px]" />
+                        <span className="text-[10px] uppercase tracking-[0.12em]">Ajouter votre moodboard</span>
                     </button>
-                </>
-            )}
-            </div>
-            {isPreviewOpen && (
-                <ImagePreview
-                    src={src}
-                    alt="Moodboard du projet"
-                    onClose={() => setIsPreviewOpen(false)}
-                />
-            )}
-        </>
-    );
-}
-
-function InspirationGallery({ images, editable, onChange }) {
-    const inputRef = useRef(null);
-    const [previewImage, setPreviewImage] = useState(null);
-
-    function addImage(event) {
-        const file = event.target.files?.[0];
-        if (file) {
-            onChange([
-                ...images,
-                { id: `upload-${Date.now()}`, src: URL.createObjectURL(file), alt: file.name },
-            ]);
-        }
-        event.target.value = '';
-    }
-
-    if (!editable) {
-        return (
-            <div className="grid grid-cols-3 gap-2">
-                {images.map((image) => (
-                    <button
-                        key={image.id}
-                        type="button"
-                        onClick={() => setPreviewImage(image)}
-                        className={`${focusRing} group aspect-square cursor-zoom-in overflow-hidden bg-blush text-left`}
-                        aria-label={`Agrandir ${image.alt}`}
-                    >
-                        <img src={image.src} alt={image.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    </button>
-                ))}
-                {previewImage && (
-                    <ImagePreview
-                        src={previewImage.src}
-                        alt={previewImage.alt}
-                        onClose={() => setPreviewImage(null)}
-                    />
+                ) : (
+                    <div className="flex aspect-[5/4] w-full items-center justify-center border border-dashed border-ink/20 text-sm text-ink/45">
+                        Aucun moodboard pour le moment
+                    </div>
                 )}
-            </div>
+            </>
         );
     }
 
     return (
         <>
-            <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={addImage} />
+            {fileInput}
+            <div className="group relative overflow-hidden bg-blush">
+                {moodboard.url ? (
+                    <button
+                        type="button"
+                        onClick={() => setIsPreviewOpen(true)}
+                        className={`${focusRing} block w-full cursor-zoom-in text-left`}
+                        aria-label="Agrandir le moodboard"
+                    >
+                        <img src={moodboard.url} alt={moodboard.alt} className="aspect-[5/4] w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+                    </button>
+                ) : (
+                    <UnavailableImage className="aspect-[5/4] w-full" />
+                )}
+                {canEdit && (
+                    <button
+                        type="button"
+                        onClick={() => inputRef.current?.click()}
+                        className={`${focusRing} absolute bottom-3 right-3 inline-flex items-center gap-2 bg-ivory/95 px-3 py-2 text-[10px] uppercase tracking-[0.1em] transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100`}
+                    >
+                        <Icone nom="upload" className="text-[15px]" />
+                        Remplacer
+                    </button>
+                )}
+            </div>
+            {isPreviewOpen && moodboard.url && (
+                <ImagePreview src={moodboard.url} alt={moodboard.alt} onClose={() => setIsPreviewOpen(false)} />
+            )}
+        </>
+    );
+}
+
+function InspirationGallery({ images, canEdit }) {
+    const inputRef = useRef(null);
+    const [previewImage, setPreviewImage] = useState(null);
+
+    function addImage(event) {
+        const file = event.target.files?.[0];
+        if (file) uploadImage('images', file);
+        event.target.value = '';
+    }
+
+    function removeImage(image) {
+        if (window.confirm('Retirer cette photo de vos inspirations ?')) {
+            router.delete(route('couple.design.media.destroy', image.id), { preserveScroll: true });
+        }
+    }
+
+    return (
+        <>
+            {canEdit && (
+                <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={addImage} />
+            )}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {images.map((image) => (
                     <div key={image.id} className="group relative aspect-square overflow-hidden bg-blush">
-                        <button
-                            type="button"
-                            onClick={() => setPreviewImage(image)}
-                            className={`${focusRing} block h-full w-full cursor-zoom-in text-left`}
-                            aria-label={`Agrandir ${image.alt}`}
-                        >
-                            <img src={image.src} alt={image.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => onChange(images.filter((item) => item.id !== image.id))}
-                            aria-label={`Supprimer ${image.alt}`}
-                            className={`${focusRing} absolute right-2 top-2 flex h-8 w-8 items-center justify-center bg-ivory/95 text-ink opacity-0 transition-opacity group-hover:opacity-100`}
-                        >
-                            <Icone nom="close" className="text-[16px]" />
-                        </button>
+                        {image.url ? (
+                            <button
+                                type="button"
+                                onClick={() => setPreviewImage(image)}
+                                className={`${focusRing} block h-full w-full cursor-zoom-in text-left`}
+                                aria-label={`Agrandir ${image.alt}`}
+                            >
+                                <img src={image.url} alt={image.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            </button>
+                        ) : (
+                            <UnavailableImage className="h-full w-full" />
+                        )}
+                        {canEdit && (
+                            <button
+                                type="button"
+                                onClick={() => removeImage(image)}
+                                aria-label={`Retirer ${image.alt}`}
+                                className={`${focusRing} absolute right-2 top-2 flex h-8 w-8 items-center justify-center bg-ivory/95 text-ink transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100`}
+                            >
+                                <Icone nom="close" className="text-[16px]" />
+                            </button>
+                        )}
                     </div>
                 ))}
-                <button
-                    type="button"
-                    onClick={() => inputRef.current?.click()}
-                    className={`${focusRing} flex aspect-square flex-col items-center justify-center gap-2 border border-dashed border-ink/20 text-ink/50 transition-colors hover:border-ink/50 hover:text-ink`}
-                >
-                    <Icone nom="add_photo_alternate" className="text-[24px]" />
-                    <span className="text-center text-[10px] uppercase tracking-[0.1em]">Ajouter</span>
-                </button>
+                {canEdit && (
+                    <button
+                        type="button"
+                        onClick={() => inputRef.current?.click()}
+                        className={`${focusRing} flex aspect-square flex-col items-center justify-center gap-2 border border-dashed border-ink/20 text-ink/50 transition-colors hover:border-ink/50 hover:text-ink`}
+                    >
+                        <Icone nom="add_photo_alternate" className="text-[24px]" />
+                        <span className="text-center text-[10px] uppercase tracking-[0.1em]">Ajouter</span>
+                    </button>
+                )}
             </div>
+            {images.length === 0 && !canEdit && (
+                <p className="text-sm text-ink/45">Aucune photo pour le moment.</p>
+            )}
             {previewImage && (
-                <ImagePreview
-                    src={previewImage.src}
-                    alt={previewImage.alt}
-                    onClose={() => setPreviewImage(null)}
-                />
+                <ImagePreview src={previewImage.url} alt={previewImage.alt} onClose={() => setPreviewImage(null)} />
             )}
         </>
     );
@@ -258,135 +257,157 @@ function ImagePreview({ src, alt, onClose }) {
     );
 }
 
-function CreativeBrief() {
-    const [brief, setBrief] = useState(briefDefaults);
-    const [draft, setDraft] = useState({
-        ...briefDefaults,
-        paletteInput: briefDefaults.palette.join(', '),
-    });
+/**
+ * The couple's own words about their wedding, saved for Jessica, with their
+ * moodboard and inspiration photos.
+ */
+function CreativeBrief({ brief, moodboard, inspirations, canEdit }) {
     const [editing, setEditing] = useState(false);
-    const [saved, setSaved] = useState(false);
+    const imageError = usePage().props.errors.file;
 
-    function update(field, value) {
-        setDraft((current) => ({ ...current, [field]: value }));
-    }
-
-    function save() {
-        setBrief({
-            ...draft,
-            palette: draft.paletteInput
-                .split(',')
-                .map((color) => color.trim())
-                .filter(Boolean),
-        });
-        setEditing(false);
-        setSaved(true);
-        window.setTimeout(() => setSaved(false), 2500);
-    }
+    const form = useForm({
+        title: brief?.title ?? '',
+        description: brief?.description ?? '',
+        palette_input: (brief?.palette ?? []).join(', '),
+        avoid: brief?.avoid ?? '',
+    });
 
     function startEditing() {
-        setDraft({
-            ...brief,
-            paletteInput: brief.palette.join(', '),
+        form.setData({
+            title: brief?.title ?? '',
+            description: brief?.description ?? '',
+            palette_input: (brief?.palette ?? []).join(', '),
+            avoid: brief?.avoid ?? '',
         });
+        form.clearErrors();
         setEditing(true);
     }
 
-    function cancelEditing() {
-        setDraft({
-            ...brief,
-            paletteInput: brief.palette.join(', '),
+    function save(event) {
+        event.preventDefault();
+        form.put(route('couple.design.brief.update'), {
+            preserveScroll: true,
+            onSuccess: () => setEditing(false),
         });
-        setEditing(false);
     }
+
+    const isEmpty = !brief || (!brief.title && !brief.description && brief.palette.length === 0 && !brief.avoid);
 
     return (
         <section id="design-brief" className="mt-16 scroll-mt-24 bg-blush/70 p-6 sm:p-8 lg:p-10" aria-labelledby="brief-heading">
             <SectionTitle eyebrow="Étape 01 · Ce que vous nous avez confié" title="Votre brief créatif">
-                <button
-                    type="button"
-                    onClick={editing ? cancelEditing : startEditing}
-                    className={`${focusRing} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.12em] text-sage transition-colors hover:text-ink`}
-                >
-                    <Icone nom={editing ? 'close' : 'edit'} className="text-[16px]" />
-                    {editing ? 'Annuler' : 'Modifier le brief'}
-                </button>
+                {canEdit && (
+                    <button
+                        type="button"
+                        onClick={editing ? () => setEditing(false) : startEditing}
+                        className={`${focusRing} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.12em] text-sage transition-colors hover:text-ink`}
+                    >
+                        <Icone nom={editing ? 'close' : 'edit'} className="text-[16px]" />
+                        {editing ? 'Annuler' : isEmpty ? 'Rédiger mon brief' : 'Modifier le brief'}
+                    </button>
+                )}
             </SectionTitle>
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
                 <div>
                     <div className="flex items-center justify-between">
                         <p className="text-[10px] uppercase tracking-brand text-sage">Votre moodboard</p>
-                        <span className="text-[11px] text-ink/40">Envoyé le 8 février 2025</span>
+                        {moodboard && (
+                            <span className="text-[11px] text-ink/40">Ajouté le {formatDate(moodboard.created_at)}</span>
+                        )}
                     </div>
                     <div className="mt-3">
-                        <Moodboard src={editing ? draft.moodboard : brief.moodboard} editable={editing} onReplace={(src) => update('moodboard', src)} />
+                        <Moodboard moodboard={moodboard} canEdit={canEdit} />
                     </div>
                 </div>
 
-                <div>
-                    <p className="text-[10px] uppercase tracking-brand text-sage">L’intention du mariage</p>
-                    {editing ? (
+                {editing ? (
+                    <form onSubmit={save}>
+                        <label htmlFor="brief-title" className="text-[10px] uppercase tracking-brand text-sage">L’intention du mariage</label>
                         <input
-                            value={draft.title}
-                            onChange={(event) => update('title', event.target.value)}
+                            id="brief-title"
+                            value={form.data.title}
+                            onChange={(event) => form.setData('title', event.target.value)}
+                            placeholder="Un jardin méditerranéen au coucher du soleil…"
                             className="mt-3 w-full border-0 border-b border-ink/20 bg-transparent px-0 py-2 font-display text-xl focus:border-ink focus:ring-0"
                         />
-                    ) : (
-                        <h3 id="brief-heading" className="mt-3 font-display text-2xl leading-snug">{brief.title}</h3>
-                    )}
-                    {editing ? (
+                        <FieldError message={form.errors.title} />
+                        <label htmlFor="brief-description" className="sr-only">Description</label>
                         <textarea
-                            value={draft.description}
-                            onChange={(event) => update('description', event.target.value)}
+                            id="brief-description"
+                            value={form.data.description}
+                            onChange={(event) => form.setData('description', event.target.value)}
                             rows={6}
+                            placeholder="Racontez l’ambiance que vous imaginez : le lieu, les matières, les fleurs, l’émotion…"
                             className="mt-5 w-full resize-y border border-ink/15 bg-white p-4 text-sm leading-relaxed focus:border-ink focus:ring-0"
                         />
-                    ) : (
-                        <p className="mt-5 text-sm leading-relaxed text-ink/70">{brief.description}</p>
-                    )}
+                        <FieldError message={form.errors.description} />
 
-                    <div className="mt-7 grid gap-6 border-t border-ink/10 pt-5 sm:grid-cols-2">
-                        <div>
-                            <p className="text-[10px] uppercase tracking-brand text-sage">Palette souhaitée</p>
-                            {editing ? (
+                        <div className="mt-7 grid gap-6 border-t border-ink/10 pt-5 sm:grid-cols-2">
+                            <div>
+                                <label htmlFor="brief-palette" className="text-[10px] uppercase tracking-brand text-sage">Palette souhaitée</label>
                                 <input
-                                    value={draft.paletteInput}
-                                    onChange={(event) => update('paletteInput', event.target.value)}
+                                    id="brief-palette"
+                                    value={form.data.palette_input}
+                                    onChange={(event) => form.setData('palette_input', event.target.value)}
                                     placeholder="Ivoire, lin, vert sauge…"
-                                    aria-label="Palette souhaitée"
                                     className="mt-3 w-full border border-ink/15 bg-white px-3 py-2 text-sm focus:border-ink focus:ring-0"
                                 />
-                            ) : (
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {brief.palette.map((color) => (
-                                        <span key={color} className="border border-ink/10 bg-blush px-3 py-1.5 text-xs">{color}</span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <p className="text-[10px] uppercase tracking-brand text-sage">À éviter</p>
-                            {editing ? (
+                                <FieldError message={form.errors.palette ?? form.errors['palette.0']} />
+                            </div>
+                            <div>
+                                <label htmlFor="brief-avoid" className="text-[10px] uppercase tracking-brand text-sage">À éviter</label>
                                 <textarea
-                                    value={draft.avoid}
-                                    onChange={(event) => update('avoid', event.target.value)}
+                                    id="brief-avoid"
+                                    value={form.data.avoid}
+                                    onChange={(event) => form.setData('avoid', event.target.value)}
                                     rows={3}
-                                    aria-label="Éléments à éviter"
                                     className="mt-3 w-full resize-y border border-ink/15 bg-white p-3 text-sm leading-relaxed focus:border-ink focus:ring-0"
                                 />
-                            ) : (
-                                <p className="mt-3 text-sm leading-relaxed text-ink/65">{brief.avoid}</p>
-                            )}
+                                <FieldError message={form.errors.avoid} />
+                            </div>
+                        </div>
+                        <button type="submit" disabled={form.processing} className={`${primaryButton} mt-7 px-5 py-3 disabled:opacity-50`}>
+                            {form.processing ? 'Enregistrement…' : 'Enregistrer mon brief'}
+                        </button>
+                    </form>
+                ) : isEmpty ? (
+                    <div>
+                        <p className="text-[10px] uppercase tracking-brand text-sage">L’intention du mariage</p>
+                        <h3 id="brief-heading" className="mt-3 font-display text-2xl leading-snug">Racontez-nous votre mariage</h3>
+                        <p className="mt-5 text-sm leading-relaxed text-ink/70">
+                            L’ambiance que vous imaginez, vos couleurs, ce que vous voulez éviter : Jessica s’en
+                            sert pour préparer votre direction artistique.
+                        </p>
+                    </div>
+                ) : (
+                    <div>
+                        <p className="text-[10px] uppercase tracking-brand text-sage">L’intention du mariage</p>
+                        <h3 id="brief-heading" className="mt-3 font-display text-2xl leading-snug">{brief.title || 'Votre mariage'}</h3>
+                        {brief.description && (
+                            <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-ink/70">{brief.description}</p>
+                        )}
+
+                        <div className="mt-7 grid gap-6 border-t border-ink/10 pt-5 sm:grid-cols-2">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-brand text-sage">Palette souhaitée</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {brief.palette.length > 0 ? (
+                                        brief.palette.map((color) => (
+                                            <span key={color} className="border border-ink/10 bg-blush px-3 py-1.5 text-xs">{color}</span>
+                                        ))
+                                    ) : (
+                                        <span className="text-sm text-ink/45">Non précisée</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-[10px] uppercase tracking-brand text-sage">À éviter</p>
+                                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink/65">{brief.avoid || 'Non précisé'}</p>
+                            </div>
                         </div>
                     </div>
-                    {editing && (
-                        <button type="button" onClick={save} className={`${primaryButton} mt-7 px-5 py-3`}>
-                            Enregistrer mes modifications
-                        </button>
-                    )}
-                    {saved && <p className="mt-3 text-xs text-sage">Votre brief a bien été enregistré.</p>}
-                </div>
+                )}
             </div>
 
             <div className="mt-10 border-t border-ink/10 pt-6">
@@ -397,12 +418,9 @@ function CreativeBrief() {
                     </div>
                     <Icone nom="photo_library" className="hidden text-[25px] text-sage sm:block" />
                 </div>
+                <FieldError message={imageError} />
                 <div className="mt-5">
-                    <InspirationGallery
-                        images={editing ? draft.inspirationImages : brief.inspirationImages}
-                        editable={editing}
-                        onChange={(images) => update('inspirationImages', images)}
-                    />
+                    <InspirationGallery images={inspirations} canEdit={canEdit} />
                 </div>
             </div>
         </section>
@@ -411,9 +429,20 @@ function CreativeBrief() {
 
 function VersionCard({ version, featured }) {
     const [feedbackOpen, setFeedbackOpen] = useState(false);
-    const [previewImage, setPreviewImage] = useState(null);
-    const [approved, setApproved] = useState(Boolean(version.approved_at));
+    const approval = useForm();
+    const feedback = useForm({ text: '' });
     const available = Boolean(version.download_url);
+    const approved = Boolean(version.approved_at);
+
+    function approve() {
+        approval.post(route('couple.documents.approve', version.id), { preserveScroll: true });
+    }
+
+    function sendFeedback(event) {
+        event.preventDefault();
+        feedback.transform((data) => ({ body: `Retours sur « ${version.title} » :\n${data.text}` }));
+        feedback.post(route('couple.messages.store'));
+    }
 
     return (
         <article id={featured ? 'design-final' : undefined} className={`scroll-mt-24 overflow-hidden border bg-white ${featured ? 'border-ink/15' : 'border-ink/10'}`}>
@@ -433,69 +462,64 @@ function VersionCard({ version, featured }) {
                     </div>
                     <div className="flex items-center justify-between gap-3">
                         <p className="text-[10px] uppercase tracking-brand text-sage">Version {String(version.number).padStart(2, '0')}</p>
-                        <Pill muted={!available}>{approved ? 'Direction validée' : available ? 'À découvrir' : 'En préparation'}</Pill>
+                        <Pill muted={!approved && !version.awaiting_approval}>
+                            {approved ? 'Direction validée' : version.awaiting_approval ? 'À valider' : 'À découvrir'}
+                        </Pill>
                     </div>
                 </div>
 
                 {version.description && (
-                    <p className="mt-7 max-w-2xl text-sm leading-relaxed text-ink/70">{version.description}</p>
+                    <p className="mt-7 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-ink/70">{version.description}</p>
                 )}
 
-                {available ? (
-                    <>
-                        <div className="mt-8 grid gap-2 sm:grid-cols-3">
-                            {proposalImages.map((image) => (
-                                <button
-                                    key={image.src}
-                                    type="button"
-                                    onClick={() => setPreviewImage(image)}
-                                    className={`${focusRing} group aspect-[4/3] cursor-zoom-in overflow-hidden bg-blush text-left`}
-                                    aria-label={`Agrandir ${image.alt}`}
-                                >
-                                    <img src={image.src} alt={image.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-ink/10 pt-6">
-                            {version.download_url && (
-                                <a href={version.download_url} className={`${primaryButton} px-5 py-3`}>
-                                    <Icone nom="download" className="mr-2 text-[16px]" />
-                                    Télécharger le carnet
-                                </a>
-                            )}
-                            <button type="button" onClick={() => setApproved(true)} className={`${focusRing} border border-ink/15 px-5 py-3 text-[10px] uppercase tracking-[0.12em] transition-colors hover:border-ink`}>
-                                <Icone nom="check" className="mr-1 align-middle text-[16px]" />
-                                {approved ? 'Direction validée' : 'Valider cette direction'}
-                            </button>
-                            <button type="button" onClick={() => setFeedbackOpen((current) => !current)} className={`${focusRing} px-2 py-3 text-[10px] uppercase tracking-[0.12em] text-sage underline decoration-ink/20 underline-offset-4`}>
-                                {feedbackOpen ? 'Fermer' : 'Demander une évolution'}
-                            </button>
-                        </div>
-                    </>
-                ) : (
-                    <div className="mt-8 flex items-center gap-4 bg-blush/60 p-5">
-                        <Icone nom="auto_awesome" className="text-[26px] text-sage/60" />
-                        <div>
-                            <p className="font-display text-lg">Jessica prépare la suite</p>
-                            <p className="mt-1 text-xs leading-relaxed text-ink/55">Une nouvelle proposition apparaîtra ici dès qu’elle sera prête.</p>
-                        </div>
-                    </div>
-                )}
-            </div>
-            {previewImage && (
-                <ImagePreview
-                    src={previewImage.src}
-                    alt={previewImage.alt}
-                    onClose={() => setPreviewImage(null)}
-                />
-            )}
-            {feedbackOpen && (
-                <div className="border-t border-ink/10 bg-ivory p-6 sm:p-8">
-                    <label htmlFor={`feedback-${version.id}`} className="text-[10px] uppercase tracking-brand text-sage">Vos retours sur cette proposition</label>
-                    <textarea id={`feedback-${version.id}`} rows={3} placeholder="Ce qui vous plaît, ce que vous souhaitez faire évoluer…" className="mt-3 w-full resize-y border border-ink/15 bg-white p-4 text-sm focus:border-ink focus:ring-0" />
-                    <button type="button" onClick={() => setFeedbackOpen(false)} className={`${primaryButton} mt-3 px-5 py-3`}>Envoyer mes retours</button>
+                <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-ink/10 pt-6">
+                    {available ? (
+                        <a href={version.download_url} className={`${primaryButton} px-5 py-3`}>
+                            <Icone nom="download" className="mr-2 text-[16px]" />
+                            Télécharger le carnet
+                        </a>
+                    ) : (
+                        <span className="border border-dashed border-ink/20 px-4 py-3 text-xs italic text-ink/55">
+                            Fichier indisponible sur cet appareil
+                        </span>
+                    )}
+                    {version.awaiting_approval && (
+                        <button
+                            type="button"
+                            onClick={approve}
+                            disabled={approval.processing}
+                            className={`${focusRing} border border-ink/15 px-5 py-3 text-[10px] uppercase tracking-[0.12em] transition-colors hover:border-ink disabled:opacity-50`}
+                        >
+                            <Icone nom="check" className="mr-1 align-middle text-[16px]" />
+                            {approval.processing ? 'Validation…' : 'Valider cette direction'}
+                        </button>
+                    )}
+                    {approved && (
+                        <span className="text-xs text-sage">Validée le {formatDate(version.approved_at)}</span>
+                    )}
+                    <button type="button" onClick={() => setFeedbackOpen((current) => !current)} className={`${focusRing} px-2 py-3 text-[10px] uppercase tracking-[0.12em] text-sage underline decoration-ink/20 underline-offset-4`}>
+                        {feedbackOpen ? 'Fermer' : 'Demander une évolution'}
+                    </button>
                 </div>
+            </div>
+            {feedbackOpen && (
+                <form onSubmit={sendFeedback} className="border-t border-ink/10 bg-ivory p-6 sm:p-8">
+                    <label htmlFor={`feedback-${version.id}`} className="text-[10px] uppercase tracking-brand text-sage">Vos retours sur cette proposition</label>
+                    <textarea
+                        id={`feedback-${version.id}`}
+                        rows={3}
+                        required
+                        value={feedback.data.text}
+                        onChange={(event) => feedback.setData('text', event.target.value)}
+                        placeholder="Ce qui vous plaît, ce que vous souhaitez faire évoluer…"
+                        className="mt-3 w-full resize-y border border-ink/15 bg-white p-4 text-sm focus:border-ink focus:ring-0"
+                    />
+                    <FieldError message={feedback.errors.body} />
+                    <p className="mt-2 text-xs text-ink/50">Vos retours seront envoyés à Jessica dans vos messages.</p>
+                    <button type="submit" disabled={feedback.processing} className={`${primaryButton} mt-3 px-5 py-3 disabled:opacity-50`}>
+                        {feedback.processing ? 'Envoi…' : 'Envoyer mes retours'}
+                    </button>
+                </form>
             )}
         </article>
     );
@@ -534,9 +558,13 @@ function Process({ activeStep }) {
     );
 }
 
-export default function Design({ versions = [] }) {
+/**
+ * Design page of the couple space: the brief, moodboard and photos the couple
+ * shares with Jessica, then the versions of the design book she sends back.
+ */
+export default function Design({ brief, moodboard, inspirations, versions = [], canEdit }) {
     const sortedVersions = [...versions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const activeStep = sortedVersions.length > 0 ? 2 : 1;
+    const activeStep = sortedVersions.some((version) => version.approved_at) ? 3 : sortedVersions.length > 0 ? 2 : 0;
 
     return (
         <CoupleLayout active="design">
@@ -557,7 +585,7 @@ export default function Design({ versions = [] }) {
             </header>
 
             <Process activeStep={activeStep} />
-            <CreativeBrief />
+            <CreativeBrief brief={brief} moodboard={moodboard} inspirations={inspirations} canEdit={canEdit} />
 
             <section id="design-proposals" className="mt-20 scroll-mt-24 bg-blush/70 p-6 sm:p-8 lg:p-10" aria-labelledby="proposals-heading">
                 <SectionTitle eyebrow="Étape 02 · Le travail de Jessica" title="Vos propositions">
@@ -574,7 +602,7 @@ export default function Design({ versions = [] }) {
                     <div className="mt-7 border border-dashed border-ink/20 bg-white px-6 py-12 text-center">
                         <Icone nom="palette" className="text-[28px] text-sage" />
                         <p className="mt-4 font-display text-lg">La première proposition arrive bientôt</p>
-                        <p className="mx-auto mt-2 max-w-sm text-sm text-ink/55">Jessica prépare votre direction artistique à partir de ce brief.</p>
+                        <p className="mx-auto mt-2 max-w-sm text-sm text-ink/55">Jessica prépare votre direction artistique à partir de votre brief.</p>
                     </div>
                 ) : (
                     <div className="mt-7 space-y-5">

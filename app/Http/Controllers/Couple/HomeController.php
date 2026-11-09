@@ -111,7 +111,9 @@ class HomeController extends Controller
 
         return [
             'title' => $appointment->title,
-            'starts_at' => $appointment->starts_at->toIso8601String(),
+            // Wall-clock time, without time zone, as on the Appointments page:
+            // the browser must not shift the hour Jessica has set.
+            'starts_at' => $appointment->starts_at->format('Y-m-d\TH:i:s'),
             'mode' => $appointment->mode?->value,
             'location' => $appointment->location,
             'starts_in' => $this->timeUntil($appointment->starts_at),

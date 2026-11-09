@@ -185,7 +185,7 @@ class HomeControllerTest extends TestCase
         $response->assertInertia(fn (Assert $page) => $page
             ->where('nextAppointment', [
                 'title' => 'Visite technique',
-                'starts_at' => '2026-11-06T15:30:00+00:00',
+                'starts_at' => '2026-11-06T15:30:00',
                 'mode' => 'in_person',
                 'location' => 'Domaine des Tilleuls',
                 'starts_in' => ['unit' => 'days', 'value' => 3],

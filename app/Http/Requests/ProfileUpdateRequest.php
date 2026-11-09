@@ -28,4 +28,27 @@ class ProfileUpdateRequest extends FormRequest
             ],
         ];
     }
+
+    /**
+     * Get validation messages in French.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Indiquez un nom.',
+            'email.required' => 'Indiquez votre adresse e-mail.',
+            'email.email' => 'Cette adresse e-mail n’est pas valide.',
+            'email.unique' => 'Cette adresse e-mail est déjà utilisée par un autre compte.',
+        ];
+    }
+
+    /**
+     * The e-mail is the login: keep a single spelling of it.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['email' => mb_strtolower(trim((string) $this->input('email')))]);
+    }
 }
