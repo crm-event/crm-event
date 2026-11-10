@@ -5,11 +5,27 @@ import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
 
-const steps = [
-    { number: '01', label: 'Vos inspirations', icon: 'favorite' },
-    { number: '02', label: 'Direction artistique', icon: 'palette' },
-    { number: '03', label: 'Vos retours', icon: 'edit_note' },
-    { number: '04', label: 'Rendu final', icon: 'auto_awesome' },
+const steps = (language) => [
+    {
+        number: '01',
+        label: language === 'en' ? 'Your inspirations' : 'Vos inspirations',
+        icon: 'favorite',
+    },
+    {
+        number: '02',
+        label: language === 'en' ? 'Art direction' : 'Direction artistique',
+        icon: 'palette',
+    },
+    {
+        number: '03',
+        label: language === 'en' ? 'Your feedback' : 'Vos retours',
+        icon: 'edit_note',
+    },
+    {
+        number: '04',
+        label: language === 'en' ? 'Final delivery' : 'Rendu final',
+        icon: 'auto_awesome',
+    },
 ];
 
 const processStepStyles = [
@@ -525,11 +541,11 @@ function VersionCard({ version, featured }) {
     );
 }
 
-function Process({ activeStep }) {
+function Process({ activeStep, language }) {
     return (
         <section className="mt-14" aria-label="Progression du projet design">
             <div className="grid gap-2 sm:grid-cols-4">
-                {steps.map((step, index) => {
+                {steps(language).map((step, index) => {
                     const complete = index < activeStep;
                     const current = index === activeStep;
                     const target = ['design-brief', 'design-proposals', 'design-feedback', 'design-final'][index];
@@ -544,12 +560,34 @@ function Process({ activeStep }) {
                                 <span className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] ${complete || current ? 'bg-ink text-ivory' : 'border border-ink/20 text-ink/45'}`}>
                                     {complete ? <Icone nom="check" className="text-[15px]" /> : step.number}
                                 </span>
-                                <Icone nom={step.icon} className={`text-[21px] ${current ? 'text-ink' : 'text-sage/60'}`} />
+
+                                <Icone
+                                    nom={step.icon}
+                                    className={`text-[21px] ${current ? 'text-ink' : 'text-sage/60'}`}
+                                />
                             </div>
-                            <p className={`mt-5 text-[10px] uppercase tracking-[0.1em] ${current ? 'text-ink' : 'text-ink/60'}`}>{step.label}</p>
-                            {current && <p className="mt-1 text-[11px] text-sage">En ce moment</p>}
-                            {complete && <p className="mt-1 text-[11px] text-sage">Terminé</p>}
-                            {!complete && !current && <p className="mt-1 text-[11px] text-ink/40">À venir</p>}
+
+                            <p className={`mt-5 text-[10px] uppercase tracking-[0.1em] ${current ? 'text-ink' : 'text-ink/60'}`}>
+                                {step.label}
+                            </p>
+
+                            {current && (
+                                <p className="mt-1 text-[11px] text-sage">
+                                    {language === 'en' ? 'Current step' : 'En ce moment'}
+                                </p>
+                            )}
+
+                            {complete && (
+                                <p className="mt-1 text-[11px] text-sage">
+                                    {language === 'en' ? 'Completed' : 'Terminé'}
+                                </p>
+                            )}
+
+                            {!complete && !current && (
+                                <p className="mt-1 text-[11px] text-ink/40">
+                                    {language === 'en' ? 'Coming soon' : 'À venir'}
+                                </p>
+                            )}
                         </a>
                     );
                 })}
@@ -563,6 +601,7 @@ function Process({ activeStep }) {
  * shares with Jessica, then the versions of the design book she sends back.
  */
 export default function Design({ brief, moodboard, inspirations, versions = [], canEdit }) {
+    const language = window.localStorage.getItem('ldt-language') ?? 'fr';
     const sortedVersions = [...versions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const activeStep = sortedVersions.some((version) => version.approved_at) ? 3 : sortedVersions.length > 0 ? 2 : 0;
 
@@ -584,8 +623,10 @@ export default function Design({ brief, moodboard, inspirations, versions = [], 
                 <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full border border-ivory/50 sm:h-96 sm:w-96" />
             </header>
 
-            <Process activeStep={activeStep} />
-            <CreativeBrief brief={brief} moodboard={moodboard} inspirations={inspirations} canEdit={canEdit} />
+            <div className="mx-auto max-w-7xl">
+                <Process activeStep={activeStep} language="fr" />
+                <CreativeBrief brief={brief} moodboard={moodboard} inspirations={inspirations} canEdit={canEdit} />
+            </div>
 
             <section id="design-proposals" className="mt-20 scroll-mt-24 bg-blush/70 p-6 sm:p-8 lg:p-10" aria-labelledby="proposals-heading">
                 <SectionTitle eyebrow="Étape 02 · Le travail de Jessica" title="Vos propositions">

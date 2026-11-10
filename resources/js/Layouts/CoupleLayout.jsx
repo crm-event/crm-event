@@ -1,6 +1,8 @@
 import Icone from '@/Components/Icone';
 import Dropdown from '@/Components/Dropdown';
+import LanguageSwitcher, { useLanguage } from '@/Components/LanguageSwitcher';
 import { focusRing } from '@/brand';
+import { translate } from '@/i18n';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -19,41 +21,43 @@ import { useEffect, useState } from 'react';
  * they are opened (messages, documents): they are only prefetched when the
  * button is pressed, never on a mere hover.
  */
-const NAVIGATION_GROUPS = [
-    {
-        label: 'Votre mariage',
-        entries: [
-            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.home' },
-            { key: 'design', label: 'Design', icon: 'palette', route: 'couple.design.index' },
-            {
-                key: 'documents',
-                label: 'Documents',
-                icon: 'description',
-                route: 'couple.documents.index',
-                prefetchOnPress: true,
-            },
-            { key: 'appointments', label: 'Rendez-vous', icon: 'event', route: 'couple.appointments.index' },
-            {
-                key: 'messages',
-                label: 'Messages',
-                icon: 'chat_bubble',
-                route: 'couple.messages.index',
-                prefetchOnPress: true,
-            },
-        ],
-    },
-    {
-        label: 'Entre couples',
-        entries: [
-            {
-                key: 'community',
-                label: 'Communauté',
-                icon: 'diversity_1',
-                route: 'couple.community.index',
-            },
-        ],
-    },
-];
+function buildNavigationGroups(t) {
+    return [
+        {
+            label: t('yourWedding'),
+            entries: [
+                { key: 'wedding', label: t('myWedding'), icon: 'favorite', route: 'couple.home' },
+                { key: 'design', label: t('design'), icon: 'palette', route: 'couple.design.index' },
+                {
+                    key: 'documents',
+                    label: t('documents'),
+                    icon: 'description',
+                    route: 'couple.documents.index',
+                    prefetchOnPress: true,
+                },
+                { key: 'appointments', label: t('appointments'), icon: 'event', route: 'couple.appointments.index' },
+                {
+                    key: 'messages',
+                    label: t('messages'),
+                    icon: 'chat_bubble',
+                    route: 'couple.messages.index',
+                    prefetchOnPress: true,
+                },
+            ],
+        },
+        {
+            label: t('betweenCouples'),
+            entries: [
+                {
+                    key: 'community',
+                    label: t('community'),
+                    icon: 'diversity_1',
+                    route: 'couple.community.index',
+                },
+            ],
+        },
+    ];
+}
 
 /** How long a prefetched page may be shown before being fetched again. */
 const PREFETCH_CACHE_DURATION = '10s';
@@ -61,15 +65,17 @@ const PREFETCH_CACHE_DURATION = '10s';
 const entryClasses =
     'flex items-center gap-3 border-l-2 px-4 py-2.5 text-[15px] transition-colors';
 
-const PAGE_LABELS = {
-    wedding: 'Notre mariage',
-    design: 'Design',
-    documents: 'Documents',
-    appointments: 'Rendez-vous',
-    messages: 'Messages',
-    community: 'Communauté',
-    account: 'Mon compte',
-};
+function buildPageLabels(t) {
+    return {
+        wedding: t('myWedding'),
+        design: t('design'),
+        documents: t('documents'),
+        appointments: t('appointments'),
+        messages: t('messages'),
+        community: t('community'),
+        account: t('account'),
+    };
+}
 
 function NavigationEntry({ entry, isActive }) {
     const content = (
@@ -109,7 +115,9 @@ function NavigationEntry({ entry, isActive }) {
     );
 }
 
-function Sidebar({ activeKey }) {
+function Sidebar({ activeKey, t }) {
+    const navigationGroups = buildNavigationGroups(t);
+
     return (
         <div className="flex h-full flex-col bg-blush">
             <Link
@@ -130,13 +138,13 @@ function Sidebar({ activeKey }) {
                         LA DERNIÈRE TOUCHE
                     </span>
                     <span className="mt-1 block text-[10px] uppercase tracking-brand text-sage">
-                        Espace client
+                        {t('clientArea')}
                     </span>
                 </span>
             </Link>
 
-            <nav aria-label="Navigation de l’espace client" className="flex-1 overflow-y-auto py-6">
-                {NAVIGATION_GROUPS.map((group) => (
+            <nav aria-label={t('clientNavigation')} className="flex-1 overflow-y-auto py-6">
+                {navigationGroups.map((group) => (
                     <div key={group.label} className="mb-6 last:mb-0">
                         <p className="mb-2 px-6 text-[10px] uppercase tracking-brand text-sage">
                             {group.label}
@@ -159,13 +167,6 @@ function Sidebar({ activeKey }) {
     );
 }
 
-const notificationDateFormatter = new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-});
-
 /**
  * Bell of the couple space. The notifications are computed by the server from
  * the couple's data (HandleInertiaRequests): each one disappears once the
@@ -173,6 +174,14 @@ const notificationDateFormatter = new Intl.DateTimeFormat('fr-FR', {
  */
 function NotificationsMenu() {
     const notifications = usePage().props.coupleNotifications ?? [];
+    const { language } = useLanguage();
+    const t = (key) => translate(language, key);
+    const notificationDateFormatter = new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
 
     return (
         <Dropdown>
@@ -181,8 +190,8 @@ function NotificationsMenu() {
                     type="button"
                     aria-label={
                         notifications.length > 0
-                            ? `Notifications (${notifications.length})`
-                            : 'Notifications'
+                            ? `${t('notifications')} (${notifications.length})`
+                            : t('notifications')
                     }
                     className={`${focusRing} relative rounded-lg p-2 text-sage transition-colors hover:bg-blush hover:text-ink`}
                 >
@@ -199,15 +208,13 @@ function NotificationsMenu() {
                 <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
                     <div>
                         <p className="text-[10px] uppercase tracking-brand text-sage">
-                            Votre actualité
+                            {t('yourUpdates')}
                         </p>
-                        <p className="mt-1 font-display text-xl text-ink">
-                            Notifications
-                        </p>
+                        <p className="mt-1 font-display text-xl text-ink">{t('notifications')}</p>
                     </div>
                     <span className="rounded-full bg-blush px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-sage">
                         {notifications.length}{' '}
-                        {notifications.length > 1 ? 'nouvelles' : 'nouvelle'}
+                        {notifications.length > 1 ? t('newPlural') : t('newSingular')}
                     </span>
                 </div>
 
@@ -245,9 +252,9 @@ function NotificationsMenu() {
                         <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blush text-sage">
                             <Icone nom="done_all" className="text-[21px]" />
                         </span>
-                        <p className="mt-4 font-display text-lg text-ink">Tout est à jour</p>
+                        <p className="mt-4 font-display text-lg text-ink">{t('upToDate')}</p>
                         <p className="mt-1 text-sm text-ink/65">
-                            Vous n’avez aucune notification en attente.
+                            {t('noPendingNotifications')}
                         </p>
                     </div>
                 )}
@@ -257,7 +264,10 @@ function NotificationsMenu() {
 }
 
 function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
-    const pageLabel = PAGE_LABELS[active] || 'Espace client';
+    const { language } = useLanguage();
+    const t = (key) => translate(language, key);
+    const pageLabels = buildPageLabels(t);
+    const pageLabel = pageLabels[active] || t('clientArea');
     const initials = user.name
         .split(' ')
         .map((name) => name[0])
@@ -270,7 +280,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
             <div className="flex min-w-0 items-center gap-3">
                 <button
                     type="button"
-                    aria-label="Ouvrir la navigation"
+                    aria-label={t('openNavigation')}
                     aria-expanded={isMenuOpen}
                     onClick={onOpenMenu}
                     className={`${focusRing} rounded-lg p-2 text-sage transition-colors hover:bg-blush hover:text-ink lg:hidden`}
@@ -280,7 +290,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
 
                 <div className="min-w-0">
                     <p className="hidden text-[10px] uppercase tracking-brand text-sage sm:block">
-                        Espace client
+                        {t('clientArea')}
                     </p>
                     <p className="truncate font-display text-lg text-ink sm:mt-0.5 sm:text-xl">
                         {pageLabel}
@@ -289,15 +299,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
             </div>
 
             <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-                <button
-                    type="button"
-                    aria-label="Changer de langue"
-                    title="Bientôt disponible"
-                    className={`${focusRing} inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[10px] uppercase tracking-[0.16em] text-sage transition-colors hover:bg-blush hover:text-ink`}
-                >
-                    <Icone nom="language" className="text-[18px]" />
-                    <span className="hidden sm:inline">FR</span>
-                </button>
+                <LanguageSwitcher />
 
                 <span className="hidden h-6 w-px bg-ink/10 sm:block" />
 
@@ -322,7 +324,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
                     <Dropdown.Content contentClasses="bg-white p-2">
                         <div className="border-b border-ink/10 px-3 py-2">
                             <p className="text-[10px] uppercase tracking-brand text-sage">
-                                Votre espace
+                                {t('yourSpace')}
                             </p>
                             <p className="mt-1 truncate font-display text-base text-ink">
                                 {user.name}
@@ -339,7 +341,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
                                     nom="person"
                                     className="text-[18px] text-sage"
                                 />
-                                Mon compte
+                                {t('account')}
                             </span>
                         </Dropdown.Link>
                         <Dropdown.Link
@@ -353,7 +355,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
                                     nom="logout"
                                     className="text-[18px] text-sage"
                                 />
-                                Se déconnecter
+                                {t('signingOut')}
                             </span>
                         </Dropdown.Link>
                     </Dropdown.Content>
@@ -365,6 +367,8 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
 
 export default function CoupleLayout({ active = 'wedding', children }) {
     const user = usePage().props.auth.user;
+    const { language } = useLanguage();
+    const t = (key) => translate(language, key);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Inertia keeps prefetched pages even after a form is sent: forget them so
@@ -398,7 +402,7 @@ export default function CoupleLayout({ active = 'wedding', children }) {
     return (
         <div className="min-h-screen bg-ivory font-sans text-ink antialiased">
             <aside className="fixed left-0 top-0 z-40 hidden h-screen w-sidebar border-r border-ink/10 lg:block">
-                <Sidebar activeKey={active} />
+                <Sidebar activeKey={active} t={t} />
             </aside>
 
             {isMenuOpen && (
@@ -410,13 +414,13 @@ export default function CoupleLayout({ active = 'wedding', children }) {
                     <aside className="relative h-full w-sidebar max-w-[85vw] border-r border-ink/10">
                         <button
                             type="button"
-                            aria-label="Fermer la navigation"
+                            aria-label={t('closeNavigation')}
                             onClick={() => setIsMenuOpen(false)}
                             className={`${focusRing} absolute left-full top-3 ml-1 p-2 text-ivory hover:opacity-80`}
                         >
                             <Icone nom="close" className="text-[22px]" />
                         </button>
-                        <Sidebar activeKey={active} />
+                        <Sidebar activeKey={active} t={t} />
                     </aside>
                 </div>
             )}
