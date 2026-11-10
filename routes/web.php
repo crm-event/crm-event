@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\RentabiliteController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DesignController;
@@ -83,6 +84,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/{message}/voice', [AdminMessageController::class, 'voice'])->name('voice');
         Route::patch('/{message}', [AdminMessageController::class, 'update'])->name('update');
         Route::delete('/{message}', [AdminMessageController::class, 'destroy'])->name('destroy');
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin/avis')
+    ->name('admin.reviews.')
+    ->group(function () {
+        Route::get('/', [AdminReviewController::class, 'index'])->name('index');
+        Route::post('/{wedding}', [AdminReviewController::class, 'store'])->name('store');
     });
 
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
