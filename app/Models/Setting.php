@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Dated parameter (rate, threshold, delay...), see docs/bdd/README.md,
- * decision D10. A value stays valid until a newer row replaces it.
+ * Dated parameter (delay, rate...): the most recent value already in force
+ * is the one that applies (see docs/bdd/README.md, decision D10).
  */
 class Setting extends Model
 {
@@ -18,38 +17,17 @@ class Setting extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'valid_from' => 'date',
-        ];
-    }
-
-    /**
-     * Value of a parameter on the given date (today by default): the most
-     * recent row whose `valid_from` is not after that date.
-     */
-    public static function valueOn(string $key, ?CarbonInterface $date = null, ?string $default = null): ?string
-    {
-        $value = static::query()
-            ->where('key', $key)
-            ->whereDate('valid_from', '<=', $date ?? today())
-            ->orderByDesc('valid_from')
-            ->value('value');
-
-        return $value ?? $default;
-    }
-
-    /**
      * Number of days after the wedding before the couple is asked for a
      * review (`review_delay_days`, 30 when not set).
      */
     public static function reviewDelayDays(): int
     {
-        return (int) static::valueOn('review_delay_days', default: '30');
+        $value = static::query()
+            ->where('key', 'review_delay_days')
+            ->whereDate('valid_from', '<=', today())
+            ->orderByDesc('valid_from')
+            ->value('value');
+
+        return $value === null ? 30 : (int) $value;
     }
 }
