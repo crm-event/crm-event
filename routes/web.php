@@ -66,6 +66,7 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::get('/', [AdminDocumentController::class, 'index'])->name('index');
         Route::post('/', [AdminDocumentController::class, 'store'])->name('store');
+        Route::get('/{document}/download', [AdminDocumentController::class, 'download'])->name('download');
     });
 
 Route::middleware(['auth', 'role:admin'])
