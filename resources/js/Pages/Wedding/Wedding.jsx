@@ -19,12 +19,6 @@ const ONGLET = [
 
 const classesAction = `${anneauFocus} text-[10px] uppercase tracking-[0.12em] text-ink underline`;
 
-
-const QUESTIONS_PAR_DEFAUT = [
-    { id: 1, texte: 'La rencontre fortuite aux lumières', repondu: true },
-    { id: 2, texte: 'La demande sous le pergola de Florence', repondu: true },
-    { id: 3, texte: 'Les vœux secrets de l’échange des anneaux', repondu: false },
-];
 function dateFr(date) {
     if (!date) return 'Date à définir';
     const valeur = new Date(date);
@@ -62,7 +56,7 @@ export default function Wedding({
                                     prestations = [],
                                     prestataires = [],
                                     milestones = [],
-                                    questions = QUESTIONS_PAR_DEFAUT,
+                                    questions = [],
                                     onOpenTab,
                                     onOpenPortal,
                                     onEditWedding,
@@ -73,27 +67,22 @@ export default function Wedding({
 
     const [ongletActif, setOngletActif] = useState('resume');
 
-    const nomCouple =
-        wedding?.couple_name ||
-        [wedding?.partner_one_name, wedding?.partner_two_name].filter(Boolean).join(' & ') ||
-        'Clémence d’Ormesson & Alexandre Royer';
+    const couple = wedding?.couple;
 
-    const totalPrestations = useMemo(
-        () =>
-            prestations.reduce(
-                (total, prestation) =>
-                    total + Number(prestation.montant ?? prestation.amount ?? 0),
-                0,
-            ),
-        [prestations],
-    );
+const nomCouple = [
+    couple?.partner1_first_name,
+    couple?.partner2_first_name,
+].filter(Boolean).join(' & ') || 'Couple sans nom';
 
-    const dateMariage = wedding?.wedding_date || wedding?.date || '2025-06-28';
-    const lieu = wedding?.venue_name || wedding?.location || 'Château de Sannes · Lubéron';
-    const nombreInvites = wedding?.guest_count ?? wedding?.guests_count ?? 140;
-    const nombrePrestatairesConfirmes = prestataires.filter(
-        (prestataire) => (prestataire.statut || prestataire.status) === 'confirmé',
-    ).length;
+const dateMariage = wedding?.wedding_date;
+
+const lieu = wedding?.venue?.name ?? 'Lieu à définir';
+
+const nombreInvites = wedding?.guest_count ?? 0;
+
+const budget = wedding?.estimated_budget ?? 0;
+
+const statut = wedding?.status ?? 'En préparation';
 
     const changerOnglet = (id) => {
         setOngletActif(id);
@@ -109,7 +98,7 @@ export default function Wedding({
                     <div className="relative flex flex-col justify-between gap-5 p-5 sm:flex-row sm:items-end sm:p-6">
                         <div className="min-w-0">
                             <div className="mb-3 flex flex-wrap items-center gap-2">
-                                <Statut sombre>{EtapeTimeline.statut || 'En préparation'}</Statut>
+                                <Statut sombre>{statut}</Statut>
                                 <span className="rounded-full bg-ivory px-2 py-1 text-[9px] tracking-wider text-sage">
                                     # DOS-{wedding?.id || '2025-0628'}
                                 </span>
@@ -223,15 +212,15 @@ export default function Wedding({
                                 <p className="text-[9px] uppercase tracking-[0.15em] text-sage">
                                     Honoraires totaux
                                     <strong className="ml-2 font-display text-xl font-normal tracking-normal text-ink">
-                                        {formaterEuros(wedding?.total_fees ?? totalPrestations)}
+                                        {formaterEuros(totalPrestations)}
                                     </strong>
                                     <span className="ml-1">HT</span>
                                 </p>
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                {prestations.map((prestation, index) => (
+                                {prestations.map((prestation) => (
                                     <Prestations
-                                        key={prestation.id ?? index}
+                                        key={prestation.id}
                                         prestation={prestation}
                                     />
                                 ))}
@@ -332,9 +321,9 @@ export default function Wedding({
                                 </p>
 
                                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                                    {prestataires.map((prestataire, index) => (
+                                    {prestataires.map((prestataire) => (
                                         <Prestataires
-                                            key={prestataire.id ?? index}
+                                            key={prestataire.id}
                                             prestataire={prestataire}
                                         />
                                     ))}

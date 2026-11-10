@@ -27,9 +27,15 @@ class WeddingSelectionController
      */
     public function show(int $id): Response
     {
-        $wedding = Wedding::with('couple')
-            ->where('id', $id)
-            ->first();
+        $wedding = Wedding::with([
+           'couple',
+           'venue',
+           'weddingServices',
+           'vendors',
+           'timelineItems' 
+        ])
+        ->where('id', $id)
+        ->first();
 
         if (!$wedding) {
             abort(404);
@@ -37,6 +43,9 @@ class WeddingSelectionController
 
         return Inertia::render('Wedding/Wedding', [
             'wedding' => $wedding,
+            'prestations' => $wedding->weddingServices,
+            'prestataires' => $wedding->vendors,
+            'milestones' => $wedding->timelineItems,
         ]);
     }
 }

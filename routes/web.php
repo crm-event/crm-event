@@ -100,8 +100,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])
-    ->prefix('weddings')
-    ->name('admin.weddings.')
+    ->prefix('wedding')
+    ->name('admin.wedding.')
     ->group(function () {
 
     Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');

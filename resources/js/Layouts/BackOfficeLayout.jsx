@@ -14,7 +14,7 @@ import { useState } from 'react';
 const NAVIGATION = [
     { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
     { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread', route: 'demandes' },
-    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'wedding' },
+    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'admin.wedding.index' },
     { cle: 'espaces-clients', libelle: 'Espaces clients', icone: 'group', route: 'admin.couples.index' },
     { cle: 'messages', libelle: 'Messages', icone: 'chat', route: 'admin.messages.index' },
     { cle: 'documents', libelle: 'Documents', icone: 'description', route: 'admin.documents.index' },
