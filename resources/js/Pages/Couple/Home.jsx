@@ -275,15 +275,7 @@ function DocumentsSummary({ documents, t }) {
  */
 export default function Home({ coupleNames, wedding, nextAppointment, unreadMessages, documents }) {
     const { language } = useLanguage();
-    const t = (key, params = {}) => {
-        const value = translate(language, key);
-
-        if (typeof value !== 'string') {
-            return key;
-        }
-
-        return value.replace(/\{(\w+)\}/g, (_, paramName) => String(params[paramName] ?? `{${paramName}}`));
-    };
+    const t = (key, params = {}) => translate(language, key, params);
 
     return (
         <CoupleLayout active="wedding">

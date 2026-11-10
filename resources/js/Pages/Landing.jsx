@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import FieldError from '@/Components/FieldError';
+import { useLanguage } from '@/Components/LanguageSwitcher';
 import { fieldLabel, focusRing, primaryButton, secondaryButton, textField } from '@/brand';
 import { CONTACT } from '@/contact';
 
@@ -302,21 +303,11 @@ function createMailLinks(language) {
 }
 
 export default function Landing({ auth }) {
-    const [language, setLanguage] = useState(() => {
-        if (typeof window === 'undefined') return 'fr';
-
-        return window.localStorage.getItem('ldt-language') ?? 'fr';
-    });
+    const { language, setLanguage: changeLanguage } = useLanguage();
 
     const homeUrl = auth?.homeUrl ?? null;
     const t = CONTENT[language];
     const mailLinks = createMailLinks(language);
-
-    function changeLanguage(nextLanguage) {
-        setLanguage(nextLanguage);
-        window.localStorage.setItem('ldt-language', nextLanguage);
-        document.documentElement.lang = CONTENT[nextLanguage].htmlLang;
-    }
 
     return (
         <>
