@@ -22,6 +22,7 @@ use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
 Route::post('/demande-acces', AccessRequestController::class)->name('access-request.store');
+Route::post('/locale', LocaleController::class)->name('locale.update');
 Route::inertia('/mentions-legales', 'LegalNotice')->name('legal-notice');
 
 Route::middleware(['auth', 'role:couple'])
