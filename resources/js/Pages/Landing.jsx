@@ -2,17 +2,7 @@ import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import FieldError from '@/Components/FieldError';
 import { fieldLabel, focusRing, primaryButton, secondaryButton, textField } from '@/brand';
-
-const CONTACT = {
-    email: 'ladernieretouche.event@gmail.com',
-    phone: '07 69 88 92 71',
-    phoneLink: 'tel:+33769889271',
-    address: '9 boulevard René Chaillan, 13013 Marseille',
-    siret: '984 937 078 00017',
-    whatsapp: '',
-    instagram: 'https://www.instagram.com/ladernieretouche.wedding/',
-    website: 'https://www.ladernieretouche.com/',
-};
+import { CONTACT } from '@/contact';
 
 const IMAGES = {
     arch: {
@@ -50,6 +40,7 @@ const CONTENT = {
         skip: 'Aller au contenu',
         navigation: 'Navigation principale',
         footerNavigation: 'Pied de page',
+        legalNotice: 'Mentions légales',
         tagline: 'Wedding design & coordination',
 
         nav: {
@@ -176,6 +167,7 @@ const CONTENT = {
         skip: 'Skip to content',
         navigation: 'Main navigation',
         footerNavigation: 'Footer navigation',
+        legalNotice: 'Legal notice (in French)',
         tagline: 'Wedding design & coordination',
 
         nav: {
@@ -780,7 +772,10 @@ function Footer({ t }) {
 
             <div className="border-t border-ink/10 bg-blush">
                 <p className="mx-auto max-w-6xl px-6 py-5 text-[11px] text-ink/60 sm:px-10">
-                    © {new Date().getFullYear()} La Dernière Touche · SIRET {CONTACT.siret}
+                    © {new Date().getFullYear()} La Dernière Touche · SIRET {CONTACT.siret} ·{' '}
+                    <Link href={route('legal-notice')} className={`${focusRing} underline decoration-ink/30 underline-offset-4 transition-colors hover:text-ink`}>
+                        {t.legalNotice}
+                    </Link>
                 </p>
             </div>
         </footer>

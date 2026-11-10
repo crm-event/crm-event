@@ -69,6 +69,7 @@ const PAGE_LABELS = {
     messages: 'Messages',
     community: 'Communauté',
     account: 'Mon compte',
+    legal: 'Mentions légales',
 };
 
 function NavigationEntry({ entry, isActive }) {
@@ -340,6 +341,18 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
                                     className="text-[18px] text-sage"
                                 />
                                 Mon compte
+                            </span>
+                        </Dropdown.Link>
+                        <Dropdown.Link
+                            href={route('couple.legal-notice')}
+                            className="rounded-md px-3 py-2 text-ink hover:bg-blush focus:bg-blush"
+                        >
+                            <span className="flex items-center gap-3">
+                                <Icone
+                                    nom="gavel"
+                                    className="text-[18px] text-sage"
+                                />
+                                Mentions légales
                             </span>
                         </Dropdown.Link>
                         <Dropdown.Link
