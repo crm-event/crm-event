@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\WeddingFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -139,5 +140,20 @@ class Wedding extends Model
     public function review(): HasOne
     {
         return $this->hasOne(Review::class);
+    }
+
+    /**
+     * Only keep the weddings whose couple can now be invited to leave a
+     * review: the wedding took place at least `$delayDays` days ago, it was
+     * not cancelled, and no invitation has been sent yet.
+     *
+     * @param  Builder<Wedding>  $query
+     */
+    public function scopeAwaitingReview(Builder $query, int $delayDays): void
+    {
+        $query
+            ->whereIn('status', ['booked', 'completed', 'closed'])
+            ->whereDate('wedding_date', '<=', now()->subDays($delayDays))
+            ->whereDoesntHave('review', fn (Builder $review) => $review->whereNotNull('requested_at'));
     }
 }
