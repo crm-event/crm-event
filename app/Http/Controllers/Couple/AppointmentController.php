@@ -45,9 +45,21 @@ class AppointmentController extends Controller
      */
     private function present(Appointment $appointment): array
     {
+        $title = $appointment->title;
+
+        if (app()->getLocale() === 'en') {
+            $title = match ($title) {
+                'Visite technique du lieu' => 'Venue technical visit',
+                'Point design M-6' => 'Design review M-6',
+                'Point design M-3' => 'Design review M-3',
+                'Point design M-1' => 'Design review M-1',
+                default => $title,
+            };
+        }
+
         return [
             'id' => $appointment->id,
-            'title' => $appointment->title,
+            'title' => $title,
             'starts_at' => $appointment->starts_at->format('Y-m-d\TH:i:s'),
             'mode' => $appointment->mode?->value,
             'location' => $appointment->location,

@@ -1,4 +1,6 @@
 import FieldError from '@/Components/FieldError';
+import { useLanguage } from '@/Components/LanguageSwitcher';
+import { translate } from '@/i18n';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -12,29 +14,30 @@ import { useState } from 'react';
  * messages; deleting a message also deletes its replies.
  */
 export default function Community({ posts, maxBodyLength }) {
+    const { language } = useLanguage();
+    const t = (key) => translate(language, key);
+
     return (
         <CoupleLayout active="community">
-            <Head title="Communauté" />
+            <Head title={t('community')} />
 
             <p className="text-[11px] uppercase tracking-brand text-sage">
-                Entre couples
+                {t('betweenCouples')}
             </p>
 
             <h1 className="mt-6 font-display text-3xl leading-snug sm:text-4xl">
-                Communauté
+                {t('community')}
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/70">
-                Un espace pour échanger avec les autres couples accompagnés par
-                Jessica : idées, bonnes adresses, questions… Seuls vos prénoms
-                apparaissent.
+                {t('communityIntro')}
             </p>
 
             <section aria-labelledby="new-post-title" className="mt-12 max-w-2xl">
                 <h2 id="new-post-title" className="sr-only">
                     Écrire un message
                 </h2>
-                <PostComposer maxBodyLength={maxBodyLength} />
+                <PostComposer maxBodyLength={maxBodyLength} language={language} />
             </section>
 
             <section aria-labelledby="feed-title" className="mt-16 max-w-2xl">
@@ -42,24 +45,24 @@ export default function Community({ posts, maxBodyLength }) {
                     id="feed-title"
                     className="border-b border-ink/10 pb-4 text-[11px] uppercase tracking-brand text-sage"
                 >
-                    Derniers messages
+                    {t('latestMessages')}
                 </h2>
 
                 {posts.data.length === 0 ? (
                     <p className="py-12 text-sm leading-relaxed text-ink/60">
-                        Aucun message pour l’instant. Soyez les premiers à écrire.
+                        {t('noCommunityMessages')}
                     </p>
                 ) : (
                     <ol className="divide-y divide-ink/10">
                         {posts.data.map((post) => (
                             <li key={post.id} className="py-8">
-                                <Post post={post} maxBodyLength={maxBodyLength} />
+                                <Post post={post} maxBodyLength={maxBodyLength} language={language} />
                             </li>
                         ))}
                     </ol>
                 )}
 
-                <FeedPagination posts={posts} />
+                <FeedPagination posts={posts} language={language} />
             </section>
         </CoupleLayout>
     );
@@ -68,12 +71,13 @@ export default function Community({ posts, maxBodyLength }) {
 /**
  * A top-level message, its replies and the reply form.
  */
-function Post({ post, maxBodyLength }) {
+function Post({ post, maxBodyLength, language }) {
+    const t = (key) => translate(language, key);
     const [isReplying, setIsReplying] = useState(false);
 
     return (
         <article>
-            <PostContent post={post} />
+            <PostContent post={post} language={language} />
 
             <div className="mt-4 flex items-center gap-6 text-[10px] uppercase tracking-[0.18em] text-sage">
                 <button
@@ -82,19 +86,19 @@ function Post({ post, maxBodyLength }) {
                     onClick={() => setIsReplying((wasReplying) => !wasReplying)}
                     className={`${focusRing} uppercase tracking-[0.18em] transition-colors hover:text-ink`}
                 >
-                    {isReplying ? 'Annuler' : 'Répondre'}
+                    {isReplying ? t('cancel') : t('reply')}
                 </button>
-                {post.is_own && <DeleteButton post={post} />}
+                {post.is_own && <DeleteButton post={post} language={language} />}
             </div>
 
             {(post.replies.length > 0 || isReplying) && (
                 <div className="mt-6 space-y-6 border-l border-sage/40 pl-6">
                     {post.replies.map((reply) => (
                         <article key={reply.id}>
-                            <PostContent post={reply} />
+                            <PostContent post={reply} language={language} />
                             {reply.is_own && (
                                 <div className="mt-3 text-[10px] uppercase tracking-[0.18em] text-sage">
-                                    <DeleteButton post={reply} />
+                                    <DeleteButton post={reply} language={language} />
                                 </div>
                             )}
                         </article>
@@ -104,6 +108,7 @@ function Post({ post, maxBodyLength }) {
                         <PostComposer
                             parentId={post.id}
                             maxBodyLength={maxBodyLength}
+                                language={language}
                             onPosted={() => setIsReplying(false)}
                         />
                     )}
@@ -113,26 +118,27 @@ function Post({ post, maxBodyLength }) {
     );
 }
 
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-});
-
 /**
  * Author, date and text of a message or reply.
  */
-function PostContent({ post }) {
+function PostContent({ post, language }) {
+    const t = (key) => translate(language, key);
+    const dateFormatter = new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
     return (
         <>
             <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <p className="font-display text-lg leading-snug">
-                    {post.author ?? 'Un ancien membre'}
+                    {post.author ?? t('formerMember')}
                     {post.is_own && (
                         <span className="ml-2 align-middle font-sans text-[10px] uppercase tracking-[0.18em] text-sage">
-                            Vous
+                            {t('you')}
                         </span>
                     )}
                 </p>
@@ -150,7 +156,8 @@ function PostContent({ post }) {
 /**
  * Form to publish a message, or a reply when `parentId` is given.
  */
-function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
+function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {}, language }) {
+    const t = (key) => translate(language, key);
     const { data, setData, post, processing, errors, reset } = useForm({
         body: '',
         parent_id: parentId,
@@ -175,7 +182,7 @@ function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
     return (
         <form onSubmit={submit}>
             <label htmlFor={fieldId} className="sr-only">
-                {isReply ? 'Votre réponse' : 'Votre message'}
+                {isReply ? t('yourReply') : t('yourMessage')}
             </label>
             <textarea
                 id={fieldId}
@@ -184,7 +191,7 @@ function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
                 maxLength={maxBodyLength}
                 autoFocus={isReply}
                 required
-                placeholder={isReply ? 'Votre réponse…' : 'Partagez une idée, une question, une bonne adresse…'}
+                placeholder={isReply ? t('replyPlaceholder') : t('communityPlaceholder')}
                 aria-invalid={Boolean(errors.body)}
                 aria-describedby={errors.body ? errorId : undefined}
                 onChange={(e) => setData('body', e.target.value)}
@@ -201,7 +208,7 @@ function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
                     disabled={processing}
                     className={`${isReply ? secondaryButton : primaryButton} disabled:cursor-wait disabled:opacity-50`}
                 >
-                    {processing ? 'Envoi…' : isReply ? 'Répondre' : 'Publier'}
+                    {processing ? t('sending') : isReply ? t('reply') : t('publish')}
                 </button>
             </div>
         </form>
@@ -211,11 +218,13 @@ function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
 /**
  * Deletes one of the couple's own messages, after confirmation.
  */
-function DeleteButton({ post }) {
+function DeleteButton({ post, language }) {
+    const t = (key) => translate(language, key);
+
     const deletePost = () => {
         const message = post.replies?.length
-            ? 'Supprimer ce message et ses réponses ?'
-            : 'Supprimer ce message ?';
+            ? t('deleteMessageAndRepliesConfirm')
+            : t('deleteMessageConfirm');
 
         if (window.confirm(message)) {
             router.delete(route('couple.community.destroy', post.id), {
@@ -230,7 +239,7 @@ function DeleteButton({ post }) {
             onClick={deletePost}
             className={`${focusRing} uppercase tracking-[0.18em] transition-colors hover:text-ink`}
         >
-            Supprimer
+            {t('delete')}
         </button>
     );
 }
@@ -238,26 +247,28 @@ function DeleteButton({ post }) {
 /**
  * Links to the newer and older pages of the feed.
  */
-function FeedPagination({ posts }) {
+function FeedPagination({ posts, language }) {
+    const t = (key) => translate(language, key);
+
     if (!posts.prev_page_url && !posts.next_page_url) {
         return null;
     }
 
     return (
         <nav
-            aria-label="Pages de messages"
+            aria-label={t('messagePages')}
             className="mt-8 flex items-center justify-between border-t border-ink/10 pt-6 text-sm"
         >
             {posts.prev_page_url ? (
                 <Link href={posts.prev_page_url} className={`${textLink} text-ink/70`}>
-                    ← Messages plus récents
+                    {t('newerMessages')}
                 </Link>
             ) : (
                 <span />
             )}
             {posts.next_page_url && (
                 <Link href={posts.next_page_url} className={`${textLink} text-ink/70`}>
-                    Messages plus anciens →
+                    {t('olderMessages')}
                 </Link>
             )}
         </nav>

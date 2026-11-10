@@ -86,17 +86,45 @@ class DocumentController extends Controller
      */
     private function toItem(Document $document): array
     {
+        $english = app()->getLocale() === 'en';
+
         [$status, $statusLabel] = match (true) {
-            $document->approved_at !== null => ['approved', 'Approuvé'],
-            $document->requires_approval => ['pending', 'À approuver'],
-            $document->viewed_at !== null => ['viewed', 'Consulté'],
-            default => ['available', 'À consulter'],
+            $document->approved_at !== null => [
+                'approved',
+                $english ? 'Approved' : 'Approuvé',
+            ],
+
+            $document->requires_approval => [
+                'pending',
+                $english ? 'Pending approval' : 'À approuver',
+            ],
+
+            $document->viewed_at !== null => [
+                'viewed',
+                $english ? 'Viewed' : 'Consulté',
+            ],
+
+            default => [
+                'available',
+                $english ? 'Available' : 'À consulter',
+            ],
         };
+
+        $message = $document->message;
+
+        if ($english) {
+            $message = match ($message) {
+                'Votre concept, le moodboard et le devis détaillé.' =>
+                'Your concept, moodboard and detailed quotation.',
+
+                default => $message,
+            };
+        }
 
         return [
             'id' => $document->id,
             'title' => $document->title,
-            'message' => $document->message,
+            'message' => $message,
             'created_at' => $document->created_at->toIso8601String(),
             'viewed_at' => $document->viewed_at?->toIso8601String(),
             'size_label' => self::formatSize($document->size_bytes),
@@ -124,12 +152,14 @@ class DocumentController extends Controller
      */
     private static function categoryLabel(string $category): string
     {
+        $english = app()->getLocale() === 'en';
+
         return match ($category) {
-            'contract' => 'Contrat',
-            'terms', 'general_conditions' => 'Conditions générales de vente',
-            'design' => 'Carnet de design',
-            'quote' => 'Devis',
-            'appointment' => 'Rendez-vous',
+            'contract' => $english ? 'Contract' : 'Contrat',
+            'terms', 'general_conditions' => $english ? 'Terms and conditions' : 'Conditions générales de vente',
+            'design' => $english ? 'Design book' : 'Carnet de design',
+            'quote' => $english ? 'Quote' : 'Devis',
+            'appointment' => $english ? 'Appointments' : 'Rendez-vous',
             default => ucfirst(str_replace('_', ' ', $category)),
         };
     }
