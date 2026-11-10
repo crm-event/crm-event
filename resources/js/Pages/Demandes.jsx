@@ -2,9 +2,10 @@ import Icone from '@/Components/Icone';
 import BackOfficeLayout from '@/Layouts/BackOfficeLayout';
 import { anneauFocus } from '@/charte';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const CLE_STOCKAGE = 'crm-event.demandes.v1';
+const CLASSES_LARGEUR_PIPELINE = 'w-full min-w-[1540px]';
 const ETAPES = [
     { cle: 'nouveau', libelle: 'Nouveau', couleur: 'bg-sage' },
     { cle: 'qualifie', libelle: 'Qualifié', couleur: 'bg-success' },
@@ -307,8 +308,16 @@ function NouvelleDemande({ onFermer, onCreer, catalogue, lieux }) {
     );
 }
 
+function synchroniserDefilement(position, cible) {
+    if (cible && cible.scrollLeft !== position) {
+        cible.scrollLeft = position;
+    }
+}
+
 export default function Demandes({ demandes, prestations, lieux, importedIds, statistiques }) {
     const pageUrl = usePage().url;
+    const barrePipeline = useRef(null);
+    const colonnesPipeline = useRef(null);
     const [demandesLocales] = useState(() => typeof window === 'undefined' ? [] : lireDemandesLocales());
     const [enCours, setEnCours] = useState(false);
     const [erreurs, setErreurs] = useState({});
@@ -378,7 +387,6 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
                             <div className="h-8 w-px bg-hairline" />
                             <div><span className="block text-caps uppercase text-sage" title="Part des demandes signées parmi tous les dossiers">Taux de signature</span><strong className="font-display text-[24px] font-normal text-success">{statistiques.taux_signature} %</strong></div>
                         </div>
-                        <button type="button" onClick={() => setCreationOuverte(true)} className={`${anneauFocus} inline-flex w-fit items-center gap-2 rounded-md bg-ink px-5 py-2.5 text-body text-white shadow-sm hover:bg-[#222222]`}><Icone nom="add" className="text-[18px]" />Nouvelle demande</button>
                     </div>
                 </header>
 
@@ -389,17 +397,35 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
                     <div className="flex min-w-0 gap-2 overflow-x-auto whitespace-nowrap">{filtres.map((option) => <button key={option.cle} type="button" aria-pressed={filtre === option.cle} onClick={() => setFiltre(option.cle)} className={`${anneauFocus} rounded-full px-3 py-1.5 text-caps uppercase transition-colors ${filtre === option.cle ? 'bg-ink text-white' : 'bg-white text-sage hover:text-ink'}`}>{option.libelle}</button>)}</div>
                 </section>
 
-                <section aria-label="Pipeline des demandes" className="-mx-4 overflow-x-auto px-4 pb-5 sm:-mx-8 sm:px-8">
-                    <div className="grid min-w-[1540px] grid-cols-6 items-start gap-4">
-                        {ETAPES.map((etape) => {
-                            const demandesColonne = demandesFiltrees.filter((demande) => demande.statut === etape.cle);
-                            return (
-                                <div key={etape.cle} className="min-h-[680px] rounded-lg bg-cream-light/50 p-3">
-                                    <div className="mb-3 flex items-center justify-between px-1"><h2 className="flex items-center gap-2 text-caps uppercase text-ink"><span className={`h-2 w-2 rounded-full ${etape.couleur}`} />{etape.libelle}</h2><span className="rounded-full bg-white px-2 text-[10px] text-sage">{demandesColonne.length}</span></div>
-                                    <div className="space-y-3">{demandesColonne.map((demande) => <CarteDemande key={demande.id} demande={demande} catalogue={prestations} onOuvrir={setDemandeOuverte} />)}{demandesColonne.length === 0 && <p className="rounded-lg border border-dashed border-hairline p-4 text-center text-body-sm text-sage">Aucune demande</p>}</div>
-                                </div>
-                            );
-                        })}
+                <section aria-label="Pipeline des demandes" className="-mx-4 space-y-2 sm:-mx-8">
+                    <div
+                        ref={barrePipeline}
+                        role="region"
+                        aria-label="Défilement horizontal du pipeline"
+                        aria-controls="colonnes-pipeline"
+                        tabIndex={0}
+                        onScroll={(event) => synchroniserDefilement(event.currentTarget.scrollLeft, colonnesPipeline.current)}
+                        className={anneauFocus + ' overflow-x-auto px-4 [scrollbar-color:var(--color-sage)_var(--color-ivory)] sm:px-8'}
+                    >
+                        <div aria-hidden="true" className={CLASSES_LARGEUR_PIPELINE + ' h-1'} />
+                    </div>
+                    <div
+                        id="colonnes-pipeline"
+                        ref={colonnesPipeline}
+                        onScroll={(event) => synchroniserDefilement(event.currentTarget.scrollLeft, barrePipeline.current)}
+                        className="overflow-x-auto px-4 pb-5 sm:px-8"
+                    >
+                        <div className={CLASSES_LARGEUR_PIPELINE + ' grid grid-cols-6 items-start gap-4'}>
+                            {ETAPES.map((etape) => {
+                                const demandesColonne = demandesFiltrees.filter((demande) => demande.statut === etape.cle);
+                                return (
+                                    <div key={etape.cle} className="min-h-[680px] rounded-lg bg-cream-light/50 p-3">
+                                        <div className="mb-3 flex items-center justify-between px-1"><h2 className="flex items-center gap-2 text-caps uppercase text-ink"><span className={`h-2 w-2 rounded-full ${etape.couleur}`} />{etape.libelle}</h2><span className="rounded-full bg-white px-2 text-[10px] text-sage">{demandesColonne.length}</span></div>
+                                        <div className="space-y-3">{demandesColonne.map((demande) => <CarteDemande key={demande.id} demande={demande} catalogue={prestations} onOuvrir={setDemandeOuverte} />)}{demandesColonne.length === 0 && <p className="rounded-lg border border-dashed border-hairline p-4 text-center text-body-sm text-sage">Aucune demande</p>}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </section>
             </div>

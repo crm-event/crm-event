@@ -22,7 +22,7 @@ use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
 Route::post('/demande-acces', AccessRequestController::class)->name('access-request.store');
-Route::post('/locale', LocaleController::class)->name('locale.update');
+Route::inertia('/mentions-legales', 'LegalNotice')->name('legal-notice');
 
 Route::middleware(['auth', 'role:couple'])
     ->prefix('espace')
@@ -35,6 +35,7 @@ Route::middleware(['auth', 'role:couple'])
         Route::get('/design/images/{mediaItem}', [DesignController::class, 'showMedia'])->name('design.media.show');
         Route::delete('/design/images/{mediaItem}', [DesignController::class, 'destroyMedia'])->name('design.media.destroy');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
+        Route::inertia('/mentions-legales', 'Couple/LegalNotice')->name('legal-notice');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');
         Route::post('/communaute', [CommunityController::class, 'store'])->name('community.store');
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::get('/', [AdminDocumentController::class, 'index'])->name('index');
         Route::post('/', [AdminDocumentController::class, 'store'])->name('store');
+        Route::get('/{document}/download', [AdminDocumentController::class, 'download'])->name('download');
     });
 
 Route::middleware(['auth', 'role:admin'])
