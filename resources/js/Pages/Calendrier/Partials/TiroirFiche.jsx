@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react';
  * qui décide de l'affichage. Le tiroir se ferme avec Échap ou un clic sur le
  * fond.
  */
-export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier, onSupprimer }) {
+export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier, onSupprimer, enCours, erreur }) {
     const boutonFermer = useRef(null);
     const [confirmationSuppression, setConfirmationSuppression] = useState(false);
 
@@ -155,14 +155,15 @@ export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier, onSup
                 </div>
 
                 <div className="mt-6 border-t border-hairline pt-6">
+                    {erreur && <p role="alert" className="mb-3 text-body-sm text-warning">{erreur}</p>}
                     <div className="flex items-center gap-3">
-                        <button
+                        {onModifier && <button
                             type="button"
                             onClick={onModifier}
                             className={`${anneauFocus} flex-1 rounded-md bg-ink py-2.5 text-center text-label text-white transition-opacity hover:opacity-80`}
                         >
                             Modifier dans le calendrier
-                        </button>
+                        </button>}
                         <button
                             type="button"
                             title="Imprimer le conducteur"
@@ -173,12 +174,12 @@ export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier, onSup
                             <Icone nom="print" className="text-[18px]" />
                         </button>
                     </div>
-                    {confirmationSuppression ? (
+                    {onSupprimer && (confirmationSuppression ? (
                         <div className="mt-4 rounded-md border border-warning/40 bg-ivory p-3">
                             <p className="text-body-sm text-ink">Supprimer cet élément du calendrier ?</p>
                             <div className="mt-3 flex justify-end gap-2">
                                 <button type="button" onClick={() => setConfirmationSuppression(false)} className={`${anneauFocus} rounded-md border border-hairline px-3 py-2 text-body-sm text-ink hover:bg-white`}>Annuler</button>
-                                <button type="button" onClick={onSupprimer} className={`${anneauFocus} rounded-md bg-ink px-3 py-2 text-body-sm text-white hover:opacity-80`}>Confirmer la suppression</button>
+                                <button type="button" disabled={enCours} onClick={onSupprimer} className={`${anneauFocus} rounded-md bg-ink px-3 py-2 text-body-sm text-white hover:opacity-80`}>Confirmer la suppression</button>
                             </div>
                         </div>
                     ) : (
@@ -186,7 +187,7 @@ export default function TiroirFiche({ fiche, ouvert, onFermer, onModifier, onSup
                             <Icone nom="delete" className="text-[18px]" />
                             Supprimer cet élément
                         </button>
-                    )}
+                    ))}
                 </div>
             </div>
         </div>

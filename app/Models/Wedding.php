@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Wedding project of a couple, created at the first contact.
@@ -78,6 +79,26 @@ class Wedding extends Model
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class, 'wedding_services')->withTimestamps();
+    }
+
+    /**
+     * The creative brief written by the couple on the Design page.
+     *
+     * @return HasOne<DesignBrief, $this>
+     */
+    public function designBrief(): HasOne
+    {
+        return $this->hasOne(DesignBrief::class);
+    }
+
+    /**
+     * The inspiration photos and moodboards added for this wedding.
+     *
+     * @return HasMany<MediaItem, $this>
+     */
+    public function mediaItems(): HasMany
+    {
+        return $this->hasMany(MediaItem::class);
     }
 
     /**

@@ -116,7 +116,7 @@ class MessageController extends Controller
      */
     public function update(UpdateMessageRequest $request, Message $message): RedirectResponse
     {
-        abort_unless($message->sender_id === $request->user()->id, 403);
+        abort_unless($message->isSentBySideOf($request->user()), 403);
         abort_if($message->body === null, 422, 'Un message vocal ne peut pas être modifié.');
 
         $message->update(['body' => $request->validated('body')]);
@@ -129,7 +129,7 @@ class MessageController extends Controller
      */
     public function destroy(Request $request, Message $message): RedirectResponse
     {
-        abort_unless($message->sender_id === $request->user()->id, 403);
+        abort_unless($message->isSentBySideOf($request->user()), 403);
 
         if ($message->voice_note_path !== null) {
             Storage::delete($message->voice_note_path);

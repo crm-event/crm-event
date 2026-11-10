@@ -75,7 +75,8 @@ class DocumentController extends Controller
             'approved_at' => now(),
         ])->save();
 
-        return to_route('couple.documents.index');
+        // Documents can be approved from the Documents page or the Design page.
+        return back(fallback: route('couple.documents.index'));
     }
 
     /**

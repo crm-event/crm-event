@@ -23,8 +23,7 @@ const NAVIGATION_GROUPS = [
     {
         label: 'Votre mariage',
         entries: [
-            { key: 'home', label: 'Accueil', icon: 'home', route: 'couple.home' },
-            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.wedding.show' },
+            { key: 'wedding', label: 'Notre mariage', icon: 'favorite', route: 'couple.home' },
             { key: 'design', label: 'Design', icon: 'palette', route: 'couple.design.index' },
             {
                 key: 'documents',
@@ -63,69 +62,14 @@ const entryClasses =
     'flex items-center gap-3 border-l-2 px-4 py-2.5 text-[15px] transition-colors';
 
 const PAGE_LABELS = {
-    home: 'Accueil',
     wedding: 'Notre mariage',
     design: 'Design',
     documents: 'Documents',
     appointments: 'Rendez-vous',
     messages: 'Messages',
     community: 'Communauté',
+    account: 'Mon compte',
 };
-
-const NOTIFICATIONS = [
-    {
-        key: 'documents',
-        icon: 'description',
-        title: 'Un document vous attend',
-        text: 'Vous avez 1 document à consulter.',
-        time: 'Il y a 2 heures',
-        route: 'couple.documents.index',
-    },
-    {
-        key: 'messages',
-        icon: 'chat_bubble',
-        title: 'Nouveau message de Jessica',
-        text: 'Jessica vous a envoyé un message concernant votre projet.',
-        time: 'Hier',
-        route: 'couple.messages.index',
-    },
-    {
-        key: 'wedding',
-        icon: 'event',
-        title: 'Votre prochain rendez-vous',
-        text: 'Votre rendez-vous approche. Retrouvez les détails de votre mariage.',
-        time: 'Il y a 3 jours',
-        route: 'couple.wedding.show',
-    },
-];
-
-const NOTIFICATIONS_STORAGE_KEY = 'couple-space-notifications';
-
-function getStoredNotifications() {
-    if (typeof window === 'undefined') {
-        return NOTIFICATIONS;
-    }
-
-    const storedNotifications = window.localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
-
-    if (!storedNotifications) {
-        return NOTIFICATIONS;
-    }
-
-    try {
-        const storedKeys = JSON.parse(storedNotifications);
-
-        if (!Array.isArray(storedKeys)) {
-            return NOTIFICATIONS;
-        }
-
-        return NOTIFICATIONS.filter((notification) => storedKeys.includes(notification.key));
-    } catch (error) {
-        console.error('Impossible de charger les notifications sauvegardées.', error);
-
-        return NOTIFICATIONS;
-    }
-}
 
 function NavigationEntry({ entry, isActive }) {
     const content = (
@@ -215,30 +159,31 @@ function Sidebar({ activeKey }) {
     );
 }
 
+const notificationDateFormatter = new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+});
+
+/**
+ * Bell of the couple space. The notifications are computed by the server from
+ * the couple's data (HandleInertiaRequests): each one disappears once the
+ * couple has dealt with it, e.g. read the message or opened the document.
+ */
 function NotificationsMenu() {
-    const [notifications, setNotifications] = useState(getStoredNotifications);
-
-    useEffect(() => {
-        window.localStorage.setItem(
-            NOTIFICATIONS_STORAGE_KEY,
-            JSON.stringify(notifications.map((notification) => notification.key)),
-        );
-    }, [notifications]);
-
-    const removeNotification = (notificationKey) => {
-        setNotifications((currentNotifications) =>
-            currentNotifications.filter(
-                (notification) => notification.key !== notificationKey,
-            ),
-        );
-    };
+    const notifications = usePage().props.coupleNotifications ?? [];
 
     return (
         <Dropdown>
             <Dropdown.Trigger>
                 <button
                     type="button"
-                    aria-label="Notifications"
+                    aria-label={
+                        notifications.length > 0
+                            ? `Notifications (${notifications.length})`
+                            : 'Notifications'
+                    }
                     className={`${focusRing} relative rounded-lg p-2 text-sage transition-colors hover:bg-blush hover:text-ink`}
                 >
                     <Icone nom="notifications" className="text-[20px]" />
@@ -262,61 +207,37 @@ function NotificationsMenu() {
                     </div>
                     <span className="rounded-full bg-blush px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-sage">
                         {notifications.length}{' '}
-                        {notifications.length === 1 ? 'nouvelle' : 'nouvelles'}
+                        {notifications.length > 1 ? 'nouvelles' : 'nouvelle'}
                     </span>
                 </div>
 
                 {notifications.length > 0 ? (
                     <div className="divide-y divide-ink/10">
                         {notifications.map((notification) => (
-                            <div
+                            <Link
                                 key={notification.key}
-                                className="group flex gap-3 px-5 py-4 transition-colors hover:bg-blush/60"
+                                href={route(notification.route)}
+                                className={`${focusRing} flex gap-3 px-5 py-4 transition-colors hover:bg-blush/60`}
                             >
                                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blush text-sage">
-                                    <Icone
-                                        nom={notification.icon}
-                                        className="text-[19px]"
-                                    />
+                                    <Icone nom={notification.icon} className="text-[19px]" />
                                 </span>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <p className="text-sm font-medium text-ink">
-                                            {notification.title}
-                                        </p>
-                                        <button
-                                            type="button"
-                                            aria-label={`Supprimer « ${notification.title} »`}
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                removeNotification(notification.key);
-                                            }}
-                                            className={`${focusRing} -mr-1 -mt-1 rounded p-1 text-sage opacity-70 transition-opacity hover:bg-white hover:text-ink sm:opacity-0 sm:group-hover:opacity-100`}
-                                        >
-                                            <Icone nom="close" className="text-[17px]" />
-                                        </button>
-                                    </div>
-                                    <p className="mt-1 text-sm leading-relaxed text-ink/65">
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-sm font-medium text-ink">
+                                        {notification.title}
+                                    </span>
+                                    <span className="mt-1 block text-sm leading-relaxed text-ink/65">
                                         {notification.text}
-                                    </p>
-                                    <div className="mt-3 flex items-center justify-between gap-3">
-                                        <span className="text-[10px] uppercase tracking-[0.12em] text-sage">
-                                            {notification.time}
+                                    </span>
+                                    {notification.date && (
+                                        <span className="mt-2 block text-[10px] uppercase tracking-[0.12em] text-sage">
+                                            {notification.date_label}{' '}
+                                            {notificationDateFormatter.format(new Date(notification.date))}
                                         </span>
-                                        <Link
-                                            href={route(notification.route)}
-                                            onClick={() => removeNotification(notification.key)}
-                                            className={`${focusRing} inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] text-ink transition-colors hover:text-sage`}
-                                        >
-                                            Y aller
-                                            <Icone
-                                                nom="arrow_forward"
-                                                className="text-[15px]"
-                                            />
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
+                                    )}
+                                </span>
+                                <Icone nom="arrow_forward" className="self-center text-[16px] text-sage" />
+                            </Link>
                         ))}
                     </div>
                 ) : (
@@ -324,22 +245,12 @@ function NotificationsMenu() {
                         <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blush text-sage">
                             <Icone nom="done_all" className="text-[21px]" />
                         </span>
-                        <p className="mt-4 font-display text-lg text-ink">
-                            Tout est à jour
-                        </p>
+                        <p className="mt-4 font-display text-lg text-ink">Tout est à jour</p>
                         <p className="mt-1 text-sm text-ink/65">
                             Vous n’avez aucune notification en attente.
                         </p>
                     </div>
                 )}
-
-                <div className="border-t border-ink/10 px-5 py-3">
-                    <p className="text-center text-[10px] uppercase tracking-[0.14em] text-sage">
-                        {notifications.length > 0
-                            ? 'Les notifications seront bientôt personnalisées'
-                            : 'Aucune notification en attente'}
-                    </p>
-                </div>
             </Dropdown.Content>
         </Dropdown>
     );
@@ -452,7 +363,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
     );
 }
 
-export default function CoupleLayout({ active = 'home', children }) {
+export default function CoupleLayout({ active = 'wedding', children }) {
     const user = usePage().props.auth.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 

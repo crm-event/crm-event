@@ -85,7 +85,7 @@ class Message extends Model
                     $viewer->hasRole(UserRole::Admin) ? 'admin.messages.voice' : 'couple.messages.voice',
                     $this,
                 ),
-            'is_own' => $this->sender_id === $viewer->id,
+            'is_own' => $this->isSentBySideOf($viewer),
             'sender_is_admin' => $this->sender?->hasRole(UserRole::Admin) ?? false,
             'sent_at' => $this->created_at->toIso8601String(),
             'read_at' => $this->read_at?->toIso8601String(),
@@ -93,17 +93,41 @@ class Message extends Model
     }
 
     /**
+     * Whether the message was sent by `$viewer`'s side of the thread.
+     *
+     * Jessica will have a single admin account, but there are several during
+     * development: every admin speaks for her, so a message sent by any admin
+     * is one of her own messages for every admin. A couple only owns the
+     * messages sent from its own account.
+     */
+    public function isSentBySideOf(User $viewer): bool
+    {
+        if ($viewer->hasRole(UserRole::Admin)) {
+            return $this->sender?->hasRole(UserRole::Admin) ?? false;
+        }
+
+        return $this->sender_id === $viewer->id;
+    }
+
+    /**
      * Only keep the messages the given user has not read yet, i.e. the unread
-     * messages sent by someone else.
+     * messages sent by the other side of the thread (see isSentBySideOf()).
      *
      * @param  Builder<Message>  $query
      */
     public function scopeUnreadFor(Builder $query, User $reader): void
     {
-        $query->whereNull('messages.read_at')
-            ->where(fn (Builder $query) => $query
-                ->whereNull('messages.sender_id')
-                ->orWhere('messages.sender_id', '!=', $reader->id));
+        $query->whereNull('messages.read_at');
+
+        if ($reader->hasRole(UserRole::Admin)) {
+            $query->whereDoesntHave('sender', fn (Builder $sender) => $sender->where('role', UserRole::Admin));
+
+            return;
+        }
+
+        $query->where(fn (Builder $query) => $query
+            ->whereNull('messages.sender_id')
+            ->orWhere('messages.sender_id', '!=', $reader->id));
     }
 
     /**

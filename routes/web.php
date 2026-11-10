@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccessRequestController;
+use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
@@ -12,7 +13,8 @@ use App\Http\Controllers\Couple\DesignController;
 use App\Http\Controllers\Couple\DocumentController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
-use App\Http\Controllers\Couple\WeddingController as CoupleWeddingController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -26,8 +28,11 @@ Route::middleware(['auth', 'role:couple'])
     ->name('couple.')
     ->group(function () {
         Route::get('/', CoupleHomeController::class)->name('home');
-        Route::get('/mariage', CoupleWeddingController::class)->name('weddings.show');
         Route::get('/design', [DesignController::class, 'index'])->name('design.index');
+        Route::put('/design/brief', [DesignController::class, 'updateBrief'])->name('design.brief.update');
+        Route::post('/design/images', [DesignController::class, 'storeMedia'])->name('design.media.store');
+        Route::get('/design/images/{mediaItem}', [DesignController::class, 'showMedia'])->name('design.media.show');
+        Route::delete('/design/images/{mediaItem}', [DesignController::class, 'destroyMedia'])->name('design.media.destroy');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');
@@ -76,17 +81,23 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/{message}', [AdminMessageController::class, 'destroy'])->name('destroy');
     });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
 
-Route::get('/demandes', function () {
-    return Inertia::render('Demandes');
-})->middleware(['auth', 'verified', 'role:admin'])->name('demandes');
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('demandes')->group(function () {
+    Route::get('/', [DemandeController::class, 'index'])->name('demandes');
+    Route::post('/', [DemandeController::class, 'store'])->name('demandes.store');
+    Route::post('/import', [DemandeController::class, 'import'])->name('demandes.import');
+    Route::patch('/{demande}', [DemandeController::class, 'update'])->whereNumber('demande')->name('demandes.update');
+    Route::patch('/{demande}/notes', [DemandeController::class, 'addNote'])->whereNumber('demande')->name('demandes.notes.store');
+});
 
-Route::get('/calendrier', function () {
-    return Inertia::render('Calendrier');
-})->middleware(['auth', 'verified'])->name('calendrier');
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::get('/calendrier', [CalendarController::class, 'index'])->name('calendrier');
+    Route::post('/calendrier/evenements', [CalendarController::class, 'store'])->name('calendrier.events.store');
+    Route::post('/calendrier/import', [CalendarController::class, 'import'])->name('calendrier.import');
+    Route::patch('/calendrier/evenements/{calendarEvent}', [CalendarController::class, 'update'])->name('calendrier.events.update');
+    Route::delete('/calendrier/evenements/{calendarEvent}', [CalendarController::class, 'destroy'])->name('calendrier.events.destroy');
+});
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('weddings')

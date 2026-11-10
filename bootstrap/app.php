@@ -52,7 +52,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $status = $response->getStatusCode();
 
-            $shouldRenderCustomPage = in_array($status, [403, 404], true)
+            // 419: the session has expired (e.g. a form sent after two hours).
+            $shouldRenderCustomPage = in_array($status, [403, 404, 405, 419], true)
                 || (in_array($status, [500, 503], true) && ! app()->environment('local', 'testing'));
 
             if (! $shouldRenderCustomPage) {

@@ -35,6 +35,7 @@ export default function EnteteCalendrier({
 }
 
 export function CommandesCalendrier({
+    annees,
     annee,
     mois,
     vue,
@@ -63,8 +64,7 @@ export function CommandesCalendrier({
                     style={{ appearance: 'none', WebkitAppearance: 'none' }}
                     className={`${anneauFocus} cursor-pointer appearance-none bg-none rounded-lg border border-hairline bg-white py-2 pl-4 pr-8 text-label text-ink focus:border-ink focus:ring-0`}
                 >
-                    <option value="2026">Saison 2026 (Réservations ouvertes)</option>
-                    <option value="2027">Saison 2027</option>
+                    {annees.map((saison) => <option key={saison} value={saison}>Saison {saison}</option>)}
                 </select>
                 <Icone
                     nom="expand_more"
