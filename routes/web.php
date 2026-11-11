@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\RentabiliteController;
+use App\Http\Controllers\Admin\WeddingSelectionController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
@@ -112,9 +113,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::delete('/calendrier/evenements/{calendarEvent}', [CalendarController::class, 'destroy'])->name('calendrier.events.destroy');
 });
 
-Route::get('/wedding', function () {
-    return Inertia::render('Wedding');
-})->middleware(['auth', 'verified'])->name('wedding');
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('wedding')
+    ->name('admin.wedding.')
+    ->group(function () {
+
+    Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');
+    Route::get('/{id}', [WeddingSelectionController::class, 'show'])->whereNumber('id')->name('show');
+    });
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('rentabilite')
