@@ -165,5 +165,13 @@ class Wedding extends Model
     {
         return $this->hasMany(TimelineItem::class)
         ->orderBy('sort_order');
+      
+     * The review of the couple, null until Jessica has invited them.
+     *
+     * @return HasOne<Review, $this>
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
     }
 }

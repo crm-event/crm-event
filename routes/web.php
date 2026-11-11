@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\RentabiliteController;
 use App\Http\Controllers\Admin\WeddingSelectionController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DesignController;
@@ -16,12 +17,15 @@ use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
 Route::post('/demande-acces', AccessRequestController::class)->name('access-request.store');
+Route::post('/locale', LocaleController::class)->name('locale.update');
+Route::inertia('/mentions-legales', 'LegalNotice')->name('legal-notice');
 
 Route::middleware(['auth', 'role:couple'])
     ->prefix('espace')
@@ -34,6 +38,7 @@ Route::middleware(['auth', 'role:couple'])
         Route::get('/design/images/{mediaItem}', [DesignController::class, 'showMedia'])->name('design.media.show');
         Route::delete('/design/images/{mediaItem}', [DesignController::class, 'destroyMedia'])->name('design.media.destroy');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
+        Route::inertia('/mentions-legales', 'Couple/LegalNotice')->name('legal-notice');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');
         Route::post('/communaute', [CommunityController::class, 'store'])->name('community.store');
@@ -67,6 +72,7 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::get('/', [AdminDocumentController::class, 'index'])->name('index');
         Route::post('/', [AdminDocumentController::class, 'store'])->name('store');
+        Route::get('/{document}/download', [AdminDocumentController::class, 'download'])->name('download');
     });
 
 Route::middleware(['auth', 'role:admin'])
@@ -79,6 +85,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/{message}/voice', [AdminMessageController::class, 'voice'])->name('voice');
         Route::patch('/{message}', [AdminMessageController::class, 'update'])->name('update');
         Route::delete('/{message}', [AdminMessageController::class, 'destroy'])->name('destroy');
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin/avis')
+    ->name('admin.reviews.')
+    ->group(function () {
+        Route::get('/', [AdminReviewController::class, 'index'])->name('index');
+        Route::post('/{wedding}', [AdminReviewController::class, 'store'])->name('store');
     });
 
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');

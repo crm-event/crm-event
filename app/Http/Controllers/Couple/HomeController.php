@@ -82,13 +82,15 @@ class HomeController extends Controller
      */
     private static function statusLabel(string $status): string
     {
+        $english = app()->getLocale() === 'en';
+
         return match ($status) {
-            'inquiry' => 'Demande en cours',
-            'quote_sent' => 'Devis envoyé',
-            'booked' => 'Contrat signé',
-            'completed' => 'Mariage célébré',
-            'closed' => 'Projet clôturé',
-            'cancelled' => 'Annulé',
+            'inquiry' => $english ? 'Inquiry in progress' : 'Demande en cours',
+            'quote_sent' => $english ? 'Quote sent' : 'Devis envoyé',
+            'booked' => $english ? 'Contract signed' : 'Contrat signé',
+            'completed' => $english ? 'Wedding celebrated' : 'Mariage célébré',
+            'closed' => $english ? 'Project closed' : 'Projet clôturé',
+            'cancelled' => $english ? 'Cancelled' : 'Annulé',
             default => $status,
         };
     }

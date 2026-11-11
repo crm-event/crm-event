@@ -17,6 +17,7 @@ const NAVIGATION = [
     { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'admin.wedding.index' },
     { cle: 'espaces-clients', libelle: 'Espaces clients', icone: 'group', route: 'admin.couples.index' },
     { cle: 'messages', libelle: 'Messages', icone: 'chat', route: 'admin.messages.index' },
+    { cle: 'avis', libelle: 'Avis', icone: 'reviews', route: 'admin.reviews.index' },
     { cle: 'documents', libelle: 'Documents', icone: 'description', route: 'admin.documents.index' },
     { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today', route: 'calendrier' },
     { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long' },
