@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
-import FieldError from '@/Components/FieldError';
-import { fieldLabel, focusRing, primaryButton, secondaryButton, textField } from '@/brand';
+import Icone from '@/Components/Icone';
+import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
 import { CONTACT } from '@/contact';
 import { useTranslation } from '@/i18n';
 import PublicLayout from '@/Layouts/PublicLayout';
+import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 
 /** Photos of the page; their alternative texts are in i18n/landing.js. */
 const IMAGE_SOURCES = {
@@ -17,12 +17,9 @@ const IMAGE_SOURCES = {
 };
 
 /**
- * Link opening the visitor's mail app with a pre-filled project e-mail.
+ * Landing page: the services of La Dernière Touche and its client area. Every
+ * call to action leads to the access request page, the way into the site.
  */
-function projectMailLink(mail) {
-    return `mailto:${CONTACT.email}?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.body.join('\n'))}`;
-}
-
 export default function Landing({ auth }) {
     const { content } = useTranslation();
 
@@ -33,19 +30,16 @@ export default function Landing({ auth }) {
     );
 
     return (
-        <>
+        <PublicLayout>
             <Head title={t.pageTitle} />
 
-            <PublicLayout>
-                <Hero homeUrl={homeUrl} t={t} images={images} />
-                <Stats t={t} />
-                <Services t={t} images={images} />
-                <About t={t} images={images} />
-                <ClientArea t={t} />
-                <Access t={t} />
-                <Contact t={t} mailLink={projectMailLink(t.projectMail)} />
-            </PublicLayout>
-        </>
+            <Hero homeUrl={homeUrl} t={t} images={images} />
+            <Stats t={t} />
+            <Services t={t} images={images} />
+            <ClientArea homeUrl={homeUrl} t={t} />
+            <About t={t} images={images} />
+            <Start homeUrl={homeUrl} t={t} />
+        </PublicLayout>
     );
 }
 
@@ -68,13 +62,27 @@ function Photo({ image, ratio, eager = false, className = '', rounded = 'rounded
     );
 }
 
-function SectionIntro({ eyebrow, title, text }) {
+function SectionIntro({ id, eyebrow, title, text }) {
     return (
         <div className="max-w-2xl">
             <p className="text-[10px] uppercase tracking-brand text-sage">{eyebrow}</p>
-            <h2 className="mt-4 font-display text-2xl leading-snug sm:text-3xl">{title}</h2>
-            <p className="mt-6 text-base leading-relaxed text-ink/70">{text}</p>
+            <h2 id={id} className="mt-4 font-display text-2xl leading-snug sm:text-3xl">
+                {title}
+            </h2>
+            {text && <p className="mt-6 text-base leading-relaxed text-ink/70">{text}</p>}
         </div>
+    );
+}
+
+/**
+ * Main call to action: the access request for a visitor, their space for a
+ * logged-in user.
+ */
+function PrimaryAction({ homeUrl, label, loggedLabel, className = '' }) {
+    return (
+        <Link href={homeUrl ?? route('access-request.create')} className={`${primaryButton} ${className}`}>
+            {homeUrl ? loggedLabel : label}
+        </Link>
     );
 }
 
@@ -90,14 +98,20 @@ function Hero({ homeUrl, t, images }) {
                     <p className="mt-8 max-w-xl text-base leading-relaxed text-ink/70">{t.hero.text}</p>
 
                     <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                        {homeUrl ? (
-                            <Link href={homeUrl} className={primaryButton}>{t.hero.loggedPrimary}</Link>
-                        ) : (
-                            <a href="#contact" className={primaryButton}>{t.hero.primary}</a>
-                        )}
-
-                        <a href="#prestations" className={secondaryButton}>{t.hero.secondary}</a>
+                        <PrimaryAction homeUrl={homeUrl} label={t.hero.primary} loggedLabel={t.hero.loggedPrimary} />
+                        <a href="#prestations" className={secondaryButton}>
+                            {t.hero.secondary}
+                        </a>
                     </div>
+
+                    {!homeUrl && (
+                        <p className="mt-6 text-sm text-ink/70">
+                            {t.hero.alreadyClient}{' '}
+                            <Link href={route('login')} className={`${textLink} text-ink`}>
+                                {t.hero.login}
+                            </Link>
+                        </p>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -111,7 +125,7 @@ function Hero({ homeUrl, t, images }) {
 
 function Stats({ t }) {
     return (
-        <section aria-label="Key figures" className="border-b border-ink/10 bg-blush/40">
+        <section aria-label={t.statsLabel} className="border-b border-ink/10 bg-blush/40">
             <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8 sm:grid-cols-3 sm:px-10">
                 {t.stats.map((item) => (
                     <div key={item.label} className="rounded-2xl border border-ink/10 bg-ivory px-5 py-5">
@@ -128,11 +142,14 @@ function Services({ t, images }) {
     return (
         <section id="prestations" aria-labelledby="services-title" className="scroll-mt-24">
             <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
-                <SectionIntro eyebrow={t.services.eyebrow} title={t.services.title} text={t.services.text} />
+                <SectionIntro id="services-title" eyebrow={t.services.eyebrow} title={t.services.title} text={t.services.text} />
 
                 <div className="mt-14 space-y-10">
                     {t.services.items.map((service, index) => (
-                        <article key={service.title} className="grid items-center gap-8 rounded-3xl border border-ink/10 bg-blush/30 p-6 sm:p-8 lg:grid-cols-2 lg:gap-14">
+                        <article
+                            key={service.title}
+                            className="grid items-center gap-8 rounded-3xl border border-ink/10 bg-blush/30 p-6 sm:p-8 lg:grid-cols-2 lg:gap-14"
+                        >
                             <Photo
                                 image={images[service.image]}
                                 ratio="aspect-[5/4]"
@@ -147,7 +164,9 @@ function Services({ t, images }) {
 
                                 <ul className="mt-6">
                                     {service.points.map((point) => (
-                                        <li key={point} className="border-t border-ink/15 py-3 text-sm last:border-b">{point}</li>
+                                        <li key={point} className="border-t border-ink/15 py-3 text-sm last:border-b">
+                                            {point}
+                                        </li>
                                     ))}
                                 </ul>
                             </div>
@@ -159,221 +178,100 @@ function Services({ t, images }) {
     );
 }
 
-function About({ t, images }) {
+function ClientArea({ homeUrl, t }) {
     return (
-        <section
-            id="a-propos"
-            aria-labelledby="about-title"
-            className="scroll-mt-24 border-t border-ink/10"
-        >
-            <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
-                <Photo
-                    image={images.jessica}
-                    ratio="aspect-[4/5]"
-                    rounded="rounded-3xl"
-                />
+        <section id="espace-client" aria-labelledby="client-area-title" className="scroll-mt-24 bg-blush">
+            <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
+                <SectionIntro id="client-area-title" eyebrow={t.clientArea.eyebrow} title={t.clientArea.title} text={t.clientArea.text} />
 
-                <div className="max-w-xl">
-                    <p className="text-[10px] uppercase tracking-brand text-sage">
-                        {t.about.eyebrow}
-                    </p>
+                <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {t.clientArea.features.map((feature) => (
+                        <li key={feature.title} className="rounded-2xl border border-ink/10 bg-ivory p-6">
+                            <Icone nom={feature.icon} className="text-[24px] text-sage" />
+                            <h3 className="mt-4 font-display text-lg leading-snug">{feature.title}</h3>
+                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{feature.text}</p>
+                        </li>
+                    ))}
+                </ul>
 
-                    <h2
-                        id="about-title"
-                        className="mt-4 font-display text-2xl leading-snug sm:text-3xl"
-                    >
-                        {t.about.title}
-                    </h2>
-
-                    <p className="mt-6 text-base leading-relaxed text-ink/70">
-                        {t.about.first}
-                    </p>
-
-                    <p className="mt-5 text-base leading-relaxed text-ink/70">
-                        {t.about.second}
-                    </p>
+                <div className="mt-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+                    <PrimaryAction homeUrl={homeUrl} label={t.clientArea.cta} loggedLabel={t.hero.loggedPrimary} />
+                    {!homeUrl && <p className="max-w-sm text-sm text-ink/70">{t.clientArea.note}</p>}
                 </div>
             </div>
         </section>
     );
 }
-function ClientArea({ t }) {
-    return (
-        <section id="espace-client" aria-labelledby="client-area-title" className="scroll-mt-24 bg-blush">
-            <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
-                <div className="max-w-sm">
-                    <h2 id="client-area-title" className="font-display text-2xl leading-snug sm:text-3xl">{t.client.title}</h2>
-                    <p className="mt-6 text-base leading-relaxed text-ink/70">{t.client.text}</p>
-                </div>
 
-                <ul className="grid gap-4 sm:grid-cols-2">
-                    {t.client.features.map(([title, text]) => (
-                        <li key={title} className="rounded-2xl border border-ink/10 bg-ivory p-6">
-                            <h3 className="font-display text-lg leading-snug">{title}</h3>
-                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{text}</p>
-                        </li>
-                    ))}
-                </ul>
+function About({ t, images }) {
+    return (
+        <section id="a-propos" aria-labelledby="about-title" className="scroll-mt-24">
+            <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
+                <Photo image={images.jessica} ratio="aspect-[4/5]" rounded="rounded-3xl" />
+
+                <div className="max-w-xl">
+                    <p className="text-[10px] uppercase tracking-brand text-sage">{t.about.eyebrow}</p>
+                    <h2 id="about-title" className="mt-4 font-display text-2xl leading-snug sm:text-3xl">
+                        {t.about.title}
+                    </h2>
+                    <p className="mt-6 text-base leading-relaxed text-ink/70">{t.about.first}</p>
+                    <p className="mt-5 text-base leading-relaxed text-ink/70">{t.about.second}</p>
+
+                    <blockquote className="mt-10 border-l-2 border-sage pl-6 font-display text-xl italic leading-snug text-ink/80 sm:text-2xl">
+                        {t.about.quote}
+                    </blockquote>
+                </div>
             </div>
         </section>
     );
 }
 
 /**
- * Form to request a client space. Jessica accepts or refuses each request; the
- * confirmation is the same whatever the address, so that the form does not tell
- * who already has an account. `website` is a field only robots fill in.
+ * Last section: the invitation to send a request, and the contact details for
+ * a question asked beforehand.
  */
-function AccessRequestForm({ t }) {
-    const { data, setData, post, processing, errors, wasSuccessful } = useForm({
-        partner1_first_name: '',
-        partner2_first_name: '',
-        email: '',
-        wedding_date: '',
-        website: '',
-    });
-
-    const submit = (event) => {
-        event.preventDefault();
-        post(route('access-request.store'), { preserveScroll: true });
-    };
-
-    if (wasSuccessful) {
-        return (
-            <p role="status" className="mt-14 max-w-2xl rounded-2xl border border-ink/10 bg-white p-6 text-base leading-relaxed sm:p-8">
-                {t.access.form.sent}
-            </p>
-        );
-    }
-
-    const fields = [
-        { name: 'partner1_first_name', label: t.access.form.firstName, autoComplete: 'given-name' },
-        { name: 'partner2_first_name', label: t.access.form.partnerFirstName, autoComplete: 'off' },
-        { name: 'email', label: t.access.form.email, type: 'email', autoComplete: 'email' },
-        { name: 'wedding_date', label: t.access.form.weddingDate, type: 'date', autoComplete: 'off' },
-    ];
+function Start({ homeUrl, t }) {
+    const contactLink = `${focusRing} transition-colors hover:text-sage`;
 
     return (
-        <form onSubmit={submit} className="mt-14 max-w-2xl rounded-2xl border border-ink/10 bg-white p-6 sm:p-8">
-            <h3 className="font-display text-xl">{t.access.form.title}</h3>
-
-            <div className="mt-8 grid gap-8 sm:grid-cols-2">
-                {fields.map(({ name, label, type = 'text', autoComplete }) => (
-                    <div key={name}>
-                        <label htmlFor={`access-${name}`} className={fieldLabel}>{label}</label>
-                        <input
-                            id={`access-${name}`}
-                            type={type}
-                            value={data[name]}
-                            autoComplete={autoComplete}
-                            aria-invalid={Boolean(errors[name])}
-                            aria-describedby={errors[name] ? `access-${name}-error` : undefined}
-                            onChange={(event) => setData(name, event.target.value)}
-                            className={`${textField} mt-2`}
-                        />
-                        <FieldError id={`access-${name}-error`} message={errors[name]} />
-                    </div>
-                ))}
-            </div>
-
-            <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-                <label htmlFor="access-website">Website</label>
-                <input
-                    id="access-website"
-                    type="text"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    value={data.website}
-                    onChange={(event) => setData('website', event.target.value)}
-                />
-            </div>
-
-            <button
-                type="submit"
-                disabled={processing}
-                className={`${primaryButton} mt-10 w-full disabled:cursor-wait disabled:opacity-50 sm:w-auto`}
-            >
-                {processing ? t.access.form.sending : t.access.request}
-            </button>
-        </form>
-    );
-}
-
-function Access({ t }) {
-    return (
-        <section id="access" aria-labelledby="access-title" className="scroll-mt-24 border-y border-ink/10">
-            <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
+        <section id="contact" aria-labelledby="start-title" className="scroll-mt-24 border-t border-ink/10 bg-ink text-ivory">
+            <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:px-10 sm:py-24 md:grid-cols-[3fr_2fr] md:items-center md:gap-16">
                 <div className="max-w-xl">
-                    <h2 id="access-title" className="font-display text-2xl leading-snug sm:text-3xl">{t.access.title}</h2>
-                    <p className="mt-6 text-base leading-relaxed text-ink/70">{t.access.text}</p>
+                    <p className="text-[10px] uppercase tracking-brand text-ivory/60">{t.start.eyebrow}</p>
+                    <h2 id="start-title" className="mt-4 font-display text-3xl leading-snug sm:text-4xl">
+                        {t.start.title}
+                    </h2>
+                    <p className="mt-6 text-base leading-relaxed text-ivory/75">{t.start.text}</p>
+
+                    <Link
+                        href={homeUrl ?? route('access-request.create')}
+                        className={`${focusRing} mt-10 inline-flex items-center justify-center bg-ivory px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-ink transition-opacity hover:opacity-85`}
+                    >
+                        {homeUrl ? t.hero.loggedPrimary : t.start.button}
+                    </Link>
                 </div>
 
-                <ol className="mt-14 grid gap-5 sm:grid-cols-3 sm:gap-6">
-                    {t.access.steps.map(([number, title, text]) => (
-                        <li key={number} className="rounded-2xl border border-ink/10 bg-blush/40 p-6">
-                            <p className="font-display text-sm text-sage">{number}</p>
-                            <h3 className="mt-3 font-display text-lg leading-snug">{title}</h3>
-                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{text}</p>
-                        </li>
-                    ))}
-                </ol>
+                <address className="rounded-3xl border border-ivory/15 p-8 not-italic">
+                    <p className="font-display text-lg leading-snug">{t.start.questionsTitle}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-ivory/70">{t.start.questionsText}</p>
 
-                <AccessRequestForm t={t} />
-
-                <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                    <Link href={route('login')} className={secondaryButton}>{t.access.login}</Link>
-                </div>
-            </div>
-        </section>
-    );
-}
-
-function Contact({ t, mailLink }) {
-    return (
-        <section id="contact" aria-labelledby="contact-title" className="scroll-mt-24 bg-blush">
-            <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 sm:px-10 md:grid-cols-[1fr_1fr] md:items-end">
-                <div className="max-w-md">
-                    <h2 id="contact-title" className="font-display text-2xl leading-snug sm:text-3xl">{t.contact.title}</h2>
-                    <p className="mt-5 text-sm leading-relaxed text-ink/70">{t.contact.text}</p>
-
-                    <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap">
-                        <a href={mailLink} className={primaryButton}>{t.contact.button}</a>
-
-                        <a
-                            href={CONTACT.instagram}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={secondaryButton}
-                        >
-                            {t.contact.instagram}
-                        </a>
-
-                        {CONTACT.whatsapp.length > 0 && (
-                            <a href={`https://wa.me/${CONTACT.whatsapp}`} target="_blank" rel="noreferrer" className={secondaryButton}>
-                                WhatsApp
-                            </a>
-                        )}
-                    </div>
-                </div>
-
-                <address className="rounded-3xl border border-ink/10 bg-ivory p-8 not-italic">
-                    <p className="text-[10px] uppercase tracking-brand text-sage">{t.contact.label}</p>
-
-                    <ul className="mt-6 space-y-4 text-sm leading-relaxed">
+                    <ul className="mt-6 space-y-3 text-sm">
                         <li>
-                            <a href={`mailto:${CONTACT.email}`} className={`${focusRing} transition-colors hover:text-sage}`}>
+                            <a href={CONTACT.phoneLink} className={contactLink}>
+                                {CONTACT.phone}
+                            </a>
+                        </li>
+                        <li>
+                            <a href={`mailto:${CONTACT.email}`} className={contactLink}>
                                 {CONTACT.email}
                             </a>
                         </li>
                         <li>
-                            <a href={CONTACT.phoneLink} className={`${focusRing} transition-colors hover:text-sage}`}>
-                                {CONTACT.phone}
+                            <a href={CONTACT.instagram} target="_blank" rel="noreferrer" className={contactLink}>
+                                Instagram
                             </a>
                         </li>
-                        <li className="text-ink/70">{CONTACT.address}</li>
                     </ul>
-
-                    <p className="mt-6 border-t border-ink/10 pt-6 text-xs leading-relaxed text-ink/50">{t.contact.note}</p>
                 </address>
             </div>
         </section>
