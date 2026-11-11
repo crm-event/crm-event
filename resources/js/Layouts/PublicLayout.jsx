@@ -6,30 +6,33 @@ import { useTranslation } from '@/i18n';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
-const navLink = `${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`;
+const navLink = `${focusRing} whitespace-nowrap text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`;
 
 const footerLink = `${focusRing} transition-colors hover:text-ink`;
 
 /** Buttons of the header, hidden on phones where they move to the menu. */
-const headerButton = `${focusRing} hidden items-center justify-center px-5 py-3.5 text-[11px] uppercase tracking-[0.18em] md:inline-flex`;
+const headerButton = `${focusRing} hidden h-11 items-center justify-center whitespace-nowrap px-5 text-[11px] uppercase tracking-[0.18em] md:inline-flex`;
 
 const headerPrimaryButton = `${headerButton} bg-ink text-ivory transition-opacity hover:opacity-80`;
 
 const headerSecondaryButton = `${headerButton} border border-ink/20 transition-colors hover:border-ink`;
 
 /**
- * Sections of the landing page reached from the menu. The links are absolute,
- * so that they also work from the other public pages.
+ * Sections of the landing page reached from the menus. The links are
+ * absolute, so that they also work from the other public pages. The header
+ * leaves out the contact, which the footer and the end of the landing page
+ * already show.
  */
-function useNavigationItems() {
+function useNavigationItems({ withContact = false } = {}) {
     const { t } = useTranslation();
 
-    return [
+    const items = [
         { href: `${route('home')}#prestations`, label: t('site.nav.services') },
         { href: `${route('home')}#espace-client`, label: t('site.nav.clientArea') },
         { href: `${route('home')}#a-propos`, label: t('site.nav.about') },
-        { href: `${route('home')}#contact`, label: t('site.nav.contact') },
     ];
+
+    return withContact ? [...items, { href: `${route('home')}#contact`, label: t('site.nav.contact') }] : items;
 }
 
 /**
@@ -55,8 +58,8 @@ function Brand() {
     const { t } = useTranslation();
 
     return (
-        <Link href={route('home')} className={`${focusRing} block shrink-0`}>
-            <span className="block whitespace-nowrap font-display text-sm tracking-[0.14em] sm:text-lg sm:tracking-[0.18em]">
+        <Link href={route('home')} className={`${focusRing} block min-w-0`}>
+            <span className="block whitespace-nowrap font-display text-xs tracking-[0.14em] sm:text-lg sm:tracking-[0.18em]">
                 LA DERNIÈRE TOUCHE
             </span>
             <span className="mt-1 block text-[10px] uppercase tracking-brand text-sage">{t('site.tagline')}</span>
@@ -183,7 +186,7 @@ function Header() {
 
 function Footer() {
     const { t } = useTranslation();
-    const navigationItems = useNavigationItems();
+    const navigationItems = useNavigationItems({ withContact: true });
 
     return (
         <footer className="border-t border-ink/10">

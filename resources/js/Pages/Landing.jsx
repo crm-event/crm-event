@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import FieldError from '@/Components/FieldError';
-import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { fieldLabel, focusRing, primaryButton, secondaryButton, textField } from '@/brand';
 import { CONTACT } from '@/contact';
 import { useTranslation } from '@/i18n';
+import PublicLayout from '@/Layouts/PublicLayout';
 
 /** Photos of the page; their alternative texts are in i18n/landing.js. */
 const IMAGE_SOURCES = {
@@ -36,21 +36,15 @@ export default function Landing({ auth }) {
         <>
             <Head title={t.pageTitle} />
 
-            <div className="flex min-h-screen flex-col bg-ivory font-sans text-ink">
-                <Header homeUrl={homeUrl} t={t} />
-
-                <main id="content" className="flex-1">
-                    <Hero homeUrl={homeUrl} t={t} images={images} />
-                    <Stats t={t} />
-                    <Services t={t} images={images} />
-                    <About t={t} images={images} />
-                    <ClientArea t={t} />
-                    <Access t={t} />
-                    <Contact t={t} mailLink={projectMailLink(t.projectMail)} />
-                </main>
-
-                <Footer t={t} />
-            </div>
+            <PublicLayout>
+                <Hero homeUrl={homeUrl} t={t} images={images} />
+                <Stats t={t} />
+                <Services t={t} images={images} />
+                <About t={t} images={images} />
+                <ClientArea t={t} />
+                <Access t={t} />
+                <Contact t={t} mailLink={projectMailLink(t.projectMail)} />
+            </PublicLayout>
         </>
     );
 }
@@ -81,50 +75,6 @@ function SectionIntro({ eyebrow, title, text }) {
             <h2 className="mt-4 font-display text-2xl leading-snug sm:text-3xl">{title}</h2>
             <p className="mt-6 text-base leading-relaxed text-ink/70">{text}</p>
         </div>
-    );
-}
-
-function Header({ homeUrl, t }) {
-    return (
-        <header className="sticky top-0 z-40 border-b border-ink/10 bg-ivory/95 backdrop-blur">
-            <a
-                href="#content"
-                className={`${focusRing} sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-5 focus:z-10 focus:bg-ink focus:px-4 focus:py-2 focus:text-[11px] focus:uppercase focus:tracking-[0.18em] focus:text-ivory`}
-            >
-                {t.skip}
-            </a>
-
-            <div className="mx-auto flex max-w-6xl items-center justify-between gap-5 px-6 py-5 sm:px-10">
-                <Link href={route('home')} className={`${focusRing} block`}>
-                    <span className="block whitespace-nowrap font-display text-xs tracking-[0.14em] sm:text-lg sm:tracking-[0.18em]">
-                        LA DERNIÈRE TOUCHE
-                    </span>
-                    <span className="mt-1 block text-[10px] uppercase tracking-brand text-sage">
-                        {t.tagline}
-                    </span>
-                </Link>
-
-                <nav aria-label={t.navigation} className="hidden lg:block">
-                    <ul className="flex items-center gap-9">
-                        <li><a href="#prestations" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.services}</a></li>
-                        <li><a href="#a-propos" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.about}</a></li>
-                        <li><a href="#espace-client" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.clientArea}</a></li>
-                        <li><a href="#contact" className={`${focusRing} text-[11px] uppercase tracking-[0.18em] text-ink/70 transition-colors hover:text-ink`}>{t.nav.contact}</a></li>
-                    </ul>
-                </nav>
-
-                <div className="flex items-center gap-3">
-                    <LanguageSwitcher variant="outlined" />
-
-                    <Link
-                        href={homeUrl ?? route('login')}
-                        className={`${focusRing} shrink-0 border border-ink/20 px-6 py-3.5 text-[11px] uppercase tracking-[0.18em] transition-colors hover:border-ink hover:bg-ink hover:text-ivory`}
-                    >
-                        {homeUrl ? t.account : t.login}
-                    </Link>
-                </div>
-            </div>
-        </header>
     );
 }
 
@@ -427,63 +377,5 @@ function Contact({ t, mailLink }) {
                 </address>
             </div>
         </section>
-    );
-}
-
-function Footer({ t }) {
-    const navItems = [
-        { href: '#prestations', label: t.nav.services },
-        { href: '#a-propos', label: t.nav.about },
-        { href: '#espace-client', label: t.nav.clientArea },
-        { href: '#contact', label: t.nav.contact },
-    ];
-
-    return (
-        <footer className="border-t border-ink/10">
-            <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10 md:flex-row md:items-start md:justify-between">
-                <div className="flex items-start gap-4">
-                    <img src="/logo-ldt.png" alt="" className="h-14 w-auto" width={285} height={560} />
-
-                    <div className="max-w-xs">
-                        <p className="font-display text-sm tracking-[0.18em]">LA DERNIÈRE TOUCHE</p>
-                        <p className="mt-3 text-sm leading-relaxed text-ink/70">{t.footer}</p>
-                    </div>
-                </div>
-
-                <nav aria-label={t.footerNavigation}>
-                    <ul className="flex flex-col gap-2 text-[11px] uppercase tracking-[0.18em] text-sage">
-                        {navItems.map((item) => (
-                            <li key={item.href}>
-                                <a href={item.href} className={`${focusRing} transition-colors hover:text-ink`}>
-                                    {item.label}
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
-                </nav>
-
-                <div className="flex flex-col gap-2 text-sm text-ink/70 md:items-end">
-                    <a href={`mailto:${CONTACT.email}`} className={`${focusRing} transition-colors hover:text-ink}`}>{CONTACT.email}</a>
-                    <a href={CONTACT.phoneLink} className={`${focusRing} transition-colors hover:text-ink}`}>{CONTACT.phone}</a>
-
-                    <a href={CONTACT.instagram} target="_blank" rel="noreferrer" className={`${focusRing} transition-colors hover:text-ink}`}>
-                        Instagram
-                    </a>
-
-                    <a href={CONTACT.website} target="_blank" rel="noreferrer" className={`${focusRing} transition-colors hover:text-ink}`}>
-                        {t.portfolio}
-                    </a>
-                </div>
-            </div>
-
-            <div className="border-t border-ink/10 bg-blush">
-                <p className="mx-auto max-w-6xl px-6 py-5 text-[11px] text-ink/60 sm:px-10">
-                    © {new Date().getFullYear()} La Dernière Touche · SIRET {CONTACT.siret} ·{' '}
-                    <Link href={route('legal-notice')} className={`${focusRing} underline decoration-ink/30 underline-offset-4 transition-colors hover:text-ink`}>
-                        {t.legalNotice}
-                    </Link>
-                </p>
-            </div>
-        </footer>
     );
 }

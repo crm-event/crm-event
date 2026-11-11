@@ -7,7 +7,7 @@ import { useState } from 'react';
 const VARIANTS = {
     /** Bordered, next to the "Se connecter" button of the public pages. */
     outlined:
-        'border border-ink/20 px-4 py-3.5 text-[10px] tracking-[0.18em] text-ink hover:border-ink hover:bg-ink hover:text-ivory',
+        'h-11 border border-ink/20 px-4 text-[10px] tracking-[0.18em] text-ink hover:border-ink hover:bg-ink hover:text-ivory',
     /** Discreet, among the icon buttons of the couple space header. */
     subtle: 'rounded-lg px-2.5 py-2 text-[10px] tracking-[0.16em] text-sage hover:bg-blush hover:text-ink',
 };
