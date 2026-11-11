@@ -1,42 +1,32 @@
 /**
  * Texts of the landing page (Pages/Landing.jsx). Unlike the other areas, they
- * are structured (lists of services, steps…): the page reads them as a whole
- * with content('landing') (see ./index.js).
+ * are structured (lists of services, features…): the page reads them as a
+ * whole with content('landing') (see ./index.js). The header and footer
+ * texts are in ./site.js.
  *
  * `image` names a photo of the page (IMAGE_SOURCES in Landing.jsx), whose
- * alternative text is in `images`.
+ * alternative text is in `images`; `icon` is a Material Symbols name.
  */
 export default {
     fr: {
         pageTitle: 'La Dernière Touche · Wedding design & coordination en Provence',
-        login: 'Se connecter',
-        account: 'Mon espace',
-        skip: 'Aller au contenu',
-        navigation: 'Navigation principale',
-        footerNavigation: 'Pied de page',
-        legalNotice: 'Mentions légales',
-        tagline: 'Wedding design & coordination',
-
-        nav: {
-            services: 'Prestations',
-            about: 'À propos',
-            clientArea: 'Espace client',
-            contact: 'Contact',
-        },
 
         hero: {
             eyebrow: 'Provence & Côte d’Azur',
             title: 'Votre mariage, pensé avec élégance du premier rendez-vous au dernier invité.',
-            text: 'Wedding design, coordination et officiante de cérémonie : une direction claire, un cadre rassurant, et une ambiance qui vous ressemble vraiment.',
-            primary: 'Parler de votre projet',
+            text: 'Wedding design, coordination et officiante de cérémonie : une direction claire, un cadre rassurant, et un espace privé où suivre chaque étape de votre projet.',
+            primary: 'Demander mon accès',
             loggedPrimary: 'Accéder à mon espace',
-            secondary: 'Découvrir nos prestations',
+            secondary: 'Découvrir les prestations',
+            alreadyClient: 'Déjà accompagnés ?',
+            login: 'Se connecter',
         },
 
+        statsLabel: 'Chiffres clés',
         stats: [
             { value: 'Depuis 2024', label: 'Une maison fondée en Provence' },
             { value: '10 à 15', label: 'Mariages accompagnés chaque année' },
-            { value: '1 couple', label: '1 espace client dédié' },
+            { value: 'Un espace', label: 'Privé pour chaque couple accompagné' },
         ],
 
         services: {
@@ -80,57 +70,38 @@ export default {
             ],
         },
 
+        clientArea: {
+            eyebrow: 'Votre espace client',
+            title: 'Tout votre mariage, réuni au même endroit.',
+            text: 'Dès que Jessica ouvre votre accès, votre projet se suit ici : plus de mails éparpillés ni de fichiers à chercher.',
+            features: [
+                { icon: 'favorite', title: 'Votre mariage', text: 'Date, lieu, prestations, avancement et prochain rendez-vous, sur une seule page.' },
+                { icon: 'palette', title: 'Le design', text: 'Votre brief, vos inspirations et le moodboard. Vous suivez chaque proposition et donnez votre avis.' },
+                { icon: 'description', title: 'Les documents', text: 'Devis, contrat et conditions générales à consulter, télécharger et valider d’un « Lu et approuvé ».' },
+                { icon: 'event', title: 'Les rendez-vous', text: 'Les points d’étape convenus avec Jessica, toujours sous les yeux.' },
+                { icon: 'chat_bubble', title: 'Les messages', text: 'Vos échanges écrits et vocaux avec Jessica, et l’historique de ce qui a été décidé.' },
+                { icon: 'groups', title: 'La communauté', text: 'Un espace pour partager idées et bonnes adresses avec les autres couples.' },
+            ],
+            cta: 'Demander mon accès',
+            note: 'Chaque espace est ouvert par Jessica, pour un couple et un mariage.',
+        },
+
         about: {
             eyebrow: 'À propos',
             title: 'Jessica Salles, fondatrice de La Dernière Touche.',
             first: 'Jessica a créé La Dernière Touche en Provence en 2024. Elle accompagne chaque année 10 à 15 couples, de France et de l’étranger, en Provence et sur la Côte d’Azur.',
             second: 'Elle suit elle-même chaque projet, du premier rendez-vous jusqu’au jour J, et s’entoure de prestataires de confiance pour les grands jours.',
-            quote: 'Faire de votre mariage, votre endroit préféré au monde.',
+            quote: '« Faire de votre mariage, votre endroit préféré au monde. »',
         },
 
-        client: {
-            title: 'Un espace privé pour suivre votre mariage.',
-            text: 'Chaque couple accompagné retrouve son projet au même endroit, du premier devis au jour J.',
-            features: [
-                ['Le projet en un coup d’œil', 'Date, lieu, temps forts de la journée et personnes impliquées, sur une seule page.'],
-                ['Votre design', 'Moodboards, carnet design et projections : suivez chaque version et laissez vos commentaires.'],
-                ['Vos documents', 'Devis, contrat et conditions générales, à consulter et télécharger à tout moment.'],
-                ['Vos échanges', 'Vos messages avec Jessica et l’historique de ce qui a été décidé, au même endroit.'],
-            ],
+        start: {
+            eyebrow: 'Votre projet',
+            title: 'Votre mariage commence ici.',
+            text: 'Faites votre demande en ligne : elle arrive directement chez Jessica, qui étudie chaque projet personnellement et vous ouvre votre espace client.',
+            button: 'Demander mon accès',
+            questionsTitle: 'Une question avant de vous lancer ?',
+            questionsText: 'Jessica vous répond par téléphone, par e-mail ou sur Instagram.',
         },
-
-        access: {
-            title: 'Un accès ouvert pour vous, personnellement.',
-            text: 'Pas d’inscription en ligne : chaque accès est créé à la main, pour un couple et pour un mariage. Personne d’autre n’y a accès.',
-            request: 'Demander mon accès',
-            login: 'J’ai déjà un identifiant',
-            steps: [
-                ['01', 'Vous faites votre demande', 'Vos prénoms et votre e-mail suffisent. Nous vérifions que votre dossier est bien ouvert.'],
-                ['02', 'Nous ouvrons votre accès', 'Votre compte est créé par nos soins, une fois votre devis et votre contrat signés.'],
-                ['03', 'Vous choisissez votre mot de passe', 'Vous recevez par e-mail un identifiant et un code provisoire, à remplacer dès la première connexion.'],
-            ],
-            form: {
-                title: 'Demander votre accès',
-                firstName: 'Votre prénom',
-                partnerFirstName: 'Le prénom de votre conjoint (facultatif)',
-                email: 'Votre adresse e-mail',
-                weddingDate: 'Date du mariage (facultative)',
-                sending: 'Envoi…',
-                sent: 'Merci, votre demande est bien transmise à Jessica. Si votre accès est ouvert, vous recevrez votre identifiant et votre code provisoire par e-mail.',
-            },
-        },
-
-        contact: {
-            title: 'Parlez-nous de votre mariage.',
-            text: 'Parlez-nous de votre mariage : sa date, son lieu, le nombre d’invités et l’ambiance que vous imaginez. Nous vous proposerons ensuite un premier rendez-vous. Aucun compte n’est nécessaire pour nous écrire.',
-            button: 'Présenter mon projet',
-            instagram: 'Suivez-nous sur Instagram',
-            label: 'Nous joindre',
-            note: 'Les demandes arrivant par e-mail, Instagram ou le site sont toutes lues par Jessica.',
-        },
-
-        footer: 'Wedding design, coordination et officiante de cérémonie en Provence et sur la Côte d’Azur.',
-        portfolio: 'Voir le portfolio',
 
         images: {
             arch: 'Décoration élégante de mariage',
@@ -140,59 +111,27 @@ export default {
             officiant: 'Cérémonie de mariage',
             jessica: 'Jessica, fondatrice de La Dernière Touche',
         },
-
-        projectMail: {
-            subject: 'Notre projet de mariage',
-            body: [
-                'Bonjour Jessica,',
-                '',
-                'Nous souhaitons vous présenter notre projet de mariage.',
-                '',
-                'Nos prénoms :',
-                'Date du mariage :',
-                'Lieu :',
-                'Nombre d’invités (environ) :',
-                'Prestations qui nous intéressent (décoration, coordination, officiante) :',
-                'Comment nous vous avons connue :',
-                'Téléphone :',
-                '',
-                'Nous pouvons vous envoyer quelques inspirations.',
-                '',
-                'Merci beaucoup,',
-            ],
-        },
     },
 
     en: {
         pageTitle: 'La Dernière Touche · Wedding design & coordination in Provence',
-        login: 'Log in',
-        account: 'My client area',
-        skip: 'Skip to content',
-        navigation: 'Main navigation',
-        footerNavigation: 'Footer navigation',
-        legalNotice: 'Legal notice',
-        tagline: 'Wedding design & coordination',
-
-        nav: {
-            services: 'Services',
-            about: 'About',
-            clientArea: 'Client area',
-            contact: 'Contact',
-        },
 
         hero: {
             eyebrow: 'Provence & French Riviera',
             title: 'Your wedding, thoughtfully designed from the first meeting to the last guest.',
-            text: 'Wedding design, day-of coordination and ceremony officiating: a clear direction, a reassuring framework and an atmosphere that feels truly yours.',
-            primary: 'Tell us about your project',
-            loggedPrimary: 'Access my client area',
+            text: 'Wedding design, day-of coordination and ceremony officiating: a clear direction, a reassuring framework and a private space to follow every step of your project.',
+            primary: 'Request access',
+            loggedPrimary: 'Access my space',
             secondary: 'Discover our services',
+            alreadyClient: 'Already working with us?',
+            login: 'Log in',
         },
 
+        statsLabel: 'Key figures',
         stats: [
             { value: 'Since 2024', label: 'A wedding studio founded in Provence' },
             { value: '10 to 15', label: 'Weddings supported every year' },
-            { value: '1 couple', label: '1 dedicated client area' },
+            { value: 'One space', label: 'Private to each couple we support' },
         ],
 
         services: {
@@ -236,57 +175,38 @@ export default {
             ],
         },
 
+        clientArea: {
+            eyebrow: 'Your client area',
+            title: 'Your whole wedding, in one place.',
+            text: 'As soon as Jessica opens your access, your project is followed here: no more scattered emails or files to look for.',
+            features: [
+                { icon: 'favorite', title: 'Your wedding', text: 'Date, venue, services, progress and next appointment, all on one page.' },
+                { icon: 'palette', title: 'The design', text: 'Your brief, your inspirations and the moodboard. Follow every proposal and share your feedback.' },
+                { icon: 'description', title: 'The documents', text: 'Quote, contract and terms to view, download and approve with “Read and approved”.' },
+                { icon: 'event', title: 'The appointments', text: 'The milestones agreed with Jessica, always in sight.' },
+                { icon: 'chat_bubble', title: 'The messages', text: 'Your written and voice messages with Jessica, and the history of every decision.' },
+                { icon: 'groups', title: 'The community', text: 'A space to share ideas and good addresses with the other couples.' },
+            ],
+            cta: 'Request access',
+            note: 'Each space is opened by Jessica, for one couple and one wedding.',
+        },
+
         about: {
             eyebrow: 'About',
             title: 'Jessica Salles, founder of La Dernière Touche.',
             first: 'Jessica founded La Dernière Touche in Provence in 2024. Each year, she supports 10 to 15 couples from France and abroad across Provence and the French Riviera.',
             second: 'She personally follows every project, from the first meeting to the wedding day, and works with trusted suppliers to make each celebration special.',
-            quote: 'Making your wedding your favourite place in the world.',
+            quote: '“Making your wedding your favourite place in the world.”',
         },
 
-        client: {
-            title: 'A private space to follow your wedding.',
-            text: 'Every couple we support can find their project in one place, from the first quotation to the wedding day.',
-            features: [
-                ['Your project at a glance', 'Your date, venue, key moments and the people involved, all on one page.'],
-                ['Your design', 'Moodboards, design books and proposals: follow every version and leave your comments.'],
-                ['Your documents', 'Quotes, contracts and terms, available to view and download at any time.'],
-                ['Your conversations', 'Your messages with Jessica and the history of every decision, all in one place.'],
-            ],
+        start: {
+            eyebrow: 'Your project',
+            title: 'Your wedding starts here.',
+            text: 'Send your request online: it goes straight to Jessica, who reviews every project personally and opens your client area.',
+            button: 'Request access',
+            questionsTitle: 'A question before you start?',
+            questionsText: 'Jessica answers by phone, by email or on Instagram.',
         },
-
-        access: {
-            title: 'Private access created especially for you.',
-            text: 'There is no online sign-up: every account is created personally for one couple and one wedding. No one else can access it.',
-            request: 'Request access',
-            login: 'I already have an account',
-            steps: [
-                ['01', 'You send your request', 'Your first names and email are all it takes. We check that your file has been opened.'],
-                ['02', 'We create your access', 'Your account is created once your quote and contract have been signed.'],
-                ['03', 'You choose your password', 'You receive a username and temporary code by email, which you replace after your first login.'],
-            ],
-            form: {
-                title: 'Request your access',
-                firstName: 'Your first name',
-                partnerFirstName: 'Your partner’s first name (optional)',
-                email: 'Your email address',
-                weddingDate: 'Wedding date (optional)',
-                sending: 'Sending…',
-                sent: 'Thank you, your request has been passed on to Jessica. If your access is opened, you will receive your username and temporary code by email.',
-            },
-        },
-
-        contact: {
-            title: 'Tell us about your wedding.',
-            text: 'Tell us about your wedding: the date, venue, number of guests and atmosphere you have in mind. We will then suggest an initial meeting. No account is needed to contact us.',
-            button: 'Share your project',
-            instagram: 'Follow us on Instagram',
-            label: 'Get in touch',
-            note: 'Every request received by email, Instagram or through the website is personally read by Jessica.',
-        },
-
-        footer: 'Wedding design, coordination and ceremony officiating across Provence and the French Riviera.',
-        portfolio: 'View the portfolio',
 
         images: {
             arch: 'Elegant wedding decoration',
@@ -295,27 +215,6 @@ export default {
             coordination: 'Wedding coordination',
             officiant: 'Wedding ceremony',
             jessica: 'Jessica, founder of La Dernière Touche',
-        },
-
-        projectMail: {
-            subject: 'Our wedding project',
-            body: [
-                'Hello Jessica,',
-                '',
-                'We would like to tell you about our wedding project.',
-                '',
-                'Our names:',
-                'Wedding date:',
-                'Venue:',
-                'Approximate number of guests:',
-                'Services we are interested in (design, coordination, ceremony officiating):',
-                'How did you hear about us:',
-                'Phone number:',
-                '',
-                'We can also send you some inspiration images.',
-                '',
-                'Thank you,',
-            ],
         },
     },
 };

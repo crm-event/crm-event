@@ -1,10 +1,12 @@
 import { usePage } from '@inertiajs/react';
+import accessRequest from './accessRequest';
 import auth from './auth';
 import couple from './couple';
 import errors from './errors';
 import landing from './landing';
 import legal from './legal';
 import profile from './profile';
+import site from './site';
 
 /**
  * Languages of the site, the first one being the default. The server decides
@@ -30,11 +32,13 @@ const TRANSLATIONS = Object.fromEntries(
         language,
         {
             ...couple[language],
+            accessRequest: accessRequest[language],
             auth: auth[language],
             errors: errors[language],
             landing: landing[language],
             legal: legal[language],
             profile: profile[language],
+            site: site[language],
         },
     ]),
 );

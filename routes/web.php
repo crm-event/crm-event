@@ -24,6 +24,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('home');
+Route::inertia('/demande-acces', 'AccessRequest')->middleware('guest')->name('access-request.create');
 Route::post('/demande-acces', AccessRequestController::class)->name('access-request.store');
 Route::post('/locale', LocaleController::class)->name('locale.update');
 Route::inertia('/mentions-legales', 'LegalNotice')->name('legal-notice');
