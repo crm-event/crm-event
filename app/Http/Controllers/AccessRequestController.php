@@ -42,7 +42,7 @@ class AccessRequestController extends Controller
             });
         }
 
-        return to_route('home');
+        return to_route('access-request.create');
     }
 
     /**

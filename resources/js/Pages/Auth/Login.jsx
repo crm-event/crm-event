@@ -106,9 +106,9 @@ export default function Login({ status, canResetPassword }) {
                 <p className="font-display text-lg leading-snug">{t('auth.login.noAccessTitle')}</p>
                 <p className="mt-3 text-sm leading-relaxed text-ink/70">
                     {t('auth.login.noAccessText')}{' '}
-                    <a href={`${route('home')}#access`} className={`${textLink} text-ink`}>
+                    <Link href={route('access-request.create')} className={`${textLink} text-ink`}>
                         {t('auth.login.requestAccess')}
-                    </a>
+                    </Link>
                 </p>
             </div>
         </AuthLayout>
