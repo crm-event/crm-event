@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Service;
 use App\Models\Wedding;
 use App\Models\WeddingService;
-use App\Models\Service;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,13 +21,14 @@ class WeddingServiceFactory extends Factory
     {
         return [
             'wedding_id' => Wedding::factory(),
-            'service_id'=> Service::factory(),
-            'amount' => fake()->numberBetween(0,100),
-            'quote_number' => fake()->unique()->text(),
+            'service_id' => Service::factory(),
+            'amount' => fake()->randomFloat(2, 500, 8000),
+            'vat_rate' => 0,
+            'quote_number' => fake()->unique()->bothify('DEV-########'),
             'quote_sent_at' => fake()->date(),
-            'quote_valid_until'=> fake()->date(),
-            'quote_accepted_at'=> fake()->date(),
-            'contract_signed_at'=> fake()->date(),
+            'quote_valid_until' => fake()->date(),
+            'quote_accepted_at' => fake()->date(),
+            'contract_signed_at' => fake()->date(),
         ];
     }
 }

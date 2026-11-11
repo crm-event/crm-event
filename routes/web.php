@@ -4,10 +4,12 @@ use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
+use App\Http\Controllers\Admin\FacturationController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
+use App\Http\Controllers\Admin\PrestationsDevisController;
 use App\Http\Controllers\Admin\RentabiliteController;
-use App\Http\Controllers\Admin\WeddingSelectionController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\WeddingSelectionController;
 use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DesignController;
@@ -20,7 +22,6 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', LandingController::class)->name('home');
 Route::post('/demande-acces', AccessRequestController::class)->name('access-request.store');
@@ -97,6 +98,11 @@ Route::middleware(['auth', 'role:admin'])
 
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
 
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::get('/facturation', FacturationController::class)->name('facturation.index');
+    Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
+});
+
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('demandes')->group(function () {
     Route::get('/', [DemandeController::class, 'index'])->name('demandes');
     Route::post('/', [DemandeController::class, 'store'])->name('demandes.store');
@@ -118,8 +124,8 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.wedding.')
     ->group(function () {
 
-    Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');
-    Route::get('/{id}', [WeddingSelectionController::class, 'show'])->whereNumber('id')->name('show');
+        Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');
+        Route::get('/{id}', [WeddingSelectionController::class, 'show'])->whereNumber('id')->name('show');
     });
 
 Route::middleware(['auth', 'role:admin'])
