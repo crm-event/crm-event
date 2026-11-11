@@ -163,6 +163,7 @@ class Wedding extends Model
      */
     public function timelineItems(): HasMany
     {
-        return $this->hasMany(TimelineItem::class);
+        return $this->hasMany(TimelineItem::class)
+        ->orderBy('sort_order');
     }
 }

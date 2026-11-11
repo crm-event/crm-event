@@ -15,13 +15,31 @@ function formaterDate(date) {
     }).format(valeur);
 }
 
+function obtenirStatut(date) {
+    if (!date) return 'a-venir';
+
+    const aujourdHui = new Date();
+    aujourdHui.setHours(0, 0, 0, 0);
+
+    const dateEtape = new Date(date);
+
+    if (Number.isNaN(dateEtape.getTime())) return 'a-venir';
+
+    dateEtape.setHours(0, 0, 0, 0);
+
+    if (dateEtape < aujourdHui) return 'valide';
+    if (dateEtape.getTime() === aujourdHui.getTime()) return 'actif';
+
+    return 'a-venir';
+}
+
 export default function EtapeTimeline({ etape, derniere = false }) {
     if (!etape) return null;
 
-    const statut = etape.statut || etape.status || 'a-venir';
+    const statut = obtenirStatut(etape.starts_at);
 
-    const valide = statut === 'valide' || statut === 'completed';
-    const active = statut === 'actif' || statut === 'active';
+    const valide = statut === 'valide';
+    const active = statut === 'actif';
 
     return (
         <div className="relative min-w-0 flex-1">
@@ -34,7 +52,13 @@ export default function EtapeTimeline({ etape, derniere = false }) {
                     }`}
                 >
                     <Icone
-                        nom={valide ? 'check' : active ? 'hourglass_top' : 'celebration'}
+                        nom={
+                            valide
+                                ? 'check'
+                                : active
+                                    ? 'hourglass_top'
+                                    : 'celebration'
+                        }
                         className="text-[12px]"
                     />
                 </span>
@@ -55,20 +79,20 @@ export default function EtapeTimeline({ etape, derniere = false }) {
             >
                 <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-sage">
                     {valide
-                        ? 'Validé'
+                        ? 'Terminé'
                         : active
-                            ? 'Échéance active'
+                            ? 'Aujourd’hui'
                             : 'À venir'}
                     {' · '}
-                    {formaterDate(etape.date || etape.due_date)}
+                    {formaterDate(etape.starts_at)}
                 </p>
 
                 <h3 className="mt-1 font-display text-[11px] leading-[1.5] text-ink">
-                    {etape.titre || etape.title || 'Étape sans titre'}
+                    {etape.title || 'Étape sans titre'}
                 </h3>
 
                 <p className="mt-1 text-[9px] leading-[1.5] text-sage">
-                    {etape.description || ''}
+                    {etape.notes || ''}
                 </p>
             </div>
         </div>

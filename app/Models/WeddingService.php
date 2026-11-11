@@ -2,13 +2,20 @@
 
 namespace App\Models;
 
+use Database\Factories\WeddingServiceFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Model which get the services (prestations) made for the wedding
+ */
 class WeddingService extends Model
 {
+    /** @use HasFactory<WeddingServiceFactory> */
+    use HasFactory;
+
     protected $fillable = [
-        'id',
         'wedding_id',
         'service_id',
         'amount',
@@ -42,8 +49,23 @@ class WeddingService extends Model
         ];
     }
 
+    /**
+     * The services held at for the wedding.
+     *
+     * @return BelongsTo<Wedding, $this>
+     */
     public function wedding(): BelongsTo
     {
         return $this->belongsTo(Wedding::class);
+    }
+
+    /**
+     * The types of service held.
+     *
+     * @return BelongsTo<Service, $this>
+     */
+    public function service() : BelongsTo
+    {
+        return $this->belongsTo(Service::class);
     }
 }

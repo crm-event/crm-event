@@ -6,10 +6,14 @@ use App\Models\Wedding;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller of the admin selector of the weddings
+ */
 class WeddingSelectionController
 {
     /**
-     * Show the list of weddings
+     * List of the weddings ordered by the date of the wedding and their place
+     * in the alphabetical order
      */
     public function index(): Response
     {
@@ -23,16 +27,18 @@ class WeddingSelectionController
     }
 
     /**
-     * Affiche le mariage sélectionné.
+     * Display the Wedding through inertia. link back to the error landing page 
+     * if an error occur.
      */
     public function show(int $id): Response
     {
         $wedding = Wedding::with([
            'couple',
            'venue',
-           'weddingServices',
-           'vendors',
-           'timelineItems' 
+           'weddingServices.service',
+           'vendors.category',
+           'timelineItems',
+           'documents' 
         ])
         ->where('id', $id)
         ->first();
@@ -46,6 +52,7 @@ class WeddingSelectionController
             'prestations' => $wedding->weddingServices,
             'prestataires' => $wedding->vendors,
             'milestones' => $wedding->timelineItems,
+            'documents' => $wedding->documents
         ]);
     }
 }
