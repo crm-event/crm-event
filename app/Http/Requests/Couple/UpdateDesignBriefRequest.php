@@ -27,18 +27,18 @@ class UpdateDesignBriefRequest extends FormRequest
     }
 
     /**
-     * Get validation messages in French.
+     * Get validation messages in the language of the couple.
      *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'title.max' => 'L’intention doit tenir en 255 caractères.',
-            'description.max' => 'La description ne peut pas dépasser 5 000 caractères.',
-            'palette.max' => 'Indiquez 12 couleurs au plus.',
-            'palette.*.max' => 'Chaque couleur doit tenir en 50 caractères.',
-            'avoid.max' => 'Ce texte ne peut pas dépasser 2 000 caractères.',
+            'title.max' => __('forms.design_brief.title_max'),
+            'description.max' => __('forms.design_brief.description_max'),
+            'palette.max' => __('forms.design_brief.palette_max'),
+            'palette.*.max' => __('forms.design_brief.palette_item_max'),
+            'avoid.max' => __('forms.design_brief.avoid_max'),
         ];
     }
 

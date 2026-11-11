@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\StandardText;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Middleware;
@@ -34,6 +35,7 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+            'locale' => app()->getLocale(),
             'auth' => [
                 'user' => $request->user(),
                 'homeUrl' => $request->user()?->homeUrl(),
@@ -45,7 +47,8 @@ class HandleInertiaRequests extends Middleware
     /**
      * What is waiting for a couple, shown in the bell of the couple space:
      * unread messages, new documents, documents to approve and an appointment
-     * coming within two weeks. Each one disappears once dealt with.
+     * coming within two weeks. Each one disappears once dealt with. The texts
+     * follow the language of the visitor (lang/{fr,en}/couple.php).
      *
      * @return list<array{key: string, icon: string, title: string, text: string, date: string|null, date_label: string, route: string}>
      */
@@ -66,10 +69,10 @@ class HandleInertiaRequests extends Middleware
             $notifications[] = [
                 'key' => 'messages',
                 'icon' => 'chat_bubble',
-                'title' => $unreadCount === 1 ? 'Nouveau message de Jessica' : "{$unreadCount} nouveaux messages de Jessica",
-                'text' => 'Ouvrez vos messages pour les lire.',
+                'title' => trans_choice('couple.notifications.messages_title', $unreadCount),
+                'text' => __('couple.notifications.messages_text'),
                 'date' => self::toIso($unreadMessages->max('messages.created_at')),
-                'date_label' => 'Reçu le',
+                'date_label' => __('couple.notifications.messages_date'),
                 'route' => 'couple.messages.index',
             ];
         }
@@ -81,10 +84,10 @@ class HandleInertiaRequests extends Middleware
             $notifications[] = [
                 'key' => 'documents',
                 'icon' => 'description',
-                'title' => $unseenCount === 1 ? 'Un nouveau document' : "{$unseenCount} nouveaux documents",
-                'text' => 'Jessica a partagé un document que vous n’avez pas encore ouvert.',
+                'title' => trans_choice('couple.notifications.documents_title', $unseenCount),
+                'text' => __('couple.notifications.documents_text'),
                 'date' => self::toIso($unseenDocuments->max('documents.created_at')),
-                'date_label' => 'Partagé le',
+                'date_label' => __('couple.notifications.documents_date'),
                 'route' => 'couple.documents.index',
             ];
         }
@@ -95,8 +98,8 @@ class HandleInertiaRequests extends Middleware
             $notifications[] = [
                 'key' => 'approvals',
                 'icon' => 'task_alt',
-                'title' => $toApproveCount === 1 ? 'Un document à approuver' : "{$toApproveCount} documents à approuver",
-                'text' => 'Lisez-le, puis validez-le avec « Lu et approuvé ».',
+                'title' => trans_choice('couple.notifications.approvals_title', $toApproveCount),
+                'text' => __('couple.notifications.approvals_text'),
                 'date' => null,
                 'date_label' => '',
                 'route' => 'couple.documents.index',
@@ -112,11 +115,11 @@ class HandleInertiaRequests extends Middleware
             $notifications[] = [
                 'key' => 'appointment',
                 'icon' => 'event',
-                'title' => 'Rendez-vous à venir',
-                'text' => $nextAppointment->title,
+                'title' => __('couple.notifications.appointment_title'),
+                'text' => StandardText::translate($nextAppointment->title),
                 // Wall-clock time, without time zone, as on the Appointments page.
                 'date' => $nextAppointment->starts_at->format('Y-m-d\TH:i:s'),
-                'date_label' => 'Prévu le',
+                'date_label' => __('couple.notifications.appointment_date'),
                 'route' => 'couple.appointments.index',
             ];
         }

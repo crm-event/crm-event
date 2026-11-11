@@ -49,14 +49,14 @@ class FirstPasswordController extends Controller
                 'confirmed',
                 function (string $attribute, mixed $value, Closure $fail) use ($user): void {
                     if (Hash::check($value, $user->password)) {
-                        $fail('Choisissez un mot de passe différent de votre code provisoire.');
+                        $fail(__('forms.password.same_as_temporary'));
                     }
                 },
             ],
         ], [
-            'password.required' => 'Choisissez un mot de passe.',
-            'password.min' => 'Votre mot de passe doit contenir au moins 8 caractères.',
-            'password.confirmed' => 'Les deux mots de passe ne correspondent pas.',
+            'password.required' => __('forms.password.required'),
+            'password.min' => __('forms.password.min'),
+            'password.confirmed' => __('forms.password.confirmed'),
         ]);
 
         // must_change_password is not mass assignable: a request must never set it.

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Couple;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Support\StandardText;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,7 +48,7 @@ class AppointmentController extends Controller
     {
         return [
             'id' => $appointment->id,
-            'title' => $appointment->title,
+            'title' => StandardText::translate($appointment->title),
             'starts_at' => $appointment->starts_at->format('Y-m-d\TH:i:s'),
             'mode' => $appointment->mode?->value,
             'location' => $appointment->location,

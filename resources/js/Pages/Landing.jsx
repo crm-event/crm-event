@@ -1,338 +1,52 @@
 import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import FieldError from '@/Components/FieldError';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { fieldLabel, focusRing, primaryButton, secondaryButton, textField } from '@/brand';
 import { CONTACT } from '@/contact';
+import { useTranslation } from '@/i18n';
 
-const IMAGES = {
-    arch: {
-        src: '/images/landing/accueil1.jpg',
-        alt: 'Décoration élégante de mariage',
-    },
-    bouquet: {
-        src: '/images/landing/accueil2.jpg',
-        alt: 'Détails raffinés d’un mariage',
-    },
-    design: {
-        src: '/images/landing/wedding-design.jpg',
-        alt: 'Décoration contemporaine de mariage',
-    },
-    coordination: {
-        src: '/images/landing/coordination.jpg',
-        alt: 'Coordination d’un mariage',
-    },
-    officiant: {
-        src: '/images/landing/officiante-de-ceremonie.jpg',
-        alt: 'Cérémonie de mariage',
-    },
-    jessica: {
-        src: '/images/landing/jessica.jpg',
-        alt: 'Jessica, fondatrice de La Dernière Touche',
-    },
+/** Photos of the page; their alternative texts are in i18n/landing.js. */
+const IMAGE_SOURCES = {
+    arch: '/images/landing/accueil1.jpg',
+    bouquet: '/images/landing/accueil2.jpg',
+    design: '/images/landing/wedding-design.jpg',
+    coordination: '/images/landing/coordination.jpg',
+    officiant: '/images/landing/officiante-de-ceremonie.jpg',
+    jessica: '/images/landing/jessica.jpg',
 };
 
-const CONTENT = {
-    fr: {
-        htmlLang: 'fr',
-        switchLanguage: 'English',
-        login: 'Se connecter',
-        account: 'Mon espace',
-        skip: 'Aller au contenu',
-        navigation: 'Navigation principale',
-        footerNavigation: 'Pied de page',
-        legalNotice: 'Mentions légales',
-        tagline: 'Wedding design & coordination',
-
-        nav: {
-            services: 'Prestations',
-            about: 'À propos',
-            clientArea: 'Espace client',
-            contact: 'Contact',
-        },
-
-        hero: {
-            eyebrow: 'Provence & Côte d’Azur',
-            title: 'Votre mariage, pensé avec élégance du premier rendez-vous au dernier invité.',
-            text: 'Wedding design, coordination et officiante de cérémonie : une direction claire, un cadre rassurant, et une ambiance qui vous ressemble vraiment.',
-            primary: 'Parler de votre projet',
-            loggedPrimary: 'Accéder à mon espace',
-            secondary: 'Découvrir nos prestations',
-        },
-
-        stats: [
-            { value: 'Depuis 2024', label: 'Une maison fondée en Provence' },
-            { value: '10 à 15', label: 'Mariages accompagnés chaque année' },
-            { value: '1 couple', label: '1 espace client dédié' },
-        ],
-
-        services: {
-            eyebrow: 'Prestations',
-            title: 'Trois savoir-faire, au rythme de votre mariage.',
-            text: 'Ils s’associent librement : décoration et coordination, décoration et officiante, ou officiante et coordination.',
-            items: [
-                {
-                    phase: 'Concevoir',
-                    title: 'Wedding design',
-                    text: 'De la première ébauche de moodboard au carnet design, nous imaginons votre décor : réception, signalétique, cérémonie et fleurs. Nous l’installons le jour J et le démontons le lendemain.',
-                    points: [
-                        'Moodboard, devis puis carnet design',
-                        'Points d’étape à M-6, M-3 et M-1',
-                        'Installation le jour J, désinstallation le lendemain',
-                    ],
-                    image: IMAGES.design,
-                },
-                {
-                    phase: 'Organiser',
-                    title: 'Coordination',
-                    text: 'Nous optimisons avec vous le planning de la journée, nous contactons vos prestataires et nous vérifions que chaque animation se déroule comme prévu.',
-                    points: [
-                        'Planning de la journée construit avec vous',
-                        'Contact et suivi de vos prestataires',
-                        'Vérification des animations',
-                    ],
-                    image: IMAGES.coordination,
-                },
-                {
-                    phase: 'Célébrer',
-                    title: 'Officiante de cérémonie',
-                    text: 'Une cérémonie qui raconte votre histoire : nous la préparons avec vous, nous l’écrivons, puis nous l’animons le jour J.',
-                    points: [
-                        '10 questionnaires « carnet d’histoire »',
-                        '3 rendez-vous étape',
-                        'Rédaction et animation de la cérémonie',
-                    ],
-                    image: IMAGES.officiant,
-                },
-            ],
-        },
-
-        about: {
-            eyebrow: 'À propos',
-            title: 'Jessica Salles, fondatrice de La Dernière Touche.',
-            first: 'Jessica a créé La Dernière Touche en Provence en 2024. Elle accompagne chaque année 10 à 15 couples, de France et de l’étranger, en Provence et sur la Côte d’Azur.',
-            second: 'Elle suit elle-même chaque projet, du premier rendez-vous jusqu’au jour J, et s’entoure de prestataires de confiance pour les grands jours.',
-            quote: 'Faire de votre mariage, votre endroit préféré au monde.',
-        },
-
-        client: {
-            title: 'Un espace privé pour suivre votre mariage.',
-            text: 'Chaque couple accompagné retrouve son projet au même endroit, du premier devis au jour J.',
-            features: [
-                ['Le projet en un coup d’œil', 'Date, lieu, temps forts de la journée et personnes impliquées, sur une seule page.'],
-                ['Votre design', 'Moodboards, carnet design et projections : suivez chaque version et laissez vos commentaires.'],
-                ['Vos documents', 'Devis, contrat et conditions générales, à consulter et télécharger à tout moment.'],
-                ['Vos échanges', 'Vos messages avec Jessica et l’historique de ce qui a été décidé, au même endroit.'],
-            ],
-        },
-
-        access: {
-            title: 'Un accès ouvert pour vous, personnellement.',
-            text: 'Pas d’inscription en ligne : chaque accès est créé à la main, pour un couple et pour un mariage. Personne d’autre n’y a accès.',
-            request: 'Demander mon accès',
-            login: 'J’ai déjà un identifiant',
-            steps: [
-                ['01', 'Vous faites votre demande', 'Vos prénoms et votre e-mail suffisent. Nous vérifions que votre dossier est bien ouvert.'],
-                ['02', 'Nous ouvrons votre accès', 'Votre compte est créé par nos soins, une fois votre devis et votre contrat signés.'],
-                ['03', 'Vous choisissez votre mot de passe', 'Vous recevez par e-mail un identifiant et un code provisoire, à remplacer dès la première connexion.'],
-            ],
-            form: {
-                title: 'Demander votre accès',
-                firstName: 'Votre prénom',
-                partnerFirstName: 'Le prénom de votre conjoint (facultatif)',
-                email: 'Votre adresse e-mail',
-                weddingDate: 'Date du mariage (facultative)',
-                sending: 'Envoi…',
-                sent: 'Merci, votre demande est bien transmise à Jessica. Si votre accès est ouvert, vous recevrez votre identifiant et votre code provisoire par e-mail.',
-            },
-        },
-
-        contact: {
-            title: 'Parlez-nous de votre mariage.',
-            text: 'Parlez-nous de votre mariage : sa date, son lieu, le nombre d’invités et l’ambiance que vous imaginez. Nous vous proposerons ensuite un premier rendez-vous. Aucun compte n’est nécessaire pour nous écrire.',
-            button: 'Présenter mon projet',
-            instagram: 'Suivez-nous sur Instagram',
-            label: 'Nous joindre',
-            note: 'Les demandes arrivant par e-mail, Instagram ou le site sont toutes lues par Jessica.',
-        },
-
-        footer: 'Wedding design, coordination et officiante de cérémonie en Provence et sur la Côte d’Azur.',
-        portfolio: 'Voir le portfolio',
-    },
-
-    en: {
-        htmlLang: 'en',
-        switchLanguage: 'Français',
-        login: 'Log in',
-        account: 'My client area',
-        skip: 'Skip to content',
-        navigation: 'Main navigation',
-        footerNavigation: 'Footer navigation',
-        legalNotice: 'Legal notice (in French)',
-        tagline: 'Wedding design & coordination',
-
-        nav: {
-            services: 'Services',
-            about: 'About',
-            clientArea: 'Client area',
-            contact: 'Contact',
-        },
-
-        hero: {
-            eyebrow: 'Provence & French Riviera',
-            title: 'Your wedding, thoughtfully designed from the first meeting to the last guest.',
-            text: 'Wedding design, day-of coordination and ceremony officiating: a clear direction, a reassuring framework and an atmosphere that feels truly yours.',
-            primary: 'Tell us about your project',
-            loggedPrimary: 'Access my client area',
-            secondary: 'Discover our services',
-        },
-
-        stats: [
-            { value: 'Since 2024', label: 'A wedding studio founded in Provence' },
-            { value: '10 to 15', label: 'Weddings supported every year' },
-            { value: '1 couple', label: '1 dedicated client area' },
-        ],
-
-        services: {
-            eyebrow: 'Services',
-            title: 'Three areas of expertise, following the rhythm of your wedding.',
-            text: 'Combine them freely: design and coordination, design and ceremony, or ceremony and coordination.',
-            items: [
-                {
-                    phase: 'Design',
-                    title: 'Wedding design',
-                    text: 'From the first moodboard to the design book, we imagine your setting: reception, stationery, ceremony and flowers. We install it on the wedding day and dismantle it the following day.',
-                    points: [
-                        'Moodboard, quote and design book',
-                        'Progress meetings at M-6, M-3 and M-1',
-                        'Installation on the wedding day and dismantling the next day',
-                    ],
-                    image: IMAGES.design,
-                },
-                {
-                    phase: 'Organise',
-                    title: 'Coordination',
-                    text: 'Together, we refine the day’s schedule, liaise with your suppliers and make sure every special moment runs as planned.',
-                    points: [
-                        'Day schedule created with you',
-                        'Supplier communication and follow-up',
-                        'Coordination of your planned activities',
-                    ],
-                    image: IMAGES.coordination,
-                },
-                {
-                    phase: 'Celebrate',
-                    title: 'Ceremony officiating',
-                    text: 'A ceremony that tells your story: we prepare it with you, write it together and officiate it on your wedding day.',
-                    points: [
-                        '10 personal story questionnaires',
-                        '3 preparation meetings',
-                        'Ceremony writing and officiating',
-                    ],
-                    image: IMAGES.officiant,
-                },
-            ],
-        },
-
-        about: {
-            eyebrow: 'About',
-            title: 'Jessica Salles, founder of La Dernière Touche.',
-            first: 'Jessica founded La Dernière Touche in Provence in 2024. Each year, she supports 10 to 15 couples from France and abroad across Provence and the French Riviera.',
-            second: 'She personally follows every project, from the first meeting to the wedding day, and works with trusted suppliers to make each celebration special.',
-            quote: 'Making your wedding your favourite place in the world.',
-        },
-
-        client: {
-            title: 'A private space to follow your wedding.',
-            text: 'Every couple we support can find their project in one place, from the first quotation to the wedding day.',
-            features: [
-                ['Your project at a glance', 'Your date, venue, key moments and the people involved, all on one page.'],
-                ['Your design', 'Moodboards, design books and proposals: follow every version and leave your comments.'],
-                ['Your documents', 'Quotes, contracts and terms, available to view and download at any time.'],
-                ['Your conversations', 'Your messages with Jessica and the history of every decision, all in one place.'],
-            ],
-        },
-
-        access: {
-            title: 'Private access created especially for you.',
-            text: 'There is no online sign-up: every account is created personally for one couple and one wedding. No one else can access it.',
-            request: 'Request access',
-            login: 'I already have an account',
-            steps: [
-                ['01', 'You send your request', 'Your first names and email are all it takes. We check that your file has been opened.'],
-                ['02', 'We create your access', 'Your account is created once your quote and contract have been signed.'],
-                ['03', 'You choose your password', 'You receive a username and temporary code by email, which you replace after your first login.'],
-            ],
-            form: {
-                title: 'Request your access',
-                firstName: 'Your first name',
-                partnerFirstName: 'Your partner’s first name (optional)',
-                email: 'Your email address',
-                weddingDate: 'Wedding date (optional)',
-                sending: 'Sending…',
-                sent: 'Thank you, your request has been passed on to Jessica. If your access is opened, you will receive your username and temporary code by email.',
-            },
-        },
-
-        contact: {
-            title: 'Tell us about your wedding.',
-            text: 'Tell us about your wedding: the date, venue, number of guests and atmosphere you have in mind. We will then suggest an initial meeting. No account is needed to contact us.',
-            button: 'Share your project',
-            instagram: 'Follow us on Instagram',
-            label: 'Get in touch',
-            note: 'Every request received by email, Instagram or through the website is personally read by Jessica.',
-        },
-
-        footer: 'Wedding design, coordination and ceremony officiating across Provence and the French Riviera.',
-        portfolio: 'View the portfolio',
-    },
-};
-
-function createMailLinks(language) {
-    const english = language === 'en';
-
-    const projectSubject = english ? 'Our wedding project' : 'Notre projet de mariage';
-
-    const projectBody = english
-        ? ['Hello Jessica,', '', 'We would like to tell you about our wedding project.', '', 'Our names:', 'Wedding date:', 'Venue:', 'Approximate number of guests:', 'Services we are interested in (design, coordination, ceremony officiating):', 'How did you hear about us:', 'Phone number:', '', 'We can also send you some inspiration images.', '', 'Thank you,'].join('\n')
-        : ['Bonjour Jessica,', '', 'Nous souhaitons vous présenter notre projet de mariage.', '', 'Nos prénoms :', 'Date du mariage :', 'Lieu :', 'Nombre d’invités (environ) :', 'Prestations qui nous intéressent (décoration, coordination, officiante) :', 'Comment nous vous avons connue :', 'Téléphone :', '', 'Nous pouvons vous envoyer quelques inspirations.', '', 'Merci beaucoup,'].join('\n');
-
-    return {
-        project: `mailto:${CONTACT.email}?subject=${encodeURIComponent(projectSubject)}&body=${encodeURIComponent(projectBody)}`,
-    };
+/**
+ * Link opening the visitor's mail app with a pre-filled project e-mail.
+ */
+function projectMailLink(mail) {
+    return `mailto:${CONTACT.email}?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.body.join('\n'))}`;
 }
 
 export default function Landing({ auth }) {
-    const [language, setLanguage] = useState(() => {
-        if (typeof window === 'undefined') return 'fr';
-
-        return window.localStorage.getItem('ldt-language') ?? 'fr';
-    });
+    const { content } = useTranslation();
 
     const homeUrl = auth?.homeUrl ?? null;
-    const t = CONTENT[language];
-    const mailLinks = createMailLinks(language);
-
-    function changeLanguage(nextLanguage) {
-        setLanguage(nextLanguage);
-        window.localStorage.setItem('ldt-language', nextLanguage);
-        document.documentElement.lang = CONTENT[nextLanguage].htmlLang;
-    }
+    const t = content('landing');
+    const images = Object.fromEntries(
+        Object.entries(IMAGE_SOURCES).map(([name, src]) => [name, { src, alt: t.images[name] }]),
+    );
 
     return (
         <>
-            <Head title="La Dernière Touche · Wedding design & coordination en Provence" />
+            <Head title={t.pageTitle} />
 
             <div className="flex min-h-screen flex-col bg-ivory font-sans text-ink">
-                <Header homeUrl={homeUrl} language={language} onLanguageChange={changeLanguage} t={t} />
+                <Header homeUrl={homeUrl} t={t} />
 
                 <main id="content" className="flex-1">
-                    <Hero homeUrl={homeUrl} t={t} />
+                    <Hero homeUrl={homeUrl} t={t} images={images} />
                     <Stats t={t} />
-                    <Services t={t} />
-                    <About t={t} />
+                    <Services t={t} images={images} />
+                    <About t={t} images={images} />
                     <ClientArea t={t} />
-                    <Access t={t} language={language} />
-                    <Contact t={t} mailLink={mailLinks.project} />
+                    <Access t={t} />
+                    <Contact t={t} mailLink={projectMailLink(t.projectMail)} />
                 </main>
 
                 <Footer t={t} />
@@ -370,7 +84,7 @@ function SectionIntro({ eyebrow, title, text }) {
     );
 }
 
-function Header({ homeUrl, language, onLanguageChange, t }) {
+function Header({ homeUrl, t }) {
     return (
         <header className="sticky top-0 z-40 border-b border-ink/10 bg-ivory/95 backdrop-blur">
             <a
@@ -400,14 +114,7 @@ function Header({ homeUrl, language, onLanguageChange, t }) {
                 </nav>
 
                 <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => onLanguageChange(language === 'fr' ? 'en' : 'fr')}
-                        className={`${focusRing} border border-ink/20 px-4 py-3.5 text-[10px] uppercase tracking-[0.18em] transition hover:border-ink hover:bg-ink hover:text-ivory`}
-                        aria-label={`Switch language to ${t.switchLanguage}`}
-                    >
-                        {language === 'fr' ? 'EN' : 'FR'}
-                    </button>
+                    <LanguageSwitcher variant="outlined" />
 
                     <Link
                         href={homeUrl ?? route('login')}
@@ -421,7 +128,7 @@ function Header({ homeUrl, language, onLanguageChange, t }) {
     );
 }
 
-function Hero({ homeUrl, t }) {
+function Hero({ homeUrl, t, images }) {
     return (
         <section className="relative overflow-hidden border-b border-ink/10">
             <div className="absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-blush/70 to-transparent" />
@@ -444,8 +151,8 @@ function Hero({ homeUrl, t }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <Photo image={IMAGES.arch} ratio="aspect-[3/4]" eager rounded="rounded-3xl" />
-                    <Photo image={IMAGES.bouquet} ratio="aspect-[3/4]" eager className="mt-10" rounded="rounded-3xl" />
+                    <Photo image={images.arch} ratio="aspect-[3/4]" eager rounded="rounded-3xl" />
+                    <Photo image={images.bouquet} ratio="aspect-[3/4]" eager className="mt-10" rounded="rounded-3xl" />
                 </div>
             </div>
         </section>
@@ -467,7 +174,7 @@ function Stats({ t }) {
     );
 }
 
-function Services({ t }) {
+function Services({ t, images }) {
     return (
         <section id="prestations" aria-labelledby="services-title" className="scroll-mt-24">
             <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
@@ -477,7 +184,7 @@ function Services({ t }) {
                     {t.services.items.map((service, index) => (
                         <article key={service.title} className="grid items-center gap-8 rounded-3xl border border-ink/10 bg-blush/30 p-6 sm:p-8 lg:grid-cols-2 lg:gap-14">
                             <Photo
-                                image={service.image}
+                                image={images[service.image]}
                                 ratio="aspect-[5/4]"
                                 rounded="rounded-2xl"
                                 className={index % 2 === 1 ? 'lg:order-2' : ''}
@@ -502,7 +209,7 @@ function Services({ t }) {
     );
 }
 
-function About({ t }) {
+function About({ t, images }) {
     return (
         <section
             id="a-propos"
@@ -511,7 +218,7 @@ function About({ t }) {
         >
             <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
                 <Photo
-                    image={IMAGES.jessica}
+                    image={images.jessica}
                     ratio="aspect-[4/5]"
                     rounded="rounded-3xl"
                 />
@@ -567,8 +274,8 @@ function ClientArea({ t }) {
  * confirmation is the same whatever the address, so that the form does not tell
  * who already has an account. `website` is a field only robots fill in.
  */
-function AccessRequestForm({ t, language }) {
-    const { data, setData, post, transform, processing, errors, wasSuccessful } = useForm({
+function AccessRequestForm({ t }) {
+    const { data, setData, post, processing, errors, wasSuccessful } = useForm({
         partner1_first_name: '',
         partner2_first_name: '',
         email: '',
@@ -578,7 +285,6 @@ function AccessRequestForm({ t, language }) {
 
     const submit = (event) => {
         event.preventDefault();
-        transform((fields) => ({ ...fields, language }));
         post(route('access-request.store'), { preserveScroll: true });
     };
 
@@ -643,7 +349,7 @@ function AccessRequestForm({ t, language }) {
     );
 }
 
-function Access({ t, language }) {
+function Access({ t }) {
     return (
         <section id="access" aria-labelledby="access-title" className="scroll-mt-24 border-y border-ink/10">
             <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
@@ -662,7 +368,7 @@ function Access({ t, language }) {
                     ))}
                 </ol>
 
-                <AccessRequestForm t={t} language={language} />
+                <AccessRequestForm t={t} />
 
                 <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                     <Link href={route('login')} className={secondaryButton}>{t.access.login}</Link>

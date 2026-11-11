@@ -1,5 +1,6 @@
 import BackOfficeLayout from '@/Layouts/BackOfficeLayout';
 import CoupleLayout from '@/Layouts/CoupleLayout';
+import { useTranslation } from '@/i18n';
 import { Head, usePage } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
@@ -14,14 +15,15 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
  */
 export default function Edit({ canDeleteAccount }) {
     const isAdmin = usePage().props.auth.user.role === 'admin';
+    const { t } = useTranslation();
 
     const content = (
         <>
-            <Head title="Mon compte" />
+            <Head title={t('profile.title')} />
 
             <div className="w-full max-w-3xl">
-                <p className="text-[11px] uppercase tracking-brand text-sage">Vos informations</p>
-                <h1 className="mt-6 font-display text-3xl leading-snug sm:text-4xl">Mon compte</h1>
+                <p className="text-[11px] uppercase tracking-brand text-sage">{t('profile.caption')}</p>
+                <h1 className="mt-6 font-display text-3xl leading-snug sm:text-4xl">{t('profile.title')}</h1>
 
                 <div className="mt-10 space-y-6">
                     <Panel>

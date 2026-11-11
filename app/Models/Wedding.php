@@ -136,4 +136,50 @@ class Wedding extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    /**
+     * The services for the wedding
+     *
+     * @return HasMany<WeddingService, $this>
+     */
+    public function weddingServices(): HasMany
+    {
+        return $this->hasMany(WeddingService::class);
+    }
+
+    /**
+     * The vendor for this wedding.
+     *
+     * @return BelongsToMany<Vendor, $this>
+     */
+    public function vendors(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Vendor::class,
+            'wedding_vendor',
+            'wedding_id',
+            'vendor_id'
+        )->withPivot('notes');
+    }
+
+    /**
+     * The item of the timaline for this wedding.
+     *
+     * @return HasMany<TimelineItem, $this>
+     */
+    public function timelineItems(): HasMany
+    {
+        return $this->hasMany(TimelineItem::class)
+            ->orderBy('sort_order');
+    }
+
+    /**
+     * The review of the couple, null until Jessica has invited them.
+     *
+     * @return HasOne<Review, $this>
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
 }

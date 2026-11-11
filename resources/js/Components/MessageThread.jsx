@@ -1,15 +1,9 @@
 import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
 import { primaryButton } from '@/brand';
+import { useTranslation } from '@/i18n';
 import { useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-});
 
 /**
  * Private thread between a couple and Jessica, used on both sides: the
@@ -29,6 +23,14 @@ export default function MessageThread({
     updateUrl,
     deleteUrl,
 }) {
+    const { language, t } = useTranslation();
+    const dateFormatter = new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
     const endOfThread = useRef(null);
     const [editingMessageId, setEditingMessageId] = useState(null);
     const editForm = useForm({ body: '' });
@@ -40,7 +42,7 @@ export default function MessageThread({
     return (
         <div className="flex flex-col border border-ink/10 bg-white">
             <ol
-                aria-label="Messages"
+                aria-label={t('messages')}
                 className="flex max-h-[60vh] min-h-64 flex-col gap-5 overflow-y-auto px-5 py-6 sm:px-8"
             >
                 {messages.length === 0 && (
@@ -55,7 +57,7 @@ export default function MessageThread({
                         className={`flex max-w-[85%] flex-col ${message.is_own ? 'self-end items-end' : 'self-start items-start'}`}
                     >
                         <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-sage">
-                            {message.is_own ? 'Vous' : otherPartyName}
+                            {message.is_own ? t('you') : otherPartyName}
                         </p>
                         {editingMessageId === message.id ? (
                             <div className="w-full min-w-64">
@@ -65,7 +67,7 @@ export default function MessageThread({
                                     maxLength={maxBodyLength}
                                     onChange={(event) => editForm.setData('body', event.target.value)}
                                     className="block w-full border border-ink/20 bg-ivory px-3 py-2 text-sm text-ink focus:border-ink focus:ring-0"
-                                    aria-label="Modifier le message"
+                                    aria-label={t('editMessage')}
                                 />
                                 <FieldError message={editForm.errors.body} />
                                 <div className="mt-2 flex justify-end gap-2">
@@ -74,7 +76,7 @@ export default function MessageThread({
                                         onClick={() => setEditingMessageId(null)}
                                         className="text-xs text-sage underline"
                                     >
-                                        Annuler
+                                        {t('cancel')}
                                     </button>
                                     <button
                                         type="button"
@@ -87,7 +89,7 @@ export default function MessageThread({
                                         disabled={editForm.processing || !editForm.data.body.trim()}
                                         className={`${primaryButton} px-3 py-2 text-xs disabled:opacity-50`}
                                     >
-                                        {editForm.processing ? 'Enregistrement…' : 'Enregistrer'}
+                                        {editForm.processing ? t('saving') : t('save')}
                                     </button>
                                 </div>
                             </div>
@@ -108,7 +110,7 @@ export default function MessageThread({
                         ) : (
                             message.has_voice_note && (
                                 <p className="border border-dashed border-ink/20 px-4 py-3 text-sm italic text-ink/55">
-                                    Message vocal indisponible sur cet appareil
+                                    {t('voiceUnavailable')}
                                 </p>
                             )
                         )}
@@ -116,7 +118,7 @@ export default function MessageThread({
                             <time dateTime={message.sent_at}>
                                 {dateFormatter.format(new Date(message.sent_at))}
                             </time>
-                            {message.is_own && message.read_at && ' · Lu'}
+                            {message.is_own && message.read_at && ` · ${t('read')}`}
                         </p>
                         {message.is_own && editingMessageId !== message.id && (
                             <div className="mt-1 flex gap-3 text-xs text-sage">
@@ -129,8 +131,8 @@ export default function MessageThread({
                                             setEditingMessageId(message.id);
                                         }}
                                         className="inline-flex items-center gap-1 underline hover:text-ink"
-                                        aria-label="Modifier le message"
-                                        title="Modifier le message"
+                                        aria-label={t('editMessage')}
+                                        title={t('editMessage')}
                                     >
                                         <Icone nom="edit" className="!text-[11px] leading-none" />
                                     </button>
@@ -138,15 +140,15 @@ export default function MessageThread({
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        if (window.confirm('Supprimer ce message ?')) {
+                                        if (window.confirm(t('deleteMessageConfirm'))) {
                                             editForm.delete(deleteUrl(message.id), {
                                                 preserveScroll: true,
                                             });
                                         }
                                     }}
                                     className="inline-flex items-center gap-1 underline hover:text-ink"
-                                    aria-label="Supprimer le message"
-                                    title="Supprimer le message"
+                                    aria-label={t('deleteMessage')}
+                                    title={t('deleteMessage')}
                                 >
                                     <Icone nom="delete" className="!text-[11px] leading-none" />
                                 </button>
@@ -169,6 +171,7 @@ export default function MessageThread({
 }
 
 function VoiceMessagePlayer({ src, isOwn }) {
+    const { language, t } = useTranslation();
     const audio = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -225,7 +228,7 @@ function VoiceMessagePlayer({ src, isOwn }) {
                     onPause={() => setIsPlaying(false)}
                     onEnded={() => setIsPlaying(false)}
                     className="hidden"
-                    aria-label="Message vocal"
+                    aria-label={t('voiceMessage')}
                 />
                 <div className="flex items-center gap-2">
                     <button
@@ -234,7 +237,7 @@ function VoiceMessagePlayer({ src, isOwn }) {
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
                             isOwn ? 'bg-ivory text-ink' : 'bg-ink text-ivory'
                         }`}
-                        aria-label={isPlaying ? 'Mettre le message vocal en pause' : 'Écouter le message vocal'}
+                        aria-label={isPlaying ? t('pauseVoiceMessage') : t('playVoiceMessage')}
                     >
                         <Icone
                             nom={isPlaying ? 'pause' : 'play_arrow'}
@@ -251,7 +254,7 @@ function VoiceMessagePlayer({ src, isOwn }) {
                         className={`h-1 min-w-0 flex-1 cursor-pointer ${
                             isOwn ? 'accent-ivory' : 'accent-ink'
                         }`}
-                        aria-label="Progression du message vocal"
+                        aria-label={t('voiceProgress')}
                     />
                     <span className="w-20 text-right font-mono text-[10px] opacity-70">
                         {formatAudioTime(currentTime)} / {formatAudioTime(duration)}
@@ -271,6 +274,7 @@ function formatAudioTime(seconds) {
 }
 
 function Composer({ postUrl, maxBodyLength }) {
+    const { language, t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         body: '',
         voice_note: null,
@@ -321,7 +325,7 @@ function Composer({ postUrl, maxBodyLength }) {
 
     const startRecording = async () => {
         if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-            setRecordingError("L’enregistrement vocal n’est pas disponible sur ce navigateur.");
+            setRecordingError(t('voiceRecordingUnavailable'));
             return;
         }
 
@@ -359,7 +363,7 @@ function Composer({ postUrl, maxBodyLength }) {
             };
             mediaRecorder.start();
         } catch {
-            setRecordingError("L’accès au microphone a été refusé ou n’est pas disponible.");
+            setRecordingError(t('microphoneUnavailable'));
         }
     };
 
@@ -382,14 +386,14 @@ function Composer({ postUrl, maxBodyLength }) {
     return (
         <form onSubmit={submit}>
             <label htmlFor="message-body" className="sr-only">
-                Votre message
+                {t('yourMessage')}
             </label>
             <textarea
                 id="message-body"
                 value={data.body}
                 rows={3}
                 maxLength={maxBodyLength}
-                placeholder="Écrivez votre message…"
+                placeholder={t('writeMessage')}
                 aria-invalid={Boolean(errors.body)}
                 aria-describedby={errors.body ? 'message-body-error' : 'message-body-hint'}
                 onChange={(e) => setData('body', e.target.value)}
@@ -400,7 +404,7 @@ function Composer({ postUrl, maxBodyLength }) {
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <span id="message-body-hint" className="text-xs text-ink/40">
-                    Ctrl + Entrée pour envoyer
+                    {t('sendShortcutHint')}
                 </span>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                     {!isRecording && !data.voice_note && (
@@ -411,14 +415,14 @@ function Composer({ postUrl, maxBodyLength }) {
                             className="inline-flex items-center gap-2 border border-ink/20 px-3 py-2 text-sm text-ink transition-colors hover:border-ink disabled:opacity-50"
                         >
                             <Icone nom="mic" className="!text-[14px] leading-none" />
-                            Enregistrer
+                            {t('record')}
                         </button>
                     )}
                     {isRecording && (
                         <div className="flex items-center gap-3 border border-ink bg-blush px-3 py-2 text-sm text-ink">
                             <span className="flex items-center gap-2" role="status" aria-live="polite">
                                 <span className="h-2 w-2 animate-pulse rounded-full bg-ink" />
-                                Enregistrement en cours
+                                {t('recordingInProgress')}
                                 <span className="font-mono text-xs">
                                     {String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:
                                     {String(recordingSeconds % 60).padStart(2, '0')}
@@ -428,11 +432,11 @@ function Composer({ postUrl, maxBodyLength }) {
                                 type="button"
                                 onClick={stopRecording}
                                 className="inline-flex items-center gap-1 underline underline-offset-2"
-                                aria-label="Arrêter l’enregistrement"
-                                title="Arrêter l’enregistrement"
+                                aria-label={t('stopRecording')}
+                                title={t('stopRecording')}
                             >
                                 <Icone nom="stop" className="!text-[14px] leading-none" />
-                                Arrêter
+                                {t('stop')}
                             </button>
                         </div>
                     )}
@@ -442,7 +446,7 @@ function Composer({ postUrl, maxBodyLength }) {
                             onClick={removeRecording}
                             className="text-sm text-sage underline"
                         >
-                            Supprimer le vocal
+                            {t('removeVoice')}
                         </button>
                     )}
                     <button
@@ -450,12 +454,12 @@ function Composer({ postUrl, maxBodyLength }) {
                         disabled={processing || isRecording || (!data.body.trim() && !data.voice_note)}
                         className={`${primaryButton} disabled:cursor-wait disabled:opacity-50`}
                     >
-                        {processing ? 'Envoi…' : 'Envoyer'}
+                        {processing ? t('sending') : t('send')}
                     </button>
                 </div>
             </div>
             {previewUrl && (
-                <audio controls src={previewUrl} className="mt-3 max-w-full" aria-label="Aperçu du message vocal" />
+                <audio controls src={previewUrl} className="mt-3 max-w-full" aria-label={t('voicePreview')} />
             )}
             {recordingError && <p className="mt-2 text-sm text-red-700">{recordingError}</p>}
             <FieldError id="message-voice-error" message={errors.voice_note} />

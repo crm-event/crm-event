@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Couple;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Support\StandardText;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -67,7 +68,7 @@ class DocumentController extends Controller
     {
         $this->ensureBelongsToCouple($request, $document);
 
-        abort_unless($document->requires_approval, 422, 'Ce document ne nécessite pas d’approbation.');
+        abort_unless($document->requires_approval, 422, __('couple.document_approval_not_needed'));
 
         // viewed_at and approved_at are not mass assignable: a request must never set them.
         $document->forceFill([
@@ -86,17 +87,17 @@ class DocumentController extends Controller
      */
     private function toItem(Document $document): array
     {
-        [$status, $statusLabel] = match (true) {
-            $document->approved_at !== null => ['approved', 'Approuvé'],
-            $document->requires_approval => ['pending', 'À approuver'],
-            $document->viewed_at !== null => ['viewed', 'Consulté'],
-            default => ['available', 'À consulter'],
+        $status = match (true) {
+            $document->approved_at !== null => 'approved',
+            $document->requires_approval => 'pending',
+            $document->viewed_at !== null => 'viewed',
+            default => 'available',
         };
 
         return [
             'id' => $document->id,
             'title' => $document->title,
-            'message' => $document->message,
+            'message' => StandardText::translate($document->message),
             'created_at' => $document->created_at->toIso8601String(),
             'viewed_at' => $document->viewed_at?->toIso8601String(),
             'size_label' => self::formatSize($document->size_bytes),
@@ -107,7 +108,7 @@ class DocumentController extends Controller
                 : null,
             'downloadable' => Storage::exists($document->file_path),
             'status' => $status,
-            'status_label' => $statusLabel,
+            'status_label' => __("couple.document_statuses.{$status}"),
         ];
     }
 
@@ -125,11 +126,8 @@ class DocumentController extends Controller
     private static function categoryLabel(string $category): string
     {
         return match ($category) {
-            'contract' => 'Contrat',
-            'terms', 'general_conditions' => 'Conditions générales de vente',
-            'design' => 'Carnet de design',
-            'quote' => 'Devis',
-            'appointment' => 'Rendez-vous',
+            'contract', 'terms', 'design', 'quote', 'appointment' => __("couple.document_categories.{$category}"),
+            'general_conditions' => __('couple.document_categories.terms'),
             default => ucfirst(str_replace('_', ' ', $category)),
         };
     }
@@ -144,9 +142,11 @@ class DocumentController extends Controller
         }
 
         if ($bytes < 1024) {
-            return $bytes.' o';
+            return __('couple.file_size.bytes', ['size' => $bytes]);
         }
 
-        return number_format($bytes / 1024, 0, ',', ' ').' Ko';
+        $kilobytes = number_format($bytes / 1024, 0, '', __('couple.file_size.thousands_separator'));
+
+        return __('couple.file_size.kilobytes', ['size' => $kilobytes]);
     }
 }
