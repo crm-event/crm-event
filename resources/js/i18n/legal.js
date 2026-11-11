@@ -46,7 +46,7 @@ export default {
             controller: 'Jessica Salles est responsable du traitement des données personnelles collectées sur ce site. Elles ne sont ni vendues ni transmises à des tiers, en dehors de l’hébergeur qui les stocke.',
             collected: 'Les données collectées sont :',
             publicData: [
-                'les prénoms du couple, son adresse e-mail, la date envisagée du mariage et la langue choisie, saisis dans le formulaire « Parler de votre projet ».',
+                'les prénoms du couple, son adresse e-mail, la date envisagée du mariage et la langue choisie, saisis dans le formulaire de demande d’accès.',
             ],
             coupleSpaceData: [
                 'votre identité et vos coordonnées (prénoms, noms, e-mail, téléphone, adresse) ;',
@@ -112,7 +112,7 @@ export default {
             controller: 'Jessica Salles is the controller of the personal data collected on this site. It is neither sold nor passed on to third parties, apart from the host that stores it.',
             collected: 'The data collected is:',
             publicData: [
-                'the first names of the couple, their email address, the planned wedding date and the chosen language, entered in the “Tell us about your project” form.',
+                'the first names of the couple, their email address, the planned wedding date and the chosen language, entered in the access request form.',
             ],
             coupleSpaceData: [
                 'your identity and contact details (first names, last names, email, phone, address);',
