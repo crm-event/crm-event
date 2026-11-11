@@ -1,6 +1,5 @@
 import Icone from '@/Components/Icone';
-import { useLanguage } from '@/Components/LanguageSwitcher';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { secondaryButton } from '@/brand';
 import { Head, Link } from '@inertiajs/react';
@@ -210,7 +209,7 @@ function NextAppointment({ appointment, language, t }) {
 function UnreadMessages({ count, t }) {
     return (
         <div className="flex flex-col rounded-lg border border-ink/10 p-6">
-            <p className="text-[11px] uppercase tracking-brand text-sage">Messages</p>
+            <p className="text-[11px] uppercase tracking-brand text-sage">{t('messages')}</p>
             <div className="mt-4 flex items-center gap-3">
                 <Icone
                     nom={count > 0 ? 'mark_chat_unread' : 'chat_bubble'}
@@ -274,8 +273,7 @@ function DocumentsSummary({ documents, t }) {
  * progress, then what comes next (appointment, messages, documents).
  */
 export default function Home({ coupleNames, wedding, nextAppointment, unreadMessages, documents }) {
-    const { language } = useLanguage();
-    const t = (key, params = {}) => translate(language, key, params);
+    const { language, t } = useTranslation();
 
     return (
         <CoupleLayout active="wedding">

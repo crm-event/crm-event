@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\SetLocale;
 use App\Models\Couple;
 use App\Models\User;
 use App\Models\Wedding;
@@ -38,7 +39,8 @@ class AccessRequestTest extends TestCase
 
     public function test_a_visitor_can_request_access(): void
     {
-        $this->post(route('access-request.store'), $this->validRequest(['email' => ' Nina.Hugo@Example.test ', 'language' => 'en']))
+        $this->withUnencryptedCookie(SetLocale::COOKIE, 'en')
+            ->post(route('access-request.store'), $this->validRequest(['email' => ' Nina.Hugo@Example.test ']))
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('home'));
 
@@ -98,11 +100,12 @@ class AccessRequestTest extends TestCase
                 'email' => 'Cette adresse e-mail n’est pas valide.',
             ]);
 
-        $this->post(route('access-request.store'), $this->validRequest(['email' => '', 'language' => 'en']))
-            ->assertSessionHasErrors(['email' => 'Please enter your email address.']);
-
         $this->post(route('access-request.store'), $this->validRequest(['wedding_date' => '2020-01-01']))
             ->assertSessionHasErrors(['wedding_date' => 'La date du mariage doit être à venir.']);
+
+        $this->withUnencryptedCookie(SetLocale::COOKIE, 'en')
+            ->post(route('access-request.store'), $this->validRequest(['email' => '']))
+            ->assertSessionHasErrors(['email' => 'Please enter your email address.']);
 
         $this->assertDatabaseCount('couples', 0);
     }

@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
         ]);
 
+        // The language is not a secret, and the error pages, rendered without
+        // the "web" middleware, must be able to read it.
+        $middleware->encryptCookies(except: [SetLocale::COOKIE]);
+
         // A logged-in user opening a guest page (e.g. /login) is sent back to
         // their own space instead of Laravel's default /dashboard.
         $middleware->redirectUsersTo(fn (Request $request) => $request->user()->homeUrl());
@@ -62,7 +66,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return $response;
             }
 
-            return Inertia::render('Error', ['status' => $status])
+            // A missing page never goes through the "web" middleware: the
+            // language is resolved here so that the page follows the switcher.
+            app()->setLocale(SetLocale::resolve($request));
+
+            return Inertia::render('Error', ['status' => $status, 'locale' => app()->getLocale()])
                 ->toResponse($request)
                 ->setStatusCode($status);
         });

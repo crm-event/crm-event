@@ -1,13 +1,11 @@
 import Icone from '@/Components/Icone';
-import { useLanguage } from '@/Components/LanguageSwitcher';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton } from '@/brand';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Documents({ categories }) {
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
 
     return (
         <CoupleLayout active="documents">
@@ -30,7 +28,7 @@ export default function Documents({ categories }) {
                             <h2 className="font-display text-xl">{category.label}</h2>
                             <div className="mt-4 space-y-3">
                                 {category.documents.map((document) => (
-                                    <DocumentCard key={document.id} document={document} language={language} />
+                                    <DocumentCard key={document.id} document={document} />
                                 ))}
                             </div>
                         </section>
@@ -41,9 +39,9 @@ export default function Documents({ categories }) {
     );
 }
 
-function DocumentCard({ document, language }) {
+function DocumentCard({ document }) {
     const approval = useForm();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
     const dateFormatter = new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'fr-FR', {
         day: 'numeric',
         month: 'long',

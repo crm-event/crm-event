@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Couple;
 use App\Models\Venue;
 use App\Models\Wedding;
+use App\Support\StandardText;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -82,15 +83,8 @@ class HomeController extends Controller
      */
     private static function statusLabel(string $status): string
     {
-        $english = app()->getLocale() === 'en';
-
         return match ($status) {
-            'inquiry' => $english ? 'Inquiry in progress' : 'Demande en cours',
-            'quote_sent' => $english ? 'Quote sent' : 'Devis envoyé',
-            'booked' => $english ? 'Contract signed' : 'Contrat signé',
-            'completed' => $english ? 'Wedding celebrated' : 'Mariage célébré',
-            'closed' => $english ? 'Project closed' : 'Projet clôturé',
-            'cancelled' => $english ? 'Cancelled' : 'Annulé',
+            'inquiry', 'quote_sent', 'booked', 'completed', 'closed', 'cancelled' => __("couple.wedding_statuses.{$status}"),
             default => $status,
         };
     }
@@ -112,7 +106,7 @@ class HomeController extends Controller
         }
 
         return [
-            'title' => $appointment->title,
+            'title' => StandardText::translate($appointment->title),
             // Wall-clock time, without time zone, as on the Appointments page:
             // the browser must not shift the hour Jessica has set.
             'starts_at' => $appointment->starts_at->format('Y-m-d\TH:i:s'),

@@ -19,11 +19,11 @@ class PasswordController extends Controller
             'current_password' => ['required', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ], [
-            'current_password.required' => 'Saisissez votre mot de passe actuel.',
-            'current_password.current_password' => 'Ce mot de passe est incorrect.',
-            'password.required' => 'Choisissez un nouveau mot de passe.',
-            'password.min' => 'Votre mot de passe doit contenir au moins 8 caractères.',
-            'password.confirmed' => 'Les deux mots de passe ne correspondent pas.',
+            'current_password.required' => __('forms.password.current_required'),
+            'current_password.current_password' => __('forms.password.current_incorrect'),
+            'password.required' => __('forms.password.new_required'),
+            'password.min' => __('forms.password.min'),
+            'password.confirmed' => __('forms.password.confirmed'),
         ]);
 
         $request->user()->update([

@@ -29,7 +29,8 @@ class AccessRequestController extends Controller
             DB::transaction(function () use ($request): void {
                 $couple = Couple::query()->create([
                     ...$request->safe()->only(['partner1_first_name', 'partner2_first_name', 'email']),
-                    'preferred_language' => $request->validated('language') ?? 'fr',
+                    // The language the visitor reads the site in (see SetLocale).
+                    'preferred_language' => app()->getLocale(),
                 ]);
 
                 $couple->weddings()->create([

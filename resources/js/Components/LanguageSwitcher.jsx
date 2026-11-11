@@ -1,97 +1,57 @@
 import Icone from '@/Components/Icone';
 import { focusRing } from '@/brand';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import { router } from '@inertiajs/react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useState } from 'react';
 
-/** Same key as the public site, so that the choice made there is kept. */
-const STORAGE_KEY = 'ldt-language';
-
-const SUPPORTED_LANGUAGES = ['fr', 'en'];
-
-const LanguageContext = createContext({ language: 'fr', setLanguage: () => {} });
-
-function readStoredLanguage() {
-    try {
-        const stored = window.localStorage.getItem(STORAGE_KEY);
-
-        return SUPPORTED_LANGUAGES.includes(stored) ? stored : null;
-    } catch {
-        return null;
-    }
-}
-
-function storeLanguage(language) {
-    try {
-        window.localStorage.setItem(STORAGE_KEY, language);
-    } catch {
-        // Private browsing: the choice still holds for this visit.
-    }
-}
+const VARIANTS = {
+    /** Bordered, next to the "Se connecter" button of the public pages. */
+    outlined:
+        'border border-ink/20 px-4 py-3.5 text-[10px] tracking-[0.18em] text-ink hover:border-ink hover:bg-ink hover:text-ivory',
+    /** Discreet, among the icon buttons of the couple space header. */
+    subtle: 'rounded-lg px-2.5 py-2 text-[10px] tracking-[0.16em] text-sage hover:bg-blush hover:text-ink',
+};
 
 /**
- * Tell the server the language, so that the texts it builds (statuses,
- * document labels…) follow it: the current page is reloaded in that language.
+ * The only language switcher of the site, shown on every public page and in
+ * the couple space. It sends the choice to the server (LocaleController),
+ * which keeps it in a cookie and reloads the page in that language: the texts
+ * built by the server and those of the interface change together.
  */
-function sendLanguageToServer(language) {
-    router.post(route('locale.update'), { locale: language }, { preserveScroll: true, preserveState: true });
-}
-
-/**
- * Language of the interface, shared by every page. The choice is kept in the
- * browser and in the session.
- */
-export function LanguageProvider({ initialLocale, children }) {
-    const serverLanguage = SUPPORTED_LANGUAGES.includes(initialLocale) ? initialLocale : 'fr';
-    const [language, setLanguageState] = useState(() => readStoredLanguage() ?? serverLanguage);
-
-    useEffect(() => {
-        document.documentElement.lang = language;
-    }, [language]);
-
-    useEffect(() => {
-        // Language chosen on the public site before logging in.
-        if (language !== serverLanguage) {
-            sendLanguageToServer(language);
-        }
-        // Only once, when the application starts.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    function setLanguage(nextLanguage) {
-        if (!SUPPORTED_LANGUAGES.includes(nextLanguage) || nextLanguage === language) {
-            return;
-        }
-
-        setLanguageState(nextLanguage);
-        storeLanguage(nextLanguage);
-        sendLanguageToServer(nextLanguage);
-    }
-
-    return <LanguageContext.Provider value={{ language, setLanguage }}>{children}</LanguageContext.Provider>;
-}
-
-export function useLanguage() {
-    return useContext(LanguageContext);
-}
-
-/**
- * Button of the couple space header switching between French and English.
- */
-export default function LanguageSwitcher() {
-    const { language, setLanguage } = useLanguage();
+export default function LanguageSwitcher({ variant = 'subtle', className = '' }) {
+    const { language, t } = useTranslation();
+    const [isSwitching, setIsSwitching] = useState(false);
     const nextLanguage = language === 'fr' ? 'en' : 'fr';
+
+    const switchLanguage = () => {
+        router.post(
+            route('locale.update'),
+            { locale: nextLanguage },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onStart: () => setIsSwitching(true),
+                onFinish: () => setIsSwitching(false),
+            },
+        );
+    };
 
     return (
         <button
             type="button"
-            onClick={() => setLanguage(nextLanguage)}
-            aria-label={translate(language, 'switchLanguage')}
-            title={translate(language, 'switchLanguage')}
-            className={`${focusRing} inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[10px] uppercase tracking-[0.16em] text-sage transition-colors hover:bg-blush hover:text-ink`}
+            onClick={switchLanguage}
+            disabled={isSwitching}
+            lang={nextLanguage}
+            aria-label={t('switchLanguage')}
+            title={t('switchLanguage')}
+            className={`${focusRing} inline-flex shrink-0 items-center gap-1.5 uppercase transition-colors disabled:cursor-wait disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
         >
-            <Icone nom="language" className="text-[18px]" />
-            <span className="hidden sm:inline">{nextLanguage.toUpperCase()}</span>
+            {/* On phones, the bordered version keeps only the language code, so
+                that it fits next to the "Se connecter" button. */}
+            <span className={variant === 'outlined' ? 'hidden sm:inline-flex' : 'inline-flex'}>
+                <Icone nom="language" className="text-[18px]" />
+            </span>
+            <span>{nextLanguage}</span>
         </button>
     );
 }

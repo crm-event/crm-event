@@ -23,15 +23,15 @@ class UpdateMessageRequest extends FormRequest
     }
 
     /**
-     * Get the validation messages in French.
+     * Get the validation messages in the language of the sender.
      *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'body.required' => 'Votre message est vide.',
-            'body.max' => 'Votre message ne peut pas dépasser '.StoreMessageRequest::MAX_BODY_LENGTH.' caractères.',
+            'body.required' => __('forms.message.body_required'),
+            'body.max' => __('forms.message.body_max', ['max' => StoreMessageRequest::MAX_BODY_LENGTH]),
         ];
     }
 

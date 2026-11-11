@@ -76,7 +76,7 @@ class DesignController extends Controller
                 'uploaded_by' => $request->user()->id,
                 'collection' => $collection,
                 'title' => $file->getClientOriginalName(),
-                'alt_text' => $collection === MediaItem::MOODBOARDS ? 'Moodboard du mariage' : 'Photo d’inspiration',
+                'alt_text' => __($collection === MediaItem::MOODBOARDS ? 'couple.media_alt.moodboard' : 'couple.media_alt.inspiration'),
                 'file_path' => $path,
                 'mime_type' => $file->getMimeType(),
                 'size_bytes' => $file->getSize(),
@@ -124,7 +124,7 @@ class DesignController extends Controller
     {
         $wedding = $request->user()->couple?->latestWedding;
 
-        abort_if($wedding === null, 422, 'Votre mariage n’est pas encore enregistré.');
+        abort_if($wedding === null, 422, __('couple.wedding_not_recorded'));
 
         return $wedding;
     }

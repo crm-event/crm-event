@@ -30,17 +30,17 @@ class StoreMediaItemRequest extends FormRequest
     }
 
     /**
-     * Get validation messages in French.
+     * Get validation messages in the language of the couple.
      *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'file.required' => 'Choisissez une image.',
-            'file.mimes' => 'L’image doit être au format JPG, PNG ou WebP.',
-            'file.max' => 'L’image ne peut pas dépasser 25 Mo.',
-            'file.uploaded' => 'L’image n’a pas pu être envoyée : elle est peut-être trop lourde.',
+            'file.required' => __('forms.media_item.file_required'),
+            'file.mimes' => __('forms.media_item.file_type'),
+            'file.max' => __('forms.media_item.file_max'),
+            'file.uploaded' => __('forms.media_item.file_upload_failed'),
         ];
     }
 
@@ -59,7 +59,7 @@ class StoreMediaItemRequest extends FormRequest
                     $this->input('collection') === MediaItem::INSPIRATIONS
                     && $wedding?->mediaItems()->where('collection', MediaItem::INSPIRATIONS)->count() >= self::MAX_INSPIRATIONS
                 ) {
-                    $validator->errors()->add('file', 'Vous avez atteint '.self::MAX_INSPIRATIONS.' photos : retirez-en une avant d’en ajouter.');
+                    $validator->errors()->add('file', __('forms.media_item.gallery_full', ['max' => self::MAX_INSPIRATIONS]));
                 }
             },
         ];

@@ -2,6 +2,7 @@ import FieldError from '@/Components/FieldError';
 import AuthLayout, { StatusMessage } from '@/Layouts/AuthLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { fieldLabel, primaryButton, textField, textLink } from '@/brand';
+import { useTranslation } from '@/i18n';
 
 /**
  * Forgotten password page: the user enters their e-mail address and receives
@@ -12,6 +13,7 @@ import { fieldLabel, primaryButton, textField, textLink } from '@/brand';
  * (PasswordResetLinkController), only the presentation changes.
  */
 export default function ForgotPassword({ status }) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
@@ -24,17 +26,17 @@ export default function ForgotPassword({ status }) {
 
     return (
         <AuthLayout
-            caption="Mot de passe oublié"
-            title="Retrouvons votre accès."
-            intro="Indiquez l’adresse e-mail de votre compte : vous recevrez un lien pour choisir un nouveau mot de passe."
+            caption={t('auth.forgotPassword.caption')}
+            title={t('auth.forgotPassword.title')}
+            intro={t('auth.forgotPassword.intro')}
         >
-            <Head title="Mot de passe oublié" />
+            <Head title={t('auth.forgotPassword.caption')} />
 
             <StatusMessage message={status} />
 
             <form onSubmit={submit} className="mt-10">
                 <label htmlFor="email" className={fieldLabel}>
-                    Adresse e-mail
+                    {t('auth.email')}
                 </label>
                 <input
                     id="email"
@@ -56,14 +58,14 @@ export default function ForgotPassword({ status }) {
                     className={`${primaryButton} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
                     disabled={processing}
                 >
-                    {processing ? 'Envoi…' : 'Recevoir le lien'}
+                    {processing ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
                 </button>
             </form>
 
             <p className="mt-10 text-sm text-ink/70">
-                Vous l’avez retrouvé ?{' '}
+                {t('auth.forgotPassword.remembered')}{' '}
                 <Link href={route('login')} className={`${textLink} text-ink`}>
-                    Revenir à la connexion
+                    {t('auth.forgotPassword.backToLogin')}
                 </Link>
             </p>
         </AuthLayout>

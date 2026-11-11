@@ -1,8 +1,7 @@
 import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
-import { useLanguage } from '@/Components/LanguageSwitcher';
 import { primaryButton } from '@/brand';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import { useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -24,8 +23,7 @@ export default function MessageThread({
     updateUrl,
     deleteUrl,
 }) {
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
     const dateFormatter = new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'fr-FR', {
         day: 'numeric',
         month: 'long',
@@ -163,7 +161,7 @@ export default function MessageThread({
 
             <div className="border-t border-ink/10 px-5 py-5 sm:px-8">
                 {canWrite ? (
-                    <Composer postUrl={postUrl} maxBodyLength={maxBodyLength} language={language} />
+                    <Composer postUrl={postUrl} maxBodyLength={maxBodyLength} />
                 ) : (
                     <p className="text-sm leading-relaxed text-ink/60">{cannotWriteText}</p>
                 )}
@@ -173,8 +171,7 @@ export default function MessageThread({
 }
 
 function VoiceMessagePlayer({ src, isOwn }) {
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
     const audio = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -276,8 +273,8 @@ function formatAudioTime(seconds) {
     return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 }
 
-function Composer({ postUrl, maxBodyLength, language }) {
-    const t = (key) => translate(language, key);
+function Composer({ postUrl, maxBodyLength }) {
+    const { language, t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         body: '',
         voice_note: null,

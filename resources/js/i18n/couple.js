@@ -1,11 +1,9 @@
 /**
- * Texts of the couple space in French and English.
- *
- * A text may contain {placeholders}, replaced by the values given to
- * translate(). A text depending on a number gives its singular and plural
- * forms separated by "|", chosen from the `value` placeholder.
+ * Shared texts (buttons, language switcher…) and texts of the couple space,
+ * in French and English. They sit at the root of the dictionary: t('cancel'),
+ * t('myWedding')… (see ./index.js).
  */
-const TRANSLATIONS = {
+export default {
     fr: {
         // Shared
         cancel: 'Annuler',
@@ -21,6 +19,11 @@ const TRANSLATIONS = {
         yourMessage: 'Votre message',
         deleteMessageConfirm: 'Supprimer ce message ?',
         switchLanguage: 'Switch to English',
+        showPassword: 'Afficher',
+        hidePassword: 'Masquer',
+        comingSoon: 'Bientôt disponible',
+        soon: 'Bientôt',
+        legalNotice: 'Mentions légales',
 
         // Navigation and header
         clientArea: 'Espace client',
@@ -236,6 +239,11 @@ const TRANSLATIONS = {
         yourMessage: 'Your message',
         deleteMessageConfirm: 'Delete this message?',
         switchLanguage: 'Passer en français',
+        showPassword: 'Show',
+        hidePassword: 'Hide',
+        comingSoon: 'Coming soon',
+        soon: 'Soon',
+        legalNotice: 'Legal notice',
 
         // Navigation and header
         clientArea: 'Client area',
@@ -434,36 +442,3 @@ const TRANSLATIONS = {
         designWriteToJessica: 'Write to Jessica',
     },
 };
-
-/**
- * Pick the singular or the plural form of a text depending on `count`:
- * in French 0 and 1 take the singular, in English only 1 does.
- */
-function pickPluralForm(text, language, count) {
-    const [singular, plural = singular] = text.split('|');
-    const isSingular = language === 'fr' ? Math.abs(count) <= 1 : Math.abs(count) === 1;
-
-    return isSingular ? singular : plural;
-}
-
-/**
- * Text of `key` in `language` (French when missing), with its {placeholders}
- * replaced by `params`. Returns the key itself when no text exists, so that a
- * missing translation shows up without breaking the page.
- *
- * @param {string} language
- * @param {string} key
- * @param {Record<string, string|number>} [params]
- * @returns {string}
- */
-export function translate(language, key, params = {}) {
-    const text = TRANSLATIONS[language]?.[key] ?? TRANSLATIONS.fr[key];
-
-    if (typeof text !== 'string') {
-        return key;
-    }
-
-    const form = typeof params.value === 'number' ? pickPluralForm(text, language, params.value) : text.split('|').pop();
-
-    return form.replace(/\{(\w+)\}/g, (placeholder, name) => (name in params ? String(params[name]) : placeholder));
-}

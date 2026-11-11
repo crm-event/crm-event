@@ -1,6 +1,5 @@
 import CoupleLayout from '@/Layouts/CoupleLayout';
-import { useLanguage } from '@/Components/LanguageSwitcher';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import { Head } from '@inertiajs/react';
 
 function buildModeLabels(t) {
@@ -31,8 +30,8 @@ function formatDateTime(value, language) {
     return `${day} à ${date.getHours()}h${minutes}`;
 }
 
-function AppointmentList({ appointments, emptyMessage, language }) {
-    const t = (key) => translate(language, key);
+function AppointmentList({ appointments, emptyMessage }) {
+    const { language, t } = useTranslation();
     const modeLabels = buildModeLabels(t);
 
     if (appointments.length === 0) {
@@ -68,8 +67,7 @@ function AppointmentList({ appointments, emptyMessage, language }) {
  * Appointments of the couple, read-only: they come from Jessica's agenda.
  */
 export default function Index({ upcoming, past }) {
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
 
     return (
         <CoupleLayout active="appointments">
@@ -91,13 +89,12 @@ export default function Index({ upcoming, past }) {
             <AppointmentList
                 appointments={upcoming}
                 emptyMessage={t('noUpcomingAppointments')}
-                language={language}
             />
 
             {past.length > 0 && (
                 <>
                     <h2 className="mt-12 font-display text-2xl">{t('appointmentPast')}</h2>
-                    <AppointmentList appointments={past} emptyMessage="" language={language} />
+                    <AppointmentList appointments={past} emptyMessage="" />
                 </>
             )}
 
