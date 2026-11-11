@@ -1,5 +1,6 @@
 import PasswordField from '@/Components/PasswordField';
 import { focusRing, secondaryButton } from '@/brand';
+import { useTranslation } from '@/i18n';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -7,6 +8,7 @@ import { useState } from 'react';
  * Deletion of a couple's account, confirmed with the password.
  */
 export default function DeleteUserForm() {
+    const { t } = useTranslation();
     const [isConfirming, setIsConfirming] = useState(false);
 
     const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm({
@@ -29,17 +31,16 @@ export default function DeleteUserForm() {
 
     return (
         <div>
-            <h2 className="font-display text-xl">Supprimer mon compte</h2>
+            <h2 className="font-display text-xl">{t('profile.deletion.title')}</h2>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink/60">
-                Vous ne pourrez plus vous connecter à votre espace. Les documents liés à votre contrat
-                restent conservés par La Dernière Touche, comme la loi l’impose.
+                {t('profile.deletion.intro')}
             </p>
 
             {isConfirming ? (
                 <form onSubmit={deleteAccount} className="mt-8 max-w-sm">
                     <PasswordField
                         id="delete_password"
-                        label="Votre mot de passe, pour confirmer"
+                        label={t('profile.deletion.password')}
                         value={data.password}
                         error={errors.password}
                         autoComplete="current-password"
@@ -52,16 +53,16 @@ export default function DeleteUserForm() {
                             disabled={processing}
                             className={`${focusRing} inline-flex items-center justify-center border border-ink bg-ivory px-6 py-3 text-[11px] uppercase tracking-[0.18em] text-ink transition-colors hover:bg-ink hover:text-ivory disabled:opacity-50`}
                         >
-                            Supprimer définitivement
+                            {t('profile.deletion.confirm')}
                         </button>
                         <button type="button" onClick={cancel} className={`${secondaryButton} px-6 py-3`}>
-                            Annuler
+                            {t('cancel')}
                         </button>
                     </div>
                 </form>
             ) : (
                 <button type="button" onClick={() => setIsConfirming(true)} className={`${secondaryButton} mt-8 px-6 py-3`}>
-                    Supprimer mon compte
+                    {t('profile.deletion.start')}
                 </button>
             )}
         </div>

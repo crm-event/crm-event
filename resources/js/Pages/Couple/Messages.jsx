@@ -1,6 +1,5 @@
 import MessageThread from '@/Components/MessageThread';
-import { useLanguage } from '@/Components/LanguageSwitcher';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { Head } from '@inertiajs/react';
 
@@ -10,8 +9,7 @@ import { Head } from '@inertiajs/react';
  * Jessica's messages are marked as read when the page is opened.
  */
 export default function Messages({ messages, canWrite, maxBodyLength }) {
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
 
     return (
         <CoupleLayout active="messages">

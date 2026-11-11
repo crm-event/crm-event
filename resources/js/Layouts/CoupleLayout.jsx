@@ -1,8 +1,8 @@
 import Icone from '@/Components/Icone';
 import Dropdown from '@/Components/Dropdown';
-import LanguageSwitcher, { useLanguage } from '@/Components/LanguageSwitcher';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { focusRing } from '@/brand';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -78,6 +78,7 @@ function buildPageLabels(t) {
 }
 
 function NavigationEntry({ entry, isActive }) {
+    const { t } = useTranslation();
     const content = (
         <>
             <Icone nom={entry.icon} className="text-[20px]" />
@@ -90,10 +91,10 @@ function NavigationEntry({ entry, isActive }) {
             <span
                 className={`${entryClasses} cursor-not-allowed border-transparent text-ink/35`}
                 aria-disabled="true"
-                title="Bientôt disponible"
+                title={t('comingSoon')}
             >
                 {content}
-                <span className="text-[9px] uppercase tracking-[0.18em]">Bientôt</span>
+                <span className="text-[9px] uppercase tracking-[0.18em]">{t('soon')}</span>
             </span>
         );
     }
@@ -174,8 +175,7 @@ function Sidebar({ activeKey, t }) {
  */
 function NotificationsMenu() {
     const notifications = usePage().props.coupleNotifications ?? [];
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
     const notificationDateFormatter = new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'fr-FR', {
         day: 'numeric',
         month: 'long',
@@ -264,8 +264,7 @@ function NotificationsMenu() {
 }
 
 function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
     const pageLabels = buildPageLabels(t);
     const pageLabel = pageLabels[active] || t('clientArea');
     const initials = user.name
@@ -353,7 +352,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
                                     nom="gavel"
                                     className="text-[18px] text-sage"
                                 />
-                                Mentions légales
+                                {t('legalNotice')}
                             </span>
                         </Dropdown.Link>
                         <Dropdown.Link
@@ -379,8 +378,7 @@ function ClientHeader({ active, user, isMenuOpen, onOpenMenu }) {
 
 export default function CoupleLayout({ active = 'wedding', children }) {
     const user = usePage().props.auth.user;
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Inertia keeps prefetched pages even after a form is sent: forget them so

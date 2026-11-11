@@ -49,7 +49,7 @@ class MessageController extends Controller
 
         if ($wedding === null) {
             throw ValidationException::withMessages([
-                'body' => 'Votre dossier n’est pas encore ouvert : Jessica vous préviendra dès que la messagerie sera disponible.',
+                'body' => __('forms.message.thread_not_open'),
             ]);
         }
 
@@ -87,7 +87,7 @@ class MessageController extends Controller
                 && $message->wedding->couple_id === $request->user()->couple?->id,
             403,
         );
-        abort_if($message->body === null, 422, 'Un message vocal ne peut pas être modifié.');
+        abort_if($message->body === null, 422, __('forms.message.voice_not_editable'));
 
         $message->update(['body' => $request->validated('body')]);
 

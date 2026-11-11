@@ -4,17 +4,8 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
 import CoupleLayout from '@/Layouts/CoupleLayout';
-import { useLanguage } from '@/Components/LanguageSwitcher';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
-
-function useT() {
-    const { language } = useLanguage();
-
-    const t = (key, params = {}) => translate(language, key, params);
-
-    return { language, t };
-}
 
 const processStepStyles = [
     'bg-blush',
@@ -71,7 +62,7 @@ function SectionTitle({ eyebrow, title, children }) {
 }
 
 function UnavailableImage({ className = '' }) {
-    const { t } = useT();
+    const { t } = useTranslation();
 
     return (
         <div className={`flex flex-col items-center justify-center gap-2 bg-blush px-3 text-center text-[11px] italic text-ink/50 ${className}`}>
@@ -82,7 +73,7 @@ function UnavailableImage({ className = '' }) {
 }
 
 function ImagePreview({ src, alt, onClose }) {
-    const { t } = useT();
+    const { t } = useTranslation();
 
     useEffect(() => {
         const closeOnEscape = (event) => {
@@ -126,7 +117,7 @@ function ImagePreview({ src, alt, onClose }) {
 }
 
 function Moodboard({ moodboard, canEdit }) {
-    const { t } = useT();
+    const { t } = useTranslation();
     const inputRef = useRef(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -219,7 +210,7 @@ function Moodboard({ moodboard, canEdit }) {
 }
 
 function InspirationGallery({ images, canEdit }) {
-    const { t } = useT();
+    const { t } = useTranslation();
     const inputRef = useRef(null);
     const [previewImage, setPreviewImage] = useState(null);
 
@@ -315,7 +306,7 @@ function InspirationGallery({ images, canEdit }) {
 }
 
 function CreativeBrief({ brief, moodboard, inspirations, canEdit }) {
-    const { language, t } = useT();
+    const { language, t } = useTranslation();
     const [editing, setEditing] = useState(false);
     const imageError = usePage().props.errors.file;
 
@@ -372,7 +363,7 @@ function CreativeBrief({ brief, moodboard, inspirations, canEdit }) {
                     >
                         <Icone nom={editing ? 'close' : 'edit'} className="text-[16px]" />
                         {editing
-                            ? translate(language, 'cancel')
+                            ? t('cancel')
                             : isEmpty
                                 ? t('designWriteBrief')
                                 : t('designEditBrief')}
@@ -470,7 +461,7 @@ function CreativeBrief({ brief, moodboard, inspirations, canEdit }) {
                             className={`${primaryButton} mt-7 px-5 py-3 disabled:opacity-50`}
                         >
                             {form.processing
-                                ? translate(language, 'saving')
+                                ? t('saving')
                                 : t('designSaveBrief')}
                         </button>
                     </form>
@@ -568,7 +559,7 @@ function CreativeBrief({ brief, moodboard, inspirations, canEdit }) {
 }
 
 function VersionCard({ version, featured }) {
-    const { language, t } = useT();
+    const { language, t } = useTranslation();
     const [feedbackOpen, setFeedbackOpen] = useState(false);
     const approval = useForm();
     const feedback = useForm({ text: '' });
@@ -662,7 +653,7 @@ function VersionCard({ version, featured }) {
                         >
                             <Icone nom="check" className="mr-1 align-middle text-[16px]" />
                             {approval.processing
-                                ? translate(language, 'approving')
+                                ? t('approving')
                                 : t('designApproveDirection')}
                         </button>
                     )}
@@ -719,7 +710,7 @@ function VersionCard({ version, featured }) {
                         className={`${primaryButton} mt-3 px-5 py-3 disabled:opacity-50`}
                     >
                         {feedback.processing
-                            ? translate(language, 'sending')
+                            ? t('sending')
                             : t('designSendFeedback')}
                     </button>
                 </form>
@@ -729,7 +720,7 @@ function VersionCard({ version, featured }) {
 }
 
 function Process({ activeStep }) {
-    const { t } = useT();
+    const { t } = useTranslation();
 
     const steps = [
         { number: '01', label: t('designStepInspirations'), icon: 'favorite' },
@@ -813,7 +804,7 @@ export default function Design({
                                    versions = [],
                                    canEdit,
                                }) {
-    const { t } = useT();
+    const { t } = useTranslation();
 
     const sortedVersions = [...versions].sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at),

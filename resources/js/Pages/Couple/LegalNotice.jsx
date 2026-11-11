@@ -1,4 +1,5 @@
 import LegalNoticeContent from '@/Components/LegalNoticeContent';
+import { useTranslation } from '@/i18n';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { Head } from '@inertiajs/react';
 
@@ -7,11 +8,13 @@ import { Head } from '@inertiajs/react';
  * a logged-in couple (data kept in the space, rules of use).
  */
 export default function LegalNotice() {
+    const { t } = useTranslation();
+
     return (
         <CoupleLayout active="legal">
-            <Head title="Mentions légales" />
+            <Head title={t('legal.title')} />
 
-            <h1 className="font-display text-3xl leading-snug sm:text-4xl">Mentions légales</h1>
+            <h1 className="font-display text-3xl leading-snug sm:text-4xl">{t('legal.title')}</h1>
 
             <div className="mt-10">
                 <LegalNoticeContent forCoupleSpace />

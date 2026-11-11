@@ -30,17 +30,17 @@ class ProfileUpdateRequest extends FormRequest
     }
 
     /**
-     * Get validation messages in French.
+     * Get validation messages in the language of the user.
      *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'name.required' => 'Indiquez un nom.',
-            'email.required' => 'Indiquez votre adresse e-mail.',
-            'email.email' => 'Cette adresse e-mail n’est pas valide.',
-            'email.unique' => 'Cette adresse e-mail est déjà utilisée par un autre compte.',
+            'name.required' => __('forms.profile.name_required'),
+            'email.required' => __('forms.profile.email_required'),
+            'email.email' => __('forms.profile.email_invalid'),
+            'email.unique' => __('forms.profile.email_taken'),
         ];
     }
 

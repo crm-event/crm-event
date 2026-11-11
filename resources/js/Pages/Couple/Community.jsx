@@ -1,6 +1,5 @@
 import FieldError from '@/Components/FieldError';
-import { useLanguage } from '@/Components/LanguageSwitcher';
-import { translate } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import CoupleLayout from '@/Layouts/CoupleLayout';
 import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -14,8 +13,7 @@ import { useState } from 'react';
  * messages; deleting a message also deletes its replies.
  */
 export default function Community({ posts, maxBodyLength }) {
-    const { language } = useLanguage();
-    const t = (key) => translate(language, key);
+    const { language, t } = useTranslation();
 
     return (
         <CoupleLayout active="community">
@@ -37,7 +35,7 @@ export default function Community({ posts, maxBodyLength }) {
                 <h2 id="new-post-title" className="sr-only">
                     Écrire un message
                 </h2>
-                <PostComposer maxBodyLength={maxBodyLength} language={language} />
+                <PostComposer maxBodyLength={maxBodyLength} />
             </section>
 
             <section aria-labelledby="feed-title" className="mt-16 max-w-2xl">
@@ -56,13 +54,13 @@ export default function Community({ posts, maxBodyLength }) {
                     <ol className="divide-y divide-ink/10">
                         {posts.data.map((post) => (
                             <li key={post.id} className="py-8">
-                                <Post post={post} maxBodyLength={maxBodyLength} language={language} />
+                                <Post post={post} maxBodyLength={maxBodyLength} />
                             </li>
                         ))}
                     </ol>
                 )}
 
-                <FeedPagination posts={posts} language={language} />
+                <FeedPagination posts={posts} />
             </section>
         </CoupleLayout>
     );
@@ -71,13 +69,13 @@ export default function Community({ posts, maxBodyLength }) {
 /**
  * A top-level message, its replies and the reply form.
  */
-function Post({ post, maxBodyLength, language }) {
-    const t = (key) => translate(language, key);
+function Post({ post, maxBodyLength }) {
+    const { language, t } = useTranslation();
     const [isReplying, setIsReplying] = useState(false);
 
     return (
         <article>
-            <PostContent post={post} language={language} />
+            <PostContent post={post} />
 
             <div className="mt-4 flex items-center gap-6 text-[10px] uppercase tracking-[0.18em] text-sage">
                 <button
@@ -88,17 +86,17 @@ function Post({ post, maxBodyLength, language }) {
                 >
                     {isReplying ? t('cancel') : t('reply')}
                 </button>
-                {post.is_own && <DeleteButton post={post} language={language} />}
+                {post.is_own && <DeleteButton post={post} />}
             </div>
 
             {(post.replies.length > 0 || isReplying) && (
                 <div className="mt-6 space-y-6 border-l border-sage/40 pl-6">
                     {post.replies.map((reply) => (
                         <article key={reply.id}>
-                            <PostContent post={reply} language={language} />
+                            <PostContent post={reply} />
                             {reply.is_own && (
                                 <div className="mt-3 text-[10px] uppercase tracking-[0.18em] text-sage">
-                                    <DeleteButton post={reply} language={language} />
+                                    <DeleteButton post={reply} />
                                 </div>
                             )}
                         </article>
@@ -108,7 +106,6 @@ function Post({ post, maxBodyLength, language }) {
                         <PostComposer
                             parentId={post.id}
                             maxBodyLength={maxBodyLength}
-                                language={language}
                             onPosted={() => setIsReplying(false)}
                         />
                     )}
@@ -121,8 +118,8 @@ function Post({ post, maxBodyLength, language }) {
 /**
  * Author, date and text of a message or reply.
  */
-function PostContent({ post, language }) {
-    const t = (key) => translate(language, key);
+function PostContent({ post }) {
+    const { language, t } = useTranslation();
     const dateFormatter = new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : 'fr-FR', {
         day: 'numeric',
         month: 'long',
@@ -156,8 +153,8 @@ function PostContent({ post, language }) {
 /**
  * Form to publish a message, or a reply when `parentId` is given.
  */
-function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {}, language }) {
-    const t = (key) => translate(language, key);
+function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {} }) {
+    const { language, t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         body: '',
         parent_id: parentId,
@@ -218,8 +215,8 @@ function PostComposer({ parentId = null, maxBodyLength, onPosted = () => {}, lan
 /**
  * Deletes one of the couple's own messages, after confirmation.
  */
-function DeleteButton({ post, language }) {
-    const t = (key) => translate(language, key);
+function DeleteButton({ post }) {
+    const { language, t } = useTranslation();
 
     const deletePost = () => {
         const message = post.replies?.length
@@ -247,8 +244,8 @@ function DeleteButton({ post, language }) {
 /**
  * Links to the newer and older pages of the feed.
  */
-function FeedPagination({ posts, language }) {
-    const t = (key) => translate(language, key);
+function FeedPagination({ posts }) {
+    const { language, t } = useTranslation();
 
     if (!posts.prev_page_url && !posts.next_page_url) {
         return null;

@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Language chosen with the language switcher, kept in the session.
+ * Language chosen with the language switcher (LanguageSwitcher.jsx).
  */
 class LocaleController extends Controller
 {
     /**
-     * Remember the language, then reload the page in that language.
+     * Remember the language in a cookie, then reload the page in that language.
      */
     public function __invoke(Request $request): RedirectResponse
     {
@@ -21,8 +21,6 @@ class LocaleController extends Controller
             'locale' => ['required', 'string', Rule::in(SetLocale::SUPPORTED_LOCALES)],
         ]);
 
-        $request->session()->put('locale', $validated['locale']);
-
-        return back();
+        return back()->withCookie(cookie(SetLocale::COOKIE, $validated['locale'], SetLocale::COOKIE_MINUTES));
     }
 }

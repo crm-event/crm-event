@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Validates a request for a client space, sent from the public site in French
- * or in English.
+ * Validates a request for a client space, sent from the public site. The
+ * messages follow the language of the visitor (see SetLocale).
  */
 class StoreAccessRequest extends FormRequest
 {
@@ -29,7 +29,6 @@ class StoreAccessRequest extends FormRequest
             'partner2_first_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'wedding_date' => ['nullable', 'date', 'after:today'],
-            'language' => ['nullable', 'in:fr,en'],
             'website' => ['nullable'],
         ];
     }
@@ -41,21 +40,13 @@ class StoreAccessRequest extends FormRequest
      */
     public function messages(): array
     {
-        return $this->isInEnglish()
-            ? [
-                'partner1_first_name.required' => 'Please enter your first name.',
-                'email.required' => 'Please enter your email address.',
-                'email.email' => 'This email address is not valid.',
-                'wedding_date.date' => 'This date is not valid.',
-                'wedding_date.after' => 'The wedding date must be in the future.',
-            ]
-            : [
-                'partner1_first_name.required' => 'Indiquez votre prénom.',
-                'email.required' => 'Indiquez votre adresse e-mail.',
-                'email.email' => 'Cette adresse e-mail n’est pas valide.',
-                'wedding_date.date' => 'Cette date n’est pas valide.',
-                'wedding_date.after' => 'La date du mariage doit être à venir.',
-            ];
+        return [
+            'partner1_first_name.required' => __('forms.access_request.first_name_required'),
+            'email.required' => __('forms.access_request.email_required'),
+            'email.email' => __('forms.access_request.email_invalid'),
+            'wedding_date.date' => __('forms.access_request.wedding_date_invalid'),
+            'wedding_date.after' => __('forms.access_request.wedding_date_past'),
+        ];
     }
 
     /**
@@ -70,9 +61,7 @@ class StoreAccessRequest extends FormRequest
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_REQUESTS)) {
             throw ValidationException::withMessages([
-                'email' => $this->isInEnglish()
-                    ? 'Too many requests. Please try again in a few minutes.'
-                    : 'Trop de demandes. Réessayez dans quelques minutes.',
+                'email' => __('forms.access_request.too_many_requests'),
             ]);
         }
 
@@ -85,13 +74,5 @@ class StoreAccessRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge(['email' => mb_strtolower(trim((string) $this->input('email')))]);
-    }
-
-    /**
-     * Determine whether the visitor is reading the site in English.
-     */
-    private function isInEnglish(): bool
-    {
-        return $this->input('language') === 'en';
     }
 }

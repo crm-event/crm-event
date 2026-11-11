@@ -1,11 +1,13 @@
 import PasswordField from '@/Components/PasswordField';
 import { primaryButton } from '@/brand';
+import { useTranslation } from '@/i18n';
 import { useForm } from '@inertiajs/react';
 
 /**
  * Change of password, which requires the current one.
  */
 export default function UpdatePasswordForm() {
+    const { t } = useTranslation();
     const { data, setData, put, errors, reset, processing, recentlySuccessful } = useForm({
         current_password: '',
         password: '',
@@ -22,13 +24,13 @@ export default function UpdatePasswordForm() {
 
     return (
         <form onSubmit={submit}>
-            <h2 className="font-display text-xl">Mot de passe</h2>
-            <p className="mt-2 text-sm text-ink/60">Choisissez un mot de passe d’au moins 8 caractères.</p>
+            <h2 className="font-display text-xl">{t('profile.password.title')}</h2>
+            <p className="mt-2 text-sm text-ink/60">{t('profile.password.intro')}</p>
 
             <div className="mt-8 space-y-8">
                 <PasswordField
                     id="current_password"
-                    label="Mot de passe actuel"
+                    label={t('profile.password.current')}
                     value={data.current_password}
                     error={errors.current_password}
                     autoComplete="current-password"
@@ -37,7 +39,7 @@ export default function UpdatePasswordForm() {
                 <div className="grid gap-8 sm:grid-cols-2">
                     <PasswordField
                         id="password"
-                        label="Nouveau mot de passe"
+                        label={t('profile.password.new')}
                         value={data.password}
                         error={errors.password}
                         autoComplete="new-password"
@@ -45,7 +47,7 @@ export default function UpdatePasswordForm() {
                     />
                     <PasswordField
                         id="password_confirmation"
-                        label="Confirmez-le"
+                        label={t('profile.password.confirm')}
                         value={data.password_confirmation}
                         error={errors.password_confirmation}
                         autoComplete="new-password"
@@ -56,10 +58,10 @@ export default function UpdatePasswordForm() {
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
                 <button type="submit" disabled={processing} className={`${primaryButton} disabled:opacity-50`}>
-                    {processing ? 'Enregistrement…' : 'Changer le mot de passe'}
+                    {processing ? t('saving') : t('profile.password.submit')}
                 </button>
                 {recentlySuccessful && (
-                    <p role="status" className="text-sm text-sage">Votre mot de passe a été changé.</p>
+                    <p role="status" className="text-sm text-sage">{t('profile.password.saved')}</p>
                 )}
             </div>
         </form>
