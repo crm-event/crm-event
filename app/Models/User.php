@@ -8,9 +8,11 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -38,6 +40,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
             'role' => UserRole::class,
         ];
     }
@@ -48,6 +51,23 @@ class User extends Authenticatable
     public function hasRole(UserRole ...$roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * Give the account a new temporary password, to be replaced at the next
+     * login, and return it: this is the only time it can be read.
+     */
+    public function assignTemporaryPassword(): string
+    {
+        $temporaryPassword = Str::password(12, symbols: false);
+
+        // must_change_password is not mass assignable: a request must never set it.
+        $this->forceFill([
+            'password' => $temporaryPassword,
+            'must_change_password' => true,
+        ])->save();
+
+        return $temporaryPassword;
     }
 
     /**
@@ -65,5 +85,15 @@ class User extends Authenticatable
     public function couple(): HasOne
     {
         return $this->hasOne(Couple::class);
+    }
+
+    /**
+     * The messages this user posted in the community space.
+     *
+     * @return HasMany<CommunityPost, $this>
+     */
+    public function communityPosts(): HasMany
+    {
+        return $this->hasMany(CommunityPost::class);
     }
 }

@@ -1,120 +1,69 @@
-import DangerButton from '@/Components/DangerButton';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import Modal from '@/Components/Modal';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
+import PasswordField from '@/Components/PasswordField';
+import { focusRing, secondaryButton } from '@/brand';
 import { useForm } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
-export default function DeleteUserForm({ className = '' }) {
-    const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
-    const passwordInput = useRef();
+/**
+ * Deletion of a couple's account, confirmed with the password.
+ */
+export default function DeleteUserForm() {
+    const [isConfirming, setIsConfirming] = useState(false);
 
-    const {
-        data,
-        setData,
-        delete: destroy,
-        processing,
-        reset,
-        errors,
-        clearErrors,
-    } = useForm({
+    const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm({
         password: '',
     });
 
-    const confirmUserDeletion = () => {
-        setConfirmingUserDeletion(true);
-    };
-
-    const deleteUser = (e) => {
-        e.preventDefault();
-
+    const deleteAccount = (event) => {
+        event.preventDefault();
         destroy(route('profile.destroy'), {
             preserveScroll: true,
-            onSuccess: () => closeModal(),
-            onError: () => passwordInput.current.focus(),
             onFinish: () => reset(),
         });
     };
 
-    const closeModal = () => {
-        setConfirmingUserDeletion(false);
-
+    const cancel = () => {
+        setIsConfirming(false);
         clearErrors();
         reset();
     };
 
     return (
-        <section className={`space-y-6 ${className}`}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Delete Account
-                </h2>
+        <div>
+            <h2 className="font-display text-xl">Supprimer mon compte</h2>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink/60">
+                Vous ne pourrez plus vous connecter à votre espace. Les documents liés à votre contrat
+                restent conservés par La Dernière Touche, comme la loi l’impose.
+            </p>
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Once your account is deleted, all of its resources and data
-                    will be permanently deleted. Before deleting your account,
-                    please download any data or information that you wish to
-                    retain.
-                </p>
-            </header>
-
-            <DangerButton onClick={confirmUserDeletion}>
-                Delete Account
-            </DangerButton>
-
-            <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Are you sure you want to delete your account?
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-600">
-                        Once your account is deleted, all of its resources and
-                        data will be permanently deleted. Please enter your
-                        password to confirm you would like to permanently delete
-                        your account.
-                    </p>
-
-                    <div className="mt-6">
-                        <InputLabel
-                            htmlFor="password"
-                            value="Password"
-                            className="sr-only"
-                        />
-
-                        <TextInput
-                            id="password"
-                            type="password"
-                            name="password"
-                            ref={passwordInput}
-                            value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
-                            className="mt-1 block w-3/4"
-                            isFocused
-                            placeholder="Password"
-                        />
-
-                        <InputError
-                            message={errors.password}
-                            className="mt-2"
-                        />
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={closeModal}>
-                            Cancel
-                        </SecondaryButton>
-
-                        <DangerButton className="ms-3" disabled={processing}>
-                            Delete Account
-                        </DangerButton>
+            {isConfirming ? (
+                <form onSubmit={deleteAccount} className="mt-8 max-w-sm">
+                    <PasswordField
+                        id="delete_password"
+                        label="Votre mot de passe, pour confirmer"
+                        value={data.password}
+                        error={errors.password}
+                        autoComplete="current-password"
+                        autoFocus
+                        onChange={(event) => setData('password', event.target.value)}
+                    />
+                    <div className="mt-8 flex flex-wrap gap-3">
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className={`${focusRing} inline-flex items-center justify-center border border-ink bg-ivory px-6 py-3 text-[11px] uppercase tracking-[0.18em] text-ink transition-colors hover:bg-ink hover:text-ivory disabled:opacity-50`}
+                        >
+                            Supprimer définitivement
+                        </button>
+                        <button type="button" onClick={cancel} className={`${secondaryButton} px-6 py-3`}>
+                            Annuler
+                        </button>
                     </div>
                 </form>
-            </Modal>
-        </section>
+            ) : (
+                <button type="button" onClick={() => setIsConfirming(true)} className={`${secondaryButton} mt-8 px-6 py-3`}>
+                    Supprimer mon compte
+                </button>
+            )}
+        </div>
     );
 }

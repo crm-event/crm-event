@@ -13,13 +13,17 @@ import { useState } from 'react';
  */
 const NAVIGATION = [
     { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
-    { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread' },
-    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'mariages.prestations' },
-    { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today' },
+    { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread', route: 'demandes' },
+    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'wedding' },
+    { cle: 'prestations', libelle: 'Prestations & devis', icone: 'description', route: 'mariages.prestations' },
+    { cle: 'espaces-clients', libelle: 'Espaces clients', icone: 'group', route: 'admin.couples.index' },
+    { cle: 'messages', libelle: 'Messages', icone: 'chat', route: 'admin.messages.index' },
+    { cle: 'documents', libelle: 'Documents', icone: 'description', route: 'admin.documents.index' },
+    { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today', route: 'calendrier' },
     { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long', route: 'facturation.index' },
     { cle: 'depenses', libelle: 'Dépenses', icone: 'payments', route: 'depenses.index' },
     { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
-    { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up' },
+    { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up', route: 'rentabilite.index' },
     { cle: 'parametres', libelle: 'Paramètres', icone: 'settings', route: 'profile.edit' },
 ];
 
@@ -153,6 +157,7 @@ function MenuUtilisateur({ utilisateur }) {
 export default function BackOfficeLayout({
     actif = 'dashboard',
     filAriane = 'Atelier de Production',
+    policeStitch = false,
     children,
 }) {
     const utilisateur = usePage().props.auth.user;
@@ -166,7 +171,10 @@ export default function BackOfficeLayout({
     });
 
     return (
-        <div className="min-h-screen bg-blush font-sans text-ink antialiased">
+        <div
+            className="min-h-screen bg-blush font-sans text-ink antialiased"
+            style={policeStitch ? { fontFamily: 'Inter, sans-serif', '--font-display': 'Playfair Display, serif' } : undefined}
+        >
             <aside className="fixed left-0 top-0 z-50 hidden h-screen w-sidebar overflow-y-auto border-r border-hairline lg:block">
                 <BarreLaterale actif={actif} utilisateur={utilisateur} />
             </aside>
