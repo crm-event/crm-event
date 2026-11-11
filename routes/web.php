@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
+use App\Http\Controllers\Admin\FacturationController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
+use App\Http\Controllers\Admin\PrestationsDevisController;
 use App\Http\Controllers\Admin\RentabiliteController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DesignController;
@@ -64,13 +66,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/facturation', function () {
-        return Inertia::render('Facturation');
-    })->name('facturation.index');
+    Route::get('/facturation', FacturationController::class)->name('facturation.index');
 
-    Route::get('/mariages/prestations-devis', function () {
-        return Inertia::render('Mariage/PrestationsDevis');
-    })->name('mariages.prestations');
+    Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
 });
 Route::get('/demandes', function () {
     return Inertia::render('Demandes');
@@ -78,11 +76,11 @@ Route::get('/demandes', function () {
 
 Route::get('/calendrier', function () {
     return Inertia::render('Calendrier');
-})->middleware(['auth', 'verified'])->name('calendrier');
+})->middleware(['auth', 'verified', 'role:admin'])->name('calendrier');
 
 Route::get('/wedding', function () {
     return Inertia::render('Wedding');
-})->middleware(['auth', 'verified'])->name('wedding');
+})->middleware(['auth', 'verified', 'role:admin'])->name('wedding');
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('rentabilite')

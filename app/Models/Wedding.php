@@ -80,6 +80,12 @@ class Wedding extends Model
         return $this->belongsToMany(Service::class, 'wedding_services')->withTimestamps();
     }
 
+    /** @return HasMany<WeddingService, $this> */
+    public function weddingServices(): HasMany
+    {
+        return $this->hasMany(WeddingService::class);
+    }
+
     /**
      * The documents shared in the couple space for this wedding.
      *

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class UserRoleRedirectTest extends TestCase
@@ -48,8 +49,15 @@ class UserRoleRedirectTest extends TestCase
     {
         $this->actingAs(User::factory()->make());
 
-        foreach (['dashboard', 'facturation.index', 'mariages.prestations'] as $routeName) {
+        foreach (['dashboard', 'demandes', 'calendrier', 'wedding', 'facturation.index', 'mariages.prestations'] as $routeName) {
             $this->get(route($routeName))->assertForbidden();
+        }
+    }
+
+    public function test_guests_must_log_in_to_open_billing_pages(): void
+    {
+        foreach (['facturation.index', 'mariages.prestations'] as $routeName) {
+            $this->get(route($routeName))->assertRedirect(route('login'));
         }
     }
 
@@ -57,8 +65,20 @@ class UserRoleRedirectTest extends TestCase
     {
         $this->actingAs(User::factory()->admin()->make());
 
-        foreach (['dashboard', 'facturation.index', 'mariages.prestations'] as $routeName) {
+        foreach (['dashboard', 'demandes', 'calendrier', 'wedding', 'facturation.index', 'mariages.prestations'] as $routeName) {
             $this->get(route($routeName))->assertOk();
         }
+    }
+
+    public function test_the_billing_pages_render_their_inertia_components(): void
+    {
+        $this->actingAs(User::factory()->admin()->make());
+
+        $this->get(route('facturation.index'))->assertInertia(
+            fn (Assert $page) => $page->component('Facturation')
+        );
+        $this->get(route('mariages.prestations'))->assertInertia(
+            fn (Assert $page) => $page->component('Mariage/PrestationsDevis')
+        );
     }
 }

@@ -11,9 +11,9 @@ class CalendrierTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_calendrier_page_is_displayed_to_an_authenticated_user(): void
+    public function test_calendrier_page_is_displayed_to_an_admin(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
 
         $response = $this
             ->actingAs($user)
@@ -22,6 +22,13 @@ class CalendrierTest extends TestCase
         $response
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Calendrier'));
+    }
+
+    public function test_couple_cannot_access_the_admin_calendar(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('calendrier'))
+            ->assertForbidden();
     }
 
     public function test_calendrier_page_redirects_a_guest_to_login(): void
