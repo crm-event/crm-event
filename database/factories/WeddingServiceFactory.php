@@ -24,6 +24,11 @@ class WeddingServiceFactory extends Factory
             'service_id' => Service::factory(),
             'amount' => fake()->randomFloat(2, 500, 8000),
             'vat_rate' => 0,
+            'quote_number' => fake()->unique()->bothify('DEV-########'),
+            'quote_sent_at' => fake()->date(),
+            'quote_valid_until' => fake()->date(),
+            'quote_accepted_at' => fake()->date(),
+            'contract_signed_at' => fake()->date(),
         ];
     }
 }

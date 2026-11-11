@@ -3,6 +3,7 @@ import PasswordField from '@/Components/PasswordField';
 import AuthLayout from '@/Layouts/AuthLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { fieldLabel, primaryButton, textField } from '@/brand';
+import { useTranslation } from '@/i18n';
 
 /**
  * Password reset page, reached from the link received by e-mail.
@@ -12,6 +13,7 @@ import { fieldLabel, primaryButton, textField } from '@/brand';
  * with a confirmation message; only the presentation changes here.
  */
 export default function ResetPassword({ token, email }) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         token: token,
         email: email,
@@ -29,16 +31,16 @@ export default function ResetPassword({ token, email }) {
 
     return (
         <AuthLayout
-            caption="Nouveau mot de passe"
-            title="Choisissez votre mot de passe."
-            intro="Il remplacera l’ancien dès que vous l’aurez enregistré."
+            caption={t('auth.resetPassword.caption')}
+            title={t('auth.resetPassword.title')}
+            intro={t('auth.resetPassword.intro')}
         >
-            <Head title="Nouveau mot de passe" />
+            <Head title={t('auth.resetPassword.caption')} />
 
             <form onSubmit={submit} className="mt-10">
                 <div>
                     <label htmlFor="email" className={fieldLabel}>
-                        Adresse e-mail
+                        {t('auth.email')}
                     </label>
                     <input
                         id="email"
@@ -58,12 +60,12 @@ export default function ResetPassword({ token, email }) {
                 <div className="mt-8">
                     <PasswordField
                         id="password"
-                        label="Nouveau mot de passe"
+                        label={t('auth.newPassword')}
                         value={data.password}
                         error={errors.password}
                         autoComplete="new-password"
                         autoFocus
-                        hint="8 caractères minimum."
+                        hint={t('auth.passwordHint')}
                         onChange={(e) => setData('password', e.target.value)}
                     />
                 </div>
@@ -71,7 +73,7 @@ export default function ResetPassword({ token, email }) {
                 <div className="mt-8">
                     <PasswordField
                         id="password_confirmation"
-                        label="Confirmez le mot de passe"
+                        label={t('auth.confirmPassword')}
                         value={data.password_confirmation}
                         error={errors.password_confirmation}
                         autoComplete="new-password"
@@ -84,7 +86,7 @@ export default function ResetPassword({ token, email }) {
                     className={`${primaryButton} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
                     disabled={processing}
                 >
-                    {processing ? 'Enregistrement…' : 'Enregistrer le mot de passe'}
+                    {processing ? t('auth.saving') : t('auth.resetPassword.submit')}
                 </button>
             </form>
         </AuthLayout>

@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * A service sold for a wedding, with its quote and contract information.
+ */
 class WeddingService extends Model
 {
     /** @use HasFactory<WeddingServiceFactory> */
@@ -18,6 +21,8 @@ class WeddingService extends Model
         'quote_sent_at', 'quote_valid_until', 'quote_accepted_at',
         'contract_signed_at', 'security_deposit_amount',
     ];
+
+    protected $hidden = ['vat_rate', 'security_deposit_amount'];
 
     protected function casts(): array
     {

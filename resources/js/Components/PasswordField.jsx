@@ -1,5 +1,6 @@
 import FieldError from '@/Components/FieldError';
 import { fieldLabel, focusRing, textField } from '@/brand';
+import { useTranslation } from '@/i18n';
 import { useState } from 'react';
 
 /**
@@ -16,6 +17,7 @@ export default function PasswordField({
     autoFocus = false,
     hint = null,
 }) {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(false);
 
     const errorId = `${id}-error`;
@@ -37,7 +39,7 @@ export default function PasswordField({
                     aria-pressed={isVisible}
                     onClick={() => setIsVisible((wasVisible) => !wasVisible)}
                 >
-                    {isVisible ? 'Masquer' : 'Afficher'}
+                    {isVisible ? t('hidePassword') : t('showPassword')}
                 </button>
             </div>
 

@@ -36,20 +36,20 @@ class StoreMessageRequest extends FormRequest
     }
 
     /**
-     * Get the error messages, in French.
+     * Get the error messages, in the language of the sender.
      *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'body.required' => 'Votre message est vide.',
-            'body.max' => 'Votre message ne peut pas dépasser '.self::MAX_BODY_LENGTH.' caractères.',
-            'body.required_without' => 'Ajoutez un message écrit ou un message vocal.',
-            'voice_note.required_without' => 'Ajoutez un message écrit ou un message vocal.',
-            'voice_note.file' => 'Le message vocal est invalide.',
-            'voice_note.mimes' => 'Le message vocal doit être un fichier audio accepté.',
-            'voice_note.max' => 'Le message vocal ne peut pas dépasser 10 Mo.',
+            'body.required' => __('forms.message.body_required'),
+            'body.max' => __('forms.message.body_max', ['max' => self::MAX_BODY_LENGTH]),
+            'body.required_without' => __('forms.message.text_or_voice'),
+            'voice_note.required_without' => __('forms.message.text_or_voice'),
+            'voice_note.file' => __('forms.message.voice_invalid'),
+            'voice_note.mimes' => __('forms.message.voice_type'),
+            'voice_note.max' => __('forms.message.voice_max'),
         ];
     }
 

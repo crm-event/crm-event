@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class UserRoleRedirectTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -49,7 +52,7 @@ class UserRoleRedirectTest extends TestCase
     {
         $this->actingAs(User::factory()->make());
 
-        foreach (['dashboard', 'demandes', 'calendrier', 'wedding', 'facturation.index', 'mariages.prestations'] as $routeName) {
+        foreach (['dashboard', 'demandes', 'calendrier', 'admin.wedding.index', 'facturation.index', 'mariages.prestations'] as $routeName) {
             $this->get(route($routeName))->assertForbidden();
         }
     }
@@ -65,7 +68,7 @@ class UserRoleRedirectTest extends TestCase
     {
         $this->actingAs(User::factory()->admin()->make());
 
-        foreach (['dashboard', 'demandes', 'calendrier', 'wedding', 'facturation.index', 'mariages.prestations'] as $routeName) {
+        foreach (['dashboard', 'demandes', 'calendrier', 'admin.wedding.index', 'facturation.index', 'mariages.prestations'] as $routeName) {
             $this->get(route($routeName))->assertOk();
         }
     }

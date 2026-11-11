@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsurePasswordIsChosen;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,13 +20,19 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            SetLocale::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            EnsurePasswordIsChosen::class,
         ]);
 
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
+
+        // The language is not a secret, and the error pages, rendered without
+        // the "web" middleware, must be able to read it.
+        $middleware->encryptCookies(except: [SetLocale::COOKIE]);
 
         // A logged-in user opening a guest page (e.g. /login) is sent back to
         // their own space instead of Laravel's default /dashboard.
@@ -50,14 +58,19 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $status = $response->getStatusCode();
 
-            $shouldRenderCustomPage = in_array($status, [403, 404], true)
+            // 419: the session has expired (e.g. a form sent after two hours).
+            $shouldRenderCustomPage = in_array($status, [403, 404, 405, 419], true)
                 || (in_array($status, [500, 503], true) && ! app()->environment('local', 'testing'));
 
             if (! $shouldRenderCustomPage) {
                 return $response;
             }
 
-            return Inertia::render('Error', ['status' => $status])
+            // A missing page never goes through the "web" middleware: the
+            // language is resolved here so that the page follows the switcher.
+            app()->setLocale(SetLocale::resolve($request));
+
+            return Inertia::render('Error', ['status' => $status, 'locale' => app()->getLocale()])
                 ->toResponse($request)
                 ->setStatusCode($status);
         });

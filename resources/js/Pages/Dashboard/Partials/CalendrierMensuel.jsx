@@ -1,15 +1,8 @@
 import Icone from '@/Components/Icone';
 import { construireCases, nomDuMois } from '@/calendrier';
 import { anneauFocus } from '@/charte';
-import { EVENEMENTS } from '@/Pages/Calendrier/donnees';
-import {
-    CLE_MODIFICATIONS,
-    CLE_STOCKAGE,
-    CLE_SUPPRESSIONS,
-    lireEvenementsCalendrier,
-} from '@/Pages/Calendrier/stockage';
 import { Link } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const JOURS_SEMAINE = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const INDEX_SAMEDI = 5;
@@ -95,26 +88,11 @@ function Case({ jour, mois, annee, horsMois, index, derniereLigne, evenements })
     );
 }
 
-export default function CalendrierMensuel() {
+export default function CalendrierMensuel({ evenementsTous }) {
     const [moisAffiche, setMoisAffiche] = useState(() => {
         const aujourdHui = new Date();
         return new Date(aujourdHui.getFullYear(), aujourdHui.getMonth(), 1);
     });
-    const [evenementsTous, setEvenementsTous] = useState(() =>
-        typeof window === 'undefined' ? EVENEMENTS : lireEvenementsCalendrier(),
-    );
-
-    useEffect(() => {
-        const actualiserEvenements = (event) => {
-            if (!event.key || [CLE_STOCKAGE, CLE_MODIFICATIONS, CLE_SUPPRESSIONS].includes(event.key)) {
-                setEvenementsTous(lireEvenementsCalendrier());
-            }
-        };
-
-        window.addEventListener('storage', actualiserEvenements);
-        return () => window.removeEventListener('storage', actualiserEvenements);
-    }, []);
-
     const annee = moisAffiche.getFullYear();
     const mois = moisAffiche.getMonth() + 1;
     const cases = useMemo(() => construireCases(annee, mois), [annee, mois]);

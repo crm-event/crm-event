@@ -2,7 +2,7 @@ import Icone from '@/Components/Icone';
 import { anneauFocus } from '@/charte';
 import { useEffect, useState } from 'react';
 
-export default function FormulaireJalon({ ouvert, dateParDefaut, evenement, typeAjout, onFermer, onEnregistrer }) {
+export default function FormulaireJalon({ ouvert, dateParDefaut, evenement, typeAjout, onFermer, onEnregistrer, enCours, erreur }) {
     const [titre, setTitre] = useState('');
     const [date, setDate] = useState(dateParDefaut);
     const [heure, setHeure] = useState('');
@@ -80,10 +80,10 @@ export default function FormulaireJalon({ ouvert, dateParDefaut, evenement, type
                     <label className="block text-label text-ink">Note (facultative)
                         <textarea rows="3" maxLength="1000" value={notes} onChange={(event) => setNotes(event.target.value)} className="mt-1 w-full rounded-lg border-hairline text-body focus:border-sage focus:ring-sage" />
                     </label>
-                    <p className="text-[11px] text-sage">Enregistré dans ce navigateur uniquement.</p>
+                    {erreur && <p role="alert" className="text-body-sm text-warning">{erreur}</p>}
                     <div className="flex justify-end gap-3 border-t border-hairline pt-4">
                         <button type="button" onClick={onFermer} className={`${anneauFocus} rounded-lg border border-hairline px-4 py-2 text-label text-ink hover:bg-ivory`}>Annuler</button>
-                        <button type="submit" className={`${anneauFocus} rounded-lg bg-ink px-4 py-2 text-label text-white hover:opacity-80`}>{evenement ? 'Enregistrer les modifications' : estMariage ? 'Enregistrer le mariage' : 'Enregistrer le jalon'}</button>
+                        <button type="submit" disabled={enCours} className={`${anneauFocus} rounded-lg bg-ink px-4 py-2 text-label text-white hover:opacity-80`}>{evenement ? 'Enregistrer les modifications' : estMariage ? 'Enregistrer le mariage' : 'Enregistrer le jalon'}</button>
                     </div>
                 </form>
             </section>

@@ -36,16 +36,16 @@ class StoreCommunityPostRequest extends FormRequest
     }
 
     /**
-     * Get the error messages shown to the couple, in French.
+     * Get the error messages shown to the couple, in their language.
      *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'body.required' => 'Votre message est vide.',
-            'body.max' => 'Votre message ne peut pas dépasser '.self::MAX_BODY_LENGTH.' caractères.',
-            'parent_id.exists' => 'Le message auquel vous répondez n’existe plus.',
+            'body.required' => __('forms.community_post.body_required'),
+            'body.max' => __('forms.community_post.body_max', ['max' => self::MAX_BODY_LENGTH]),
+            'parent_id.exists' => __('forms.community_post.parent_missing'),
         ];
     }
 

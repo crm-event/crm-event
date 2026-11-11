@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Wedding project of a couple, created at the first contact.
@@ -80,10 +81,24 @@ class Wedding extends Model
         return $this->belongsToMany(Service::class, 'wedding_services')->withTimestamps();
     }
 
-    /** @return HasMany<WeddingService, $this> */
-    public function weddingServices(): HasMany
+    /**
+     * The creative brief written by the couple on the Design page.
+     *
+     * @return HasOne<DesignBrief, $this>
+     */
+    public function designBrief(): HasOne
     {
-        return $this->hasMany(WeddingService::class);
+        return $this->hasOne(DesignBrief::class);
+    }
+
+    /**
+     * The inspiration photos and moodboards added for this wedding.
+     *
+     * @return HasMany<MediaItem, $this>
+     */
+    public function mediaItems(): HasMany
+    {
+        return $this->hasMany(MediaItem::class);
     }
 
     /**
@@ -114,5 +129,51 @@ class Wedding extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * The services for the wedding
+     *
+     * @return HasMany<WeddingService, $this>
+     */
+    public function weddingServices(): HasMany
+    {
+        return $this->hasMany(WeddingService::class);
+    }
+
+    /**
+     * The vendor for this wedding.
+     *
+     * @return BelongsToMany<Vendor, $this>
+     */
+    public function vendors(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Vendor::class,
+            'wedding_vendor',
+            'wedding_id',
+            'vendor_id'
+        )->withPivot('notes');
+    }
+
+    /**
+     * The item of the timaline for this wedding.
+     *
+     * @return HasMany<TimelineItem, $this>
+     */
+    public function timelineItems(): HasMany
+    {
+        return $this->hasMany(TimelineItem::class)
+            ->orderBy('sort_order');
+    }
+
+    /**
+     * The review of the couple, null until Jessica has invited them.
+     *
+     * @return HasOne<Review, $this>
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
     }
 }

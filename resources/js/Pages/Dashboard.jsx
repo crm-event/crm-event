@@ -8,13 +8,7 @@ import RappelsPrioritaires from '@/Pages/Dashboard/Partials/RappelsPrioritaires'
 import { anneauFocus } from '@/charte';
 import { Head, Link, usePage } from '@inertiajs/react';
 
-/**
- * Tableau de bord de Jessica (maquette Figma « Dashboard — La Dernière Touche »).
- *
- * Les indicateurs, événements et montants affichés sont ceux de la maquette :
- * ils seront remplacés par les données de la base au fil des prochaines pages.
- */
-export default function Dashboard() {
+export default function Dashboard({ aujourdhui, annee, finances, suivi, evenementsTous, activites }) {
     const prenom = usePage().props.auth.user.name.split(' ')[0];
 
     return (
@@ -34,40 +28,32 @@ export default function Dashboard() {
                             Bonjour {prenom}
                         </h1>
                         <p className="mt-0.5 text-body text-sage">
-                            Saison des mariages 2025 • Provence &amp; Côte
-                            d’Azur
+                            Suivi des dossiers · {annee}
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    {route().has('demandes') && (
                         <Link
-                            href={`${route('demandes')}?nouvelle=1`}
-                            className={`${anneauFocus} inline-flex items-center gap-2 rounded-lg border border-hairline bg-white px-4 py-2 text-label text-ink shadow-sm transition-colors hover:bg-ivory`}
+                            href={route('demandes', { nouvelle: 1 })}
+                            className={anneauFocus + ' inline-flex items-center gap-2 rounded-lg border border-hairline bg-white px-4 py-2 text-label text-ink hover:bg-ivory'}
                         >
                             <Icone nom="add_circle" className="text-[17px] text-sage" />
-                            <span>Nouvelle demande</span>
+                            Nouvelle demande
                         </Link>
-                        <button
-                            type="button"
-                            className={`${anneauFocus} inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-label text-white shadow-sm transition-opacity hover:opacity-80`}
-                        >
-                            <Icone nom="event_note" className="text-[17px]" />
-                            <span>Créer un mariage</span>
-                        </button>
-                    </div>
+                    )}
                 </header>
 
-                <CartesIndicateurs />
+                <CartesIndicateurs suivi={suivi} finances={finances} />
 
                 <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                     <div className="flex flex-col gap-6 lg:col-span-8">
-                        <CalendrierMensuel />
-                        <GraphiqueChiffreAffaires />
+                        <CalendrierMensuel evenementsTous={evenementsTous} />
+                        <GraphiqueChiffreAffaires finances={finances} annee={annee} />
                     </div>
 
                     <div className="flex flex-col gap-6 lg:col-span-4">
-                        <RappelsPrioritaires />
-                        <ActiviteRecente />
+                        <RappelsPrioritaires rappels={suivi.rappels} aujourdhui={aujourdhui} />
+                        <ActiviteRecente activites={activites} />
                     </div>
                 </div>
             </div>
