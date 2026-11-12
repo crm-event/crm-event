@@ -10,6 +10,7 @@ use App\Models\ProposalComment;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -115,13 +116,73 @@ class WeddingDesignTest extends TestCase
         $this->actingAs($this->admin)->get(route('admin.wedding.design.proposals.file', $proposal))->assertOk();
     }
 
+    public function test_jessica_sends_a_version_numbered_within_its_type(): void
+    {
+        $wedding = $this->wedding();
+        Proposal::factory()->for($wedding)->create(['type' => Proposal::DESIGN_BOOK, 'version' => 1]);
+        Proposal::factory()->for($wedding)->create(['type' => 'signage', 'version' => 1]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.wedding.design.proposals.store', $wedding->id), [
+                'type' => Proposal::DESIGN_BOOK,
+                'title' => 'Carnet design, deuxième version',
+                'description' => 'Plus de vert, comme demandé.',
+                'file' => UploadedFile::fake()->image('carnet.png'),
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.wedding.show', ['id' => $wedding->id, 'onglet' => 'design']));
+
+        $proposal = $wedding->proposals()->latest('id')->first();
+        $this->assertSame(2, $proposal->version);
+        $this->assertSame('Carnet design, deuxième version', $proposal->title);
+        $this->assertSame('design', $proposal->document->category);
+        $this->assertFalse($proposal->document->requires_approval);
+        Storage::assertExists($proposal->document->file_path);
+    }
+
+    public function test_a_version_must_be_an_image_or_a_pdf_of_a_known_type(): void
+    {
+        $wedding = $this->wedding();
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.wedding.design.proposals.store', $wedding->id), [
+                'type' => 'video',
+                'title' => '',
+                'file' => UploadedFile::fake()->create('notes.txt', 10, 'text/plain'),
+            ])
+            ->assertSessionHasErrors(['type', 'title', 'file']);
+
+        $this->assertDatabaseCount('proposals', 0);
+    }
+
+    public function test_jessica_answers_under_a_version(): void
+    {
+        $proposal = Proposal::factory()->for($this->wedding())->create();
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.wedding.design.comments.store', $proposal), ['body' => '  Bien noté, je modifie.  '])
+            ->assertRedirect(route('admin.wedding.show', ['id' => $proposal->wedding_id, 'onglet' => 'design']));
+
+        $comment = $proposal->comments()->sole();
+        $this->assertSame('Bien noté, je modifie.', $comment->body);
+        $this->assertSame($this->admin->id, $comment->user_id);
+        $this->assertSame(Proposal::AWAITING, $proposal->fresh()->status());
+    }
+
     public function test_couples_cannot_use_the_design_tab(): void
     {
         $wedding = $this->wedding();
         $photo = MediaItem::factory()->for($wedding)->create();
+        $proposal = Proposal::factory()->for($wedding)->create();
 
         $this->actingAs($wedding->couple->user)
             ->get(route('admin.wedding.design.media.show', $photo))
+            ->assertForbidden();
+
+        $this->post(route('admin.wedding.design.proposals.store', $wedding->id), ['type' => 'other', 'title' => 'x'])
+            ->assertForbidden();
+
+        $this->post(route('admin.wedding.design.comments.store', $proposal), ['body' => 'Coucou'])
             ->assertForbidden();
     }
 }

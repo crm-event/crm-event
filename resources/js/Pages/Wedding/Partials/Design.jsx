@@ -1,5 +1,8 @@
+import FieldError from '@/Components/FieldError';
 import Icone from '@/Components/Icone';
 import { anneauFocus } from '@/charte';
+import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 
 /** Where the design stands, shown at the top of the tab. */
 const ETATS = {
@@ -27,6 +30,13 @@ export function dateCourte(valeur) {
 export function MicroTitre({ children }) {
     return <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-sage">{children}</p>;
 }
+
+const champ =
+    'mt-1 block w-full rounded-lg border border-hairline bg-white px-3 py-2 text-[11px] text-ink focus:border-ink focus:ring-0';
+
+const boutonPrincipal = `${anneauFocus} inline-flex items-center justify-center gap-1.5 rounded-lg bg-ink px-4 py-2 text-[10px] uppercase tracking-[0.12em] text-white transition hover:bg-sage disabled:cursor-wait disabled:opacity-50`;
+
+const boutonSecondaire = `${anneauFocus} inline-flex items-center justify-center gap-1.5 rounded-lg border border-hairline px-4 py-2 text-[10px] uppercase tracking-[0.12em] text-ink transition hover:border-ink`;
 
 function EtatVide({ children }) {
     return <p className="rounded-lg bg-ivory p-4 text-center text-[10px] text-sage">{children}</p>;
@@ -227,6 +237,128 @@ export function Commentaires({ commentaires }) {
     );
 }
 
+/**
+ * Form to send a new version (a Canva export, a PDF...) to the couple.
+ */
+function NouvelleVersion({ weddingId, types, onFermer }) {
+    const formulaire = useForm({ type: 'design_book', title: '', description: '', file: null });
+
+    const envoyer = (event) => {
+        event.preventDefault();
+        formulaire.post(route('admin.wedding.design.proposals.store', weddingId), {
+            preserveScroll: true,
+            onSuccess: () => onFermer(),
+        });
+    };
+
+    return (
+        <form onSubmit={envoyer} className="rounded-2xl border border-hairline bg-white p-4 sm:p-5">
+            <MicroTitre>Nouvelle version</MicroTitre>
+            <p className="mt-1 text-[10px] text-sage">
+                Le couple la retrouvera sur sa page Design et dans ses documents. Il pourra la valider ou vous envoyer ses remarques.
+            </p>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="block text-[10px] text-sage">
+                    Type
+                    <select
+                        value={formulaire.data.type}
+                        onChange={(event) => formulaire.setData('type', event.target.value)}
+                        className={champ}
+                    >
+                        {types.map((type) => (
+                            <option key={type.value} value={type.value}>
+                                {type.label}
+                            </option>
+                        ))}
+                    </select>
+                    <FieldError message={formulaire.errors.type} />
+                </label>
+
+                <label className="block text-[10px] text-sage">
+                    Titre
+                    <input
+                        type="text"
+                        value={formulaire.data.title}
+                        onChange={(event) => formulaire.setData('title', event.target.value)}
+                        placeholder="Carnet design, première proposition"
+                        className={champ}
+                    />
+                    <FieldError message={formulaire.errors.title} />
+                </label>
+
+                <label className="block text-[10px] text-sage sm:col-span-2">
+                    Message au couple (facultatif)
+                    <textarea
+                        rows={3}
+                        value={formulaire.data.description}
+                        onChange={(event) => formulaire.setData('description', event.target.value)}
+                        placeholder="Ce que vous avez imaginé, ce sur quoi vous attendez leur avis…"
+                        className={champ}
+                    />
+                    <FieldError message={formulaire.errors.description} />
+                </label>
+
+                <label className="block text-[10px] text-sage sm:col-span-2">
+                    Fichier (image ou PDF, 20 Mo maximum)
+                    <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,application/pdf"
+                        onChange={(event) => formulaire.setData('file', event.target.files[0] ?? null)}
+                        className="mt-1 block w-full text-[11px] text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-ivory file:px-3 file:py-2 file:text-[10px] file:uppercase file:tracking-[0.12em] file:text-ink"
+                    />
+                    <FieldError message={formulaire.errors.file} />
+                </label>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+                <button type="submit" disabled={formulaire.processing} className={boutonPrincipal}>
+                    <Icone nom="send" className="text-[14px]" />
+                    {formulaire.processing ? 'Envoi…' : 'Envoyer au couple'}
+                </button>
+                <button type="button" onClick={onFermer} className={boutonSecondaire}>
+                    Annuler
+                </button>
+            </div>
+        </form>
+    );
+}
+
+/**
+ * Jessica's answer under a version.
+ */
+function Repondre({ proposition }) {
+    const formulaire = useForm({ body: '' });
+
+    const envoyer = (event) => {
+        event.preventDefault();
+        formulaire.post(route('admin.wedding.design.comments.store', proposition.id), {
+            preserveScroll: true,
+            onSuccess: () => formulaire.reset(),
+        });
+    };
+
+    return (
+        <form onSubmit={envoyer} className="mt-3">
+            <label htmlFor={`reponse-${proposition.id}`} className="sr-only">
+                Répondre au couple
+            </label>
+            <textarea
+                id={`reponse-${proposition.id}`}
+                rows={2}
+                value={formulaire.data.body}
+                onChange={(event) => formulaire.setData('body', event.target.value)}
+                placeholder="Répondre au couple…"
+                className={champ}
+            />
+            <FieldError message={formulaire.errors.body} />
+            <button type="submit" disabled={formulaire.processing} className={`${boutonSecondaire} mt-2`}>
+                {formulaire.processing ? 'Envoi…' : 'Répondre'}
+            </button>
+        </form>
+    );
+}
+
 function Proposition({ proposition }) {
     return (
         <article className={`rounded-2xl border border-hairline bg-white p-4 sm:p-5 ${proposition.is_current ? '' : 'opacity-75'}`}>
@@ -258,6 +390,7 @@ function Proposition({ proposition }) {
                         <div className="mt-3">
                             <Commentaires commentaires={proposition.comments} />
                         </div>
+                        <Repondre proposition={proposition} />
                     </div>
                 </div>
             </div>
@@ -269,8 +402,9 @@ function Proposition({ proposition }) {
  * Design tab of the wedding file: what the couple shared, then the proposals
  * sent by Jessica and the couple's answers.
  */
-export default function Design({ design }) {
+export default function Design({ design, weddingId }) {
     const etat = ETATS[design.status] ?? ETATS.waiting_for_couple;
+    const [formulaireOuvert, setFormulaireOuvert] = useState(false);
 
     return (
         <div className="space-y-4">
@@ -291,10 +425,23 @@ export default function Design({ design }) {
             <PartageDuCouple design={design} />
 
             <section className="space-y-3">
-                <div>
-                    <MicroTitre>Vos propositions</MicroTitre>
-                    <h2 className="mt-1 font-display text-lg text-ink">Versions envoyées au couple</h2>
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <MicroTitre>Vos propositions</MicroTitre>
+                        <h2 className="mt-1 font-display text-lg text-ink">Versions envoyées au couple</h2>
+                    </div>
+
+                    {!formulaireOuvert && (
+                        <button type="button" onClick={() => setFormulaireOuvert(true)} className={boutonPrincipal}>
+                            <Icone nom="add" className="text-[14px]" />
+                            Nouvelle version
+                        </button>
+                    )}
                 </div>
+
+                {formulaireOuvert && (
+                    <NouvelleVersion weddingId={weddingId} types={design.types} onFermer={() => setFormulaireOuvert(false)} />
+                )}
 
                 {design.proposals.length > 0 ? (
                     design.proposals.map((proposition) => <Proposition key={proposition.id} proposition={proposition} />)
