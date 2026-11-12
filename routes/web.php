@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
+use App\Http\Controllers\Admin\DesignController as AdminDesignController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\FacturationController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
@@ -127,6 +128,9 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');
         Route::get('/{id}', [WeddingSelectionController::class, 'show'])->whereNumber('id')->name('show');
+
+        Route::get('/design/images/{mediaItem}', [AdminDesignController::class, 'showMedia'])->name('design.media.show');
+        Route::get('/design/versions/{proposal}/fichier', [AdminDesignController::class, 'showProposalFile'])->name('design.proposals.file');
     });
 
 Route::middleware(['auth', 'role:admin'])

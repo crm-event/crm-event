@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Wedding;
+use App\Support\WeddingDesign;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,23 +28,23 @@ class WeddingSelectionController
     }
 
     /**
-     * Display the Wedding through inertia. link back to the error landing page 
+     * Display the Wedding through inertia. link back to the error landing page
      * if an error occur.
      */
     public function show(int $id): Response
     {
         $wedding = Wedding::with([
-           'couple',
-           'venue',
-           'weddingServices.service',
-           'vendors.category',
-           'timelineItems',
-           'documents' 
+            'couple',
+            'venue',
+            'weddingServices.service',
+            'vendors.category',
+            'timelineItems',
+            'documents',
         ])
-        ->where('id', $id)
-        ->first();
+            ->where('id', $id)
+            ->first();
 
-        if (!$wedding) {
+        if (! $wedding) {
             abort(404);
         }
 
@@ -52,7 +53,8 @@ class WeddingSelectionController
             'prestations' => $wedding->weddingServices,
             'prestataires' => $wedding->vendors,
             'milestones' => $wedding->timelineItems,
-            'documents' => $wedding->documents
+            'documents' => $wedding->documents,
+            'design' => WeddingDesign::forAdmin($wedding),
         ]);
     }
 }
