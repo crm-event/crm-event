@@ -3,8 +3,11 @@
 namespace App\Http\Middleware;
 
 use App\Enums\UserRole;
+use App\Models\Couple;
+use App\Models\Proposal;
 use App\Models\User;
 use App\Support\StandardText;
+use App\Support\WeddingDesign;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Middleware;
@@ -46,9 +49,10 @@ class HandleInertiaRequests extends Middleware
 
     /**
      * What is waiting for a couple, shown in the bell of the couple space:
-     * unread messages, new documents, documents to approve and an appointment
-     * coming within two weeks. Each one disappears once dealt with. The texts
-     * follow the language of the visitor (lang/{fr,en}/couple.php).
+     * unread messages, new documents, documents to approve, an appointment
+     * coming within two weeks and the design (ideas to share, proposals to
+     * answer, Jessica's replies). Each one disappears once dealt with. The
+     * texts follow the language of the visitor (lang/{fr,en}/couple.php).
      *
      * @return list<array{key: string, icon: string, title: string, text: string, date: string|null, date_label: string, route: string}>
      */
@@ -77,7 +81,8 @@ class HandleInertiaRequests extends Middleware
             ];
         }
 
-        $unseenDocuments = $couple->documents()->unseen();
+        // Design versions have their own notification below.
+        $unseenDocuments = $couple->documents()->unseen()->where('documents.category', '!=', 'design');
         $unseenCount = (clone $unseenDocuments)->count();
 
         if ($unseenCount > 0) {
@@ -121,6 +126,70 @@ class HandleInertiaRequests extends Middleware
                 'date' => $nextAppointment->starts_at->format('Y-m-d\TH:i:s'),
                 'date_label' => __('couple.notifications.appointment_date'),
                 'route' => 'couple.appointments.index',
+            ];
+        }
+
+        return [...$notifications, ...$this->designNotifications($couple)];
+    }
+
+    /**
+     * What the design of the couple's wedding expects from them: sharing their
+     * ideas while nothing exists yet, answering the new proposals, and reading
+     * Jessica's replies to their remarks.
+     *
+     * @return list<array{key: string, icon: string, title: string, text: string, date: string|null, date_label: string, route: string}>
+     */
+    private function designNotifications(Couple $couple): array
+    {
+        $wedding = $couple->latestWedding;
+
+        if ($wedding === null) {
+            return [];
+        }
+
+        $proposals = WeddingDesign::proposalsOf($wedding);
+
+        if ($proposals->isEmpty()) {
+            $hasShared = $wedding->designBrief()->exists() || $wedding->mediaItems()->exists();
+
+            return $hasShared ? [] : [[
+                'key' => 'design_start',
+                'icon' => 'palette',
+                'title' => __('couple.notifications.design_start_title'),
+                'text' => __('couple.notifications.design_start_text'),
+                'date' => null,
+                'date_label' => '',
+                'route' => 'couple.design.index',
+            ]];
+        }
+
+        $waiting = WeddingDesign::current($proposals)->filter(fn (Proposal $proposal) => $proposal->approved_at === null);
+        $newProposals = $waiting->filter(fn (Proposal $proposal) => $proposal->comments->isEmpty());
+        $replied = $waiting->filter(fn (Proposal $proposal) => $proposal->comments->isNotEmpty() && ! $proposal->comments->last()->isFromCouple());
+
+        $notifications = [];
+
+        if ($newProposals->isNotEmpty()) {
+            $notifications[] = [
+                'key' => 'design_proposals',
+                'icon' => 'auto_awesome',
+                'title' => trans_choice('couple.notifications.design_proposals_title', $newProposals->count()),
+                'text' => __('couple.notifications.design_proposals_text'),
+                'date' => $newProposals->max('created_at')->toIso8601String(),
+                'date_label' => __('couple.notifications.design_proposals_date'),
+                'route' => 'couple.design.index',
+            ];
+        }
+
+        if ($replied->isNotEmpty()) {
+            $notifications[] = [
+                'key' => 'design_replies',
+                'icon' => 'forum',
+                'title' => __('couple.notifications.design_replies_title'),
+                'text' => __('couple.notifications.design_replies_text'),
+                'date' => $replied->map(fn (Proposal $proposal) => $proposal->comments->last()->created_at)->max()->toIso8601String(),
+                'date_label' => __('couple.notifications.design_replies_date'),
+                'route' => 'couple.design.index',
             ];
         }
 
