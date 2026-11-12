@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -49,6 +50,28 @@ class DocumentControllerTest extends TestCase
             ->where('documents.0.title', 'Contrat de prestation')
             ->where('documents.0.status', 'viewed')
         );
+    }
+
+    public function test_design_versions_are_no_longer_sent_from_the_documents_page(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        Wedding::factory()->for($couple)->create();
+
+        $this->actingAs($this->jessica)
+            ->get(route('admin.documents.index'))
+            ->assertInertia(fn (Assert $page) => $page->where(
+                'categories',
+                fn ($categories) => ! collect($categories)->contains('value', 'design'),
+            ));
+
+        $this->post(route('admin.documents.store'), [
+            'couple_id' => $couple->id,
+            'category' => 'design',
+            'title' => 'Carnet design',
+            'file' => UploadedFile::fake()->create('carnet.pdf', 100, 'application/pdf'),
+        ])->assertSessionHasErrors('category');
+
+        $this->assertDatabaseCount('documents', 0);
     }
 
     public function test_jessica_can_download_a_shared_document(): void
