@@ -6,6 +6,8 @@ use App\Models\Couple;
 use App\Models\DesignBrief;
 use App\Models\Document;
 use App\Models\MediaItem;
+use App\Models\Proposal;
+use App\Models\ProposalComment;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -179,43 +181,91 @@ class DesignControllerTest extends TestCase
         $this->assertModelExists($otherPhoto);
     }
 
-    public function test_versions_are_the_design_documents_of_the_couple_latest_first(): void
+    public function test_versions_are_the_proposals_sent_to_the_couple_latest_first(): void
     {
         Storage::fake();
-        $couple = Couple::factory()->withPortalAccess()->create();
-        $wedding = Wedding::factory()->for($couple)->create();
-        $first = Document::factory()->for($wedding)->create(['category' => 'design', 'title' => 'Version 1', 'created_at' => now()->subWeek()]);
-        $second = Document::factory()->for($wedding)->create(['category' => 'design', 'title' => 'Version 2', 'requires_approval' => true]);
-        Storage::put($second->file_path, 'pdf');
-        Document::factory()->for($wedding)->create(['category' => 'contract']);
-        Document::factory()->create(['category' => 'design', 'title' => 'Autre couple']);
+        $couple = $this->coupleWithWedding();
+        $wedding = $couple->latestWedding;
+        $first = Proposal::factory()->for($wedding)->create(['version' => 1, 'title' => 'Version 1', 'created_at' => now()->subWeek()]);
+        $second = Proposal::factory()->for($wedding)->create(['version' => 2, 'title' => 'Version 2']);
+        Storage::put($second->document->file_path, 'pdf');
+        ProposalComment::factory()->for($first)->create(['user_id' => $couple->user_id, 'body' => 'Plus de vert.']);
+        Proposal::factory()->create(['title' => 'Autre couple']);
 
         $this->actingAs($couple->user)
             ->get(route('couple.design.index'))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('versions', 2)
                 ->where('versions.0.id', $second->id)
-                ->where('versions.0.number', 2)
-                ->where('versions.0.awaiting_approval', true)
-                ->where('versions.0.download_url', route('couple.documents.download', $second))
+                ->where('versions.0.version', 2)
+                ->where('versions.0.status', 'awaiting')
+                ->where('versions.0.is_current', true)
+                ->where('versions.0.file.url', route('couple.design.proposals.file', $second))
+                ->where('versions.0.file.download_url', route('couple.documents.download', $second->document))
                 ->where('versions.1.id', $first->id)
-                ->where('versions.1.number', 1)
-                ->where('versions.1.awaiting_approval', false)
-                ->where('versions.1.download_url', null)
+                ->where('versions.1.is_current', false)
+                ->where('versions.1.file', null)
+                ->where('versions.1.comments.0.body', 'Plus de vert.')
+                ->where('versions.1.comments.0.from_couple', true)
             );
     }
 
-    public function test_a_version_approved_from_the_design_page_stays_on_it(): void
+    public function test_a_couple_approves_the_latest_version(): void
     {
         $couple = $this->coupleWithWedding();
-        $document = Document::factory()->for($couple->latestWedding)->requiringApproval()->create(['category' => 'design']);
+        $proposal = Proposal::factory()->for($couple->latestWedding)->create();
 
         $this->actingAs($couple->user)
-            ->from(route('couple.design.index'))
-            ->post(route('couple.documents.approve', $document))
+            ->post(route('couple.design.proposals.approve', $proposal))
             ->assertRedirect(route('couple.design.index'));
 
-        $this->assertNotNull($document->fresh()->approved_at);
+        $this->assertNotNull($proposal->fresh()->approved_at);
+        $this->assertNotNull($proposal->document->fresh()->approved_at);
+    }
+
+    public function test_a_replaced_or_approved_version_cannot_be_approved(): void
+    {
+        $couple = $this->coupleWithWedding();
+        $wedding = $couple->latestWedding;
+        $old = Proposal::factory()->for($wedding)->create(['version' => 1]);
+        Proposal::factory()->for($wedding)->create(['version' => 2]);
+        $approved = Proposal::factory()->for($wedding)->approved()->create(['type' => 'signage']);
+
+        $this->actingAs($couple->user);
+        $this->post(route('couple.design.proposals.approve', $old))->assertStatus(422);
+        $this->post(route('couple.design.proposals.approve', $approved))->assertStatus(422);
+
+        $this->assertNull($old->fresh()->approved_at);
+    }
+
+    public function test_a_couple_sends_remarks_under_a_version(): void
+    {
+        $couple = $this->coupleWithWedding();
+        $proposal = Proposal::factory()->for($couple->latestWedding)->create();
+
+        $this->actingAs($couple->user)
+            ->post(route('couple.design.comments.store', $proposal), ['body' => 'Moins de doré, svp.'])
+            ->assertRedirect(route('couple.design.index'));
+
+        $this->assertSame('Moins de doré, svp.', $proposal->comments()->sole()->body);
+        $this->assertSame(Proposal::CHANGES_REQUESTED, $proposal->fresh()->status());
+
+        $this->post(route('couple.design.comments.store', $proposal), ['body' => '   '])
+            ->assertSessionHasErrors(['body' => 'Votre message est vide.']);
+    }
+
+    public function test_a_couple_cannot_touch_the_proposals_of_another_couple(): void
+    {
+        $couple = $this->coupleWithWedding();
+        $other = Proposal::factory()->create();
+
+        $this->actingAs($couple->user);
+        $this->get(route('couple.design.proposals.file', $other))->assertForbidden();
+        $this->post(route('couple.design.proposals.approve', $other))->assertForbidden();
+        $this->post(route('couple.design.comments.store', $other), ['body' => 'Coucou'])->assertForbidden();
+
+        $this->assertNull($other->fresh()->approved_at);
+        $this->assertDatabaseCount('proposal_comments', 0);
     }
 
     public function test_opening_the_page_does_not_mark_the_documents_as_viewed(): void

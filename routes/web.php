@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
+use App\Http\Controllers\Admin\DesignController as AdminDesignController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\FacturationController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
@@ -39,6 +40,9 @@ Route::middleware(['auth', 'role:couple'])
         Route::post('/design/images', [DesignController::class, 'storeMedia'])->name('design.media.store');
         Route::get('/design/images/{mediaItem}', [DesignController::class, 'showMedia'])->name('design.media.show');
         Route::delete('/design/images/{mediaItem}', [DesignController::class, 'destroyMedia'])->name('design.media.destroy');
+        Route::get('/design/versions/{proposal}/fichier', [DesignController::class, 'showProposalFile'])->name('design.proposals.file');
+        Route::post('/design/versions/{proposal}/valider', [DesignController::class, 'approveProposal'])->name('design.proposals.approve');
+        Route::post('/design/versions/{proposal}/commentaires', [DesignController::class, 'storeComment'])->name('design.comments.store');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
         Route::inertia('/mentions-legales', 'Couple/LegalNotice')->name('legal-notice');
 
@@ -127,6 +131,11 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');
         Route::get('/{id}', [WeddingSelectionController::class, 'show'])->whereNumber('id')->name('show');
+
+        Route::post('/{wedding}/design/versions', [AdminDesignController::class, 'storeProposal'])->whereNumber('wedding')->name('design.proposals.store');
+        Route::post('/design/versions/{proposal}/commentaires', [AdminDesignController::class, 'storeComment'])->name('design.comments.store');
+        Route::get('/design/images/{mediaItem}', [AdminDesignController::class, 'showMedia'])->name('design.media.show');
+        Route::get('/design/versions/{proposal}/fichier', [AdminDesignController::class, 'showProposalFile'])->name('design.proposals.file');
     });
 
 Route::middleware(['auth', 'role:admin'])

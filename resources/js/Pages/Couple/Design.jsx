@@ -558,160 +558,211 @@ function CreativeBrief({ brief, moodboard, inspirations, canEdit }) {
     );
 }
 
+function VersionStatus({ version }) {
+    const { t } = useTranslation();
+
+    if (!version.is_current && !version.approved_at) {
+        return <Pill muted>{t('designReplaced')}</Pill>;
+    }
+
+    if (version.status === 'approved') {
+        return <Pill>{t('designApproved')}</Pill>;
+    }
+
+    if (version.status === 'changes_requested') {
+        return <Pill muted>{t('designChangesSent')}</Pill>;
+    }
+
+    return <Pill>{t('designToApprove')}</Pill>;
+}
+
+function VersionPreview({ version }) {
+    const { t } = useTranslation();
+
+    if (!version.file) {
+        return (
+            <div className="flex aspect-[4/3] items-center justify-center bg-blush px-4 text-center text-xs italic text-ink/55">
+                {t('designUnavailableFile')}
+            </div>
+        );
+    }
+
+    if (version.file.is_image) {
+        return (
+            <a
+                href={version.file.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t('designEnlargeProposal')}
+                className={`${focusRing} block overflow-hidden bg-blush`}
+            >
+                <img src={version.file.url} alt={version.title} className="aspect-[4/3] w-full object-cover transition duration-500 hover:scale-[1.02]" />
+            </a>
+        );
+    }
+
+    return (
+        <a
+            href={version.file.url}
+            target="_blank"
+            rel="noreferrer"
+            className={`${focusRing} flex aspect-[4/3] flex-col items-center justify-center gap-3 bg-blush text-sage transition-colors hover:text-ink`}
+        >
+            <Icone nom="menu_book" className="text-[36px]" />
+            <span className="text-[10px] uppercase tracking-[0.12em]">{t('designOpenFile')}</span>
+        </a>
+    );
+}
+
+function Conversation({ comments }) {
+    const { language, t } = useTranslation();
+
+    if (comments.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mt-8 border-t border-ink/10 pt-6">
+            <p className="text-[10px] uppercase tracking-brand text-sage">{t('designConversation')}</p>
+
+            <ol className="mt-4 space-y-3">
+                {comments.map((comment) => (
+                    <li
+                        key={comment.id}
+                        className={`max-w-[85%] px-4 py-3 text-sm leading-relaxed ${
+                            comment.from_couple ? 'ml-auto bg-ink text-ivory' : 'bg-blush text-ink'
+                        }`}
+                    >
+                        <p className={`text-[10px] uppercase tracking-[0.12em] ${comment.from_couple ? 'text-ivory/60' : 'text-sage'}`}>
+                            {comment.from_couple ? t('you') : 'Jessica'} · {formatDate(comment.created_at, language, t)}
+                        </p>
+                        <p className="mt-1 whitespace-pre-line">{comment.body}</p>
+                    </li>
+                ))}
+            </ol>
+        </div>
+    );
+}
+
 function VersionCard({ version, featured }) {
     const { language, t } = useTranslation();
     const [feedbackOpen, setFeedbackOpen] = useState(false);
     const approval = useForm();
-    const feedback = useForm({ text: '' });
+    const feedback = useForm({ body: '' });
 
-    const available = Boolean(version.download_url);
     const approved = Boolean(version.approved_at);
+    const canAnswer = version.is_current && !approved;
 
     function approve() {
-        approval.post(
-            route('couple.documents.approve', version.id),
-            { preserveScroll: true },
-        );
+        approval.post(route('couple.design.proposals.approve', version.id), { preserveScroll: true });
     }
 
     function sendFeedback(event) {
         event.preventDefault();
 
-        feedback.transform((data) => ({
-            body: `${t('designFeedbackTitle')} « ${version.title} » :\n${data.text}`,
-        }));
-
-        feedback.post(route('couple.messages.store'));
+        feedback.post(route('couple.design.comments.store', version.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                feedback.reset();
+                setFeedbackOpen(false);
+            },
+        });
     }
 
     return (
         <article
             id={featured ? 'design-final' : undefined}
-            className={`scroll-mt-24 overflow-hidden border bg-white ${featured ? 'border-ink/15' : 'border-ink/10'}`}
+            className={`scroll-mt-24 overflow-hidden border bg-white ${featured ? 'border-ink/15' : 'border-ink/10'} ${version.is_current || approved ? '' : 'opacity-70'}`}
         >
-            <div className="p-6 sm:p-8 lg:p-10">
-                <div className="flex flex-col gap-6 border-b border-ink/10 pb-8 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex gap-4">
-                        <div className="flex h-14 w-12 shrink-0 items-center justify-center bg-blush text-sage">
-                            <Icone nom="menu_book" className="text-[27px]" />
-                        </div>
+            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:p-10">
+                <VersionPreview version={version} />
 
-                        <div>
-                            <p className="text-[10px] uppercase tracking-brand text-sage">
-                                {t('designDesignBook')}
-                            </p>
-
-                            <h3 className="mt-2 font-display text-2xl leading-tight sm:text-3xl">
-                                {version.title}
-                            </h3>
-
-                            <p className="mt-2 text-xs text-ink/45">
-                                {t('designProposalByJessica')} · {formatDate(version.created_at, language, t)}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-[10px] uppercase tracking-brand text-sage">
-                            {t('designVersion')} {String(version.number).padStart(2, '0')}
+                            {t(`designTypes.${version.type}`)} · {t('designVersion')} {String(version.version).padStart(2, '0')}
                         </p>
 
-                        <Pill muted={!approved && !version.awaiting_approval}>
-                            {approved
-                                ? t('designApproved')
-                                : version.awaiting_approval
-                                    ? t('designToApprove')
-                                    : t('designDiscover')}
-                        </Pill>
+                        <VersionStatus version={version} />
                     </div>
-                </div>
 
-                {version.description && (
-                    <p className="mt-7 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-ink/70">
-                        {version.description}
+                    <h3 className="mt-4 font-display text-2xl leading-tight sm:text-3xl">{version.title}</h3>
+
+                    <p className="mt-2 text-xs text-ink/45">
+                        {t('designProposalByJessica')} · {formatDate(version.created_at, language, t)}
                     </p>
-                )}
 
-                <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-ink/10 pt-6">
-                    {available ? (
-                        <a href={version.download_url} className={`${primaryButton} px-5 py-3`}>
-                            <Icone nom="download" className="mr-2 text-[16px]" />
-                            {t('designDownloadBook')}
-                        </a>
-                    ) : (
-                        <span className="border border-dashed border-ink/20 px-4 py-3 text-xs italic text-ink/55">
-                            {t('designUnavailableFile')}
-                        </span>
+                    {version.description && (
+                        <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-ink/70">{version.description}</p>
                     )}
 
-                    {version.awaiting_approval && (
-                        <button
-                            type="button"
-                            onClick={approve}
-                            disabled={approval.processing}
-                            className={`${focusRing} border border-ink/15 px-5 py-3 text-[10px] uppercase tracking-[0.12em] transition-colors hover:border-ink disabled:opacity-50`}
-                        >
-                            <Icone nom="check" className="mr-1 align-middle text-[16px]" />
-                            {approval.processing
-                                ? t('approving')
-                                : t('designApproveDirection')}
-                        </button>
+                    {!version.is_current && !approved && (
+                        <p className="mt-4 text-xs text-ink/50">{t('designReplacedExplanation')}</p>
                     )}
 
-                    {approved && (
-                        <span className="text-xs text-sage">
-                            {t('designApprovedOn')} {formatDate(version.approved_at, language, t)}
-                        </span>
-                    )}
+                    <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-ink/10 pt-6">
+                        {version.file && (
+                            <a href={version.file.download_url} className={`${primaryButton} px-5 py-3`}>
+                                <Icone nom="download" className="mr-2 text-[16px]" />
+                                {t('designDownloadBook')}
+                            </a>
+                        )}
 
-                    <button
-                        type="button"
-                        onClick={() => setFeedbackOpen((current) => !current)}
-                        className={`${focusRing} px-2 py-3 text-[10px] uppercase tracking-[0.12em] text-sage underline decoration-ink/20 underline-offset-4`}
-                    >
-                        {feedbackOpen
-                            ? t('close')
-                            : t('designRequestChange')}
-                    </button>
+                        {canAnswer && (
+                            <button
+                                type="button"
+                                onClick={approve}
+                                disabled={approval.processing}
+                                className={`${focusRing} border border-ink/15 px-5 py-3 text-[10px] uppercase tracking-[0.12em] transition-colors hover:border-ink disabled:opacity-50`}
+                            >
+                                <Icone nom="check" className="mr-1 align-middle text-[16px]" />
+                                {approval.processing ? t('approving') : t('designApproveDirection')}
+                            </button>
+                        )}
+
+                        {approved && (
+                            <span className="text-xs text-sage">
+                                {t('designApprovedOn')} {formatDate(version.approved_at, language, t)}
+                            </span>
+                        )}
+
+                        {canAnswer && (
+                            <button
+                                type="button"
+                                onClick={() => setFeedbackOpen((current) => !current)}
+                                aria-expanded={feedbackOpen}
+                                className={`${focusRing} px-2 py-3 text-[10px] uppercase tracking-[0.12em] text-sage underline decoration-ink/20 underline-offset-4`}
+                            >
+                                {feedbackOpen ? t('close') : t('designRequestChange')}
+                            </button>
+                        )}
+                    </div>
+
+                    <Conversation comments={version.comments} />
                 </div>
             </div>
 
             {feedbackOpen && (
-                <form
-                    onSubmit={sendFeedback}
-                    className="border-t border-ink/10 bg-ivory p-6 sm:p-8"
-                >
-                    <label
-                        htmlFor={`feedback-${version.id}`}
-                        className="text-[10px] uppercase tracking-brand text-sage"
-                    >
+                <form onSubmit={sendFeedback} className="border-t border-ink/10 bg-ivory p-6 sm:p-8">
+                    <label htmlFor={`feedback-${version.id}`} className="text-[10px] uppercase tracking-brand text-sage">
                         {t('designYourFeedback')}
                     </label>
 
                     <textarea
                         id={`feedback-${version.id}`}
                         rows={3}
-                        required
-                        value={feedback.data.text}
-                        onChange={(event) => feedback.setData('text', event.target.value)}
+                        value={feedback.data.body}
+                        onChange={(event) => feedback.setData('body', event.target.value)}
                         placeholder={t('designFeedbackPlaceholder')}
                         className="mt-3 w-full resize-y border border-ink/15 bg-white p-4 text-sm focus:border-ink focus:ring-0"
                     />
 
                     <FieldError message={feedback.errors.body} />
 
-                    <p className="mt-2 text-xs text-ink/50">
-                        {t('designFeedbackExplanation')}
-                    </p>
+                    <p className="mt-2 text-xs text-ink/50">{t('designFeedbackExplanation')}</p>
 
-                    <button
-                        type="submit"
-                        disabled={feedback.processing}
-                        className={`${primaryButton} mt-3 px-5 py-3 disabled:opacity-50`}
-                    >
-                        {feedback.processing
-                            ? t('sending')
-                            : t('designSendFeedback')}
+                    <button type="submit" disabled={feedback.processing} className={`${primaryButton} mt-3 px-5 py-3 disabled:opacity-50`}>
+                        {feedback.processing ? t('sending') : t('designSendFeedback')}
                     </button>
                 </form>
             )}
@@ -810,11 +861,16 @@ export default function Design({
         (a, b) => new Date(b.created_at) - new Date(a.created_at),
     );
 
+    const hasShared = Boolean(brief || moodboard || inspirations.length > 0);
+
+    // 0: inspirations, 1: art direction in progress, 2: their feedback, 3: final.
     const activeStep = sortedVersions.some((version) => version.approved_at)
         ? 3
         : sortedVersions.length > 0
             ? 2
-            : 0;
+            : hasShared
+                ? 1
+                : 0;
 
     return (
         <CoupleLayout active="design">

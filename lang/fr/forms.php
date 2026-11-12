@@ -26,6 +26,11 @@ return [
         'voice_not_editable' => 'Un message vocal ne peut pas être modifié.',
     ],
 
+    'proposal_comment' => [
+        'body_required' => 'Votre message est vide.',
+        'body_max' => 'Votre message ne peut pas dépasser :max caractères.',
+    ],
+
     'community_post' => [
         'body_required' => 'Votre message est vide.',
         'body_max' => 'Votre message ne peut pas dépasser :max caractères.',

@@ -102,6 +102,16 @@ class Wedding extends Model
     }
 
     /**
+     * The design versions sent by Jessica for this wedding.
+     *
+     * @return HasMany<Proposal, $this>
+     */
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(Proposal::class);
+    }
+
+    /**
      * The documents shared in the couple space for this wedding.
      *
      * @return HasMany<Document, $this>

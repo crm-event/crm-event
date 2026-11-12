@@ -46,6 +46,8 @@ return [
 
     'wedding_not_recorded' => 'Votre mariage n’est pas encore enregistré.',
 
+    'proposal_not_approvable' => 'Cette version ne peut plus être validée : elle est déjà validée ou une version plus récente existe.',
+
     'notifications' => [
         'messages_title' => '{1} Nouveau message de Jessica|[2,*] :count nouveaux messages de Jessica',
         'messages_text' => 'Ouvrez vos messages pour les lire.',
@@ -57,6 +59,14 @@ return [
         'approvals_text' => 'Lisez-le, puis validez-le avec « Lu et approuvé ».',
         'appointment_title' => 'Rendez-vous à venir',
         'appointment_date' => 'Prévu le',
+        'design_start_title' => 'Partagez vos inspirations',
+        'design_start_text' => 'Ajoutez votre moodboard, vos photos et votre brief : Jessica s’en servira pour imaginer votre design.',
+        'design_proposals_title' => '{1} Nouvelle proposition de design|[2,*] :count nouvelles propositions de design',
+        'design_proposals_text' => 'Validez-la ou envoyez vos remarques à Jessica.',
+        'design_proposals_date' => 'Envoyée le',
+        'design_replies_title' => 'Jessica a répondu à vos remarques',
+        'design_replies_text' => 'Retrouvez sa réponse sous la version concernée.',
+        'design_replies_date' => 'Reçue le',
     ],
 
 ];

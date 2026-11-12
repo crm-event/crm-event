@@ -19,7 +19,8 @@ class StoreDocumentRequest extends FormRequest
     {
         return [
             'couple_id' => ['required', 'integer', 'exists:couples,id'],
-            'category' => ['required', 'string', 'max:50'],
+            // Design versions are sent from the Design tab of the wedding file.
+            'category' => ['required', 'string', 'max:50', 'not_in:design'],
             'title' => ['required', 'string', 'max:255'],
             'message' => ['nullable', 'string', 'max:2000'],
             'requires_approval' => ['boolean'],
@@ -36,6 +37,7 @@ class StoreDocumentRequest extends FormRequest
     {
         return [
             'couple_id.required' => 'Sélectionnez un couple.',
+            'category.not_in' => 'Les versions de design s’envoient depuis l’onglet Design de la fiche mariage.',
             'title.required' => 'Donnez un titre au document.',
             'file.required' => 'Sélectionnez un fichier.',
             'file.mimes' => 'Le fichier doit être un PDF, un document, un tableur ou une image.',
