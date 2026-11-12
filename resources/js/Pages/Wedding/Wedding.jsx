@@ -6,7 +6,7 @@ import BackOfficeLayout from '@/Layouts/BackOfficeLayout';
 import EtapeTimeline from '@/Pages/Wedding/Partials/EtapeTimeline.jsx';
 import Prestations from '@/Pages/Wedding/Partials/Prestations.jsx';
 import Prestataires from '@/Pages/Wedding/Partials/Prestataires.jsx';
-import Document from '@/Pages/Wedding/Partials/Document.jsx';
+import Documents from '@/Pages/Wedding/Partials/Document.jsx';
 import Icone from '@/Components/Icone';
 
 import { anneauFocus } from '@/charte';
