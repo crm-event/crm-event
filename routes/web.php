@@ -40,6 +40,9 @@ Route::middleware(['auth', 'role:couple'])
         Route::post('/design/images', [DesignController::class, 'storeMedia'])->name('design.media.store');
         Route::get('/design/images/{mediaItem}', [DesignController::class, 'showMedia'])->name('design.media.show');
         Route::delete('/design/images/{mediaItem}', [DesignController::class, 'destroyMedia'])->name('design.media.destroy');
+        Route::get('/design/versions/{proposal}/fichier', [DesignController::class, 'showProposalFile'])->name('design.proposals.file');
+        Route::post('/design/versions/{proposal}/valider', [DesignController::class, 'approveProposal'])->name('design.proposals.approve');
+        Route::post('/design/versions/{proposal}/commentaires', [DesignController::class, 'storeComment'])->name('design.comments.store');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
         Route::inertia('/mentions-legales', 'Couple/LegalNotice')->name('legal-notice');
 

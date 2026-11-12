@@ -46,6 +46,8 @@ return [
 
     'wedding_not_recorded' => 'Votre mariage n’est pas encore enregistré.',
 
+    'proposal_not_approvable' => 'Cette version ne peut plus être validée : elle est déjà validée ou une version plus récente existe.',
+
     'notifications' => [
         'messages_title' => '{1} Nouveau message de Jessica|[2,*] :count nouveaux messages de Jessica',
         'messages_text' => 'Ouvrez vos messages pour les lire.',

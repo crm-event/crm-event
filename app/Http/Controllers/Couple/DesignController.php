@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Couple;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Couple\StoreMediaItemRequest;
 use App\Http\Requests\Couple\UpdateDesignBriefRequest;
+use App\Http\Requests\StoreProposalCommentRequest;
 use App\Models\DesignBrief;
-use App\Models\Document;
 use App\Models\MediaItem;
+use App\Models\Proposal;
 use App\Models\Wedding;
+use App\Support\WeddingDesign;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +21,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Design page of the logged-in couple: their creative brief, moodboard and
- * inspiration photos, then the design versions shared by Jessica.
+ * inspiration photos, then the design proposals sent by Jessica, which they
+ * approve or answer with their remarks.
  */
 class DesignController extends Controller
 {
@@ -41,7 +44,7 @@ class DesignController extends Controller
                 ->reverse()
                 ->map(fn (MediaItem $item) => $this->toImage($item))
                 ->values(),
-            'versions' => $wedding === null ? [] : $this->versionsOf($wedding),
+            'versions' => $wedding === null ? [] : WeddingDesign::proposalsForCouple($wedding),
         ]);
     }
 
@@ -118,6 +121,64 @@ class DesignController extends Controller
     }
 
     /**
+     * Display the file of a proposal in the browser, for its preview.
+     */
+    public function showProposalFile(Request $request, Proposal $proposal): StreamedResponse
+    {
+        $this->ensureProposalBelongsToCouple($request, $proposal);
+
+        $document = $proposal->document;
+
+        abort_unless($document !== null && Storage::exists($document->file_path), 404);
+
+        return Storage::response($document->file_path, $document->title, [
+            'Content-Type' => $document->mime_type ?? 'application/octet-stream',
+        ]);
+    }
+
+    /**
+     * Approve the latest version of a type. Its document is marked as
+     * approved too, so that the Documents page says the same.
+     */
+    public function approveProposal(Request $request, Proposal $proposal): RedirectResponse
+    {
+        $this->ensureProposalBelongsToCouple($request, $proposal);
+
+        $isLatestOfItsType = ! $proposal->wedding->proposals()
+            ->where('type', $proposal->type)
+            ->where('version', '>', $proposal->version)
+            ->exists();
+
+        abort_unless($isLatestOfItsType && $proposal->approved_at === null, 422, __('couple.proposal_not_approvable'));
+
+        DB::transaction(function () use ($proposal): void {
+            // approved_at is not mass assignable: a request must never set it.
+            $proposal->forceFill(['approved_at' => now()])->save();
+            $proposal->document?->forceFill([
+                'viewed_at' => $proposal->document->viewed_at ?? now(),
+                'approved_at' => now(),
+            ])->save();
+        });
+
+        return to_route('couple.design.index');
+    }
+
+    /**
+     * Send remarks to Jessica under a version.
+     */
+    public function storeComment(StoreProposalCommentRequest $request, Proposal $proposal): RedirectResponse
+    {
+        $this->ensureProposalBelongsToCouple($request, $proposal);
+
+        $proposal->comments()->create([
+            'user_id' => $request->user()->id,
+            'body' => $request->validated('body'),
+        ]);
+
+        return to_route('couple.design.index');
+    }
+
+    /**
      * The wedding the couple is preparing: nothing can be saved without one.
      */
     private function weddingOf(Request $request): Wedding
@@ -135,6 +196,14 @@ class DesignController extends Controller
     private function ensureBelongsToCouple(Request $request, MediaItem $mediaItem): void
     {
         abort_unless($mediaItem->wedding->couple_id === $request->user()->couple?->id, 403);
+    }
+
+    /**
+     * Ensure that the proposal was sent to the current couple.
+     */
+    private function ensureProposalBelongsToCouple(Request $request, Proposal $proposal): void
+    {
+        abort_unless($proposal->wedding->couple_id === $request->user()->couple?->id, 403);
     }
 
     /**
@@ -166,36 +235,5 @@ class DesignController extends Controller
             'alt' => $item->alt_text ?? $item->title,
             'created_at' => $item->created_at->toIso8601String(),
         ];
-    }
-
-    /**
-     * The design documents of a wedding, numbered from the oldest and sorted
-     * from the latest.
-     *
-     * @return list<array{id: int, number: int, title: string, description: string|null, created_at: string, approved_at: string|null, awaiting_approval: bool, download_url: string|null}>
-     */
-    private function versionsOf(Wedding $wedding): array
-    {
-        return $wedding->documents()
-            ->where('category', 'design')
-            ->oldest()
-            ->oldest('id')
-            ->get()
-            ->values()
-            ->map(fn (Document $document, int $index) => [
-                'id' => $document->id,
-                'number' => $index + 1,
-                'title' => $document->title,
-                'description' => $document->message,
-                'created_at' => $document->created_at->toIso8601String(),
-                'approved_at' => $document->approved_at?->toIso8601String(),
-                'awaiting_approval' => $document->requires_approval && $document->approved_at === null,
-                'download_url' => Storage::exists($document->file_path)
-                    ? route('couple.documents.download', $document)
-                    : null,
-            ])
-            ->reverse()
-            ->values()
-            ->all();
     }
 }

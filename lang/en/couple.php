@@ -46,6 +46,8 @@ return [
 
     'wedding_not_recorded' => 'Your wedding has not been recorded yet.',
 
+    'proposal_not_approvable' => 'This version can no longer be approved: it is already approved or a newer version exists.',
+
     'notifications' => [
         'messages_title' => '{1} New message from Jessica|[2,*] :count new messages from Jessica',
         'messages_text' => 'Open your messages to read them.',
