@@ -3,7 +3,7 @@ export const NAVIGATION = [
     { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread', route: 'demandes' },
     { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'wedding', mots: 'dossiers' },
     { cle: 'espaces-clients', libelle: 'Espaces clients', icone: 'group', route: 'admin.couples.index', mots: 'couples' },
-    { cle: 'messages', libelle: 'Messages', icone: 'chat', route: 'admin.messages.index' },
+    { cle: 'messages', libelle: 'Messages', icone: 'chat', route: 'admin.messages.index', mots: 'conversations discussions messagerie' },
     { cle: 'avis', libelle: 'Avis', icone: 'reviews', route: 'admin.reviews.index' },
     { cle: 'documents', libelle: 'Documents', icone: 'description', route: 'admin.documents.index' },
     { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today', route: 'calendrier', mots: 'planning rendez-vous jalons' },

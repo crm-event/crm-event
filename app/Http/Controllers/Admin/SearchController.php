@@ -91,11 +91,24 @@ class SearchController extends Controller
                 'url' => route('calendrier', ['date' => substr($appointment->starts_at, 0, 10), 'event' => 'appointment-'.$appointment->id]),
             ]);
 
-        $conversations = $this->matching(
-            DB::table('couples')->whereNotNull('user_id'),
-            $names,
-            $terms,
-        )->orderByDesc('id')->limit(5)
+        $conversationQuery = DB::table('couples')->whereNotNull('user_id');
+
+        foreach ($terms as $term) {
+            $conversationQuery->where(function (Builder $matches) use ($names, $term): void {
+                $this->matching($matches, $names, [$term]);
+
+                $matches->orWhereExists(function (Builder $messages) use ($term): void {
+                    $messages->selectRaw('1')
+                        ->from('messages')
+                        ->join('weddings', 'weddings.id', '=', 'messages.wedding_id')
+                        ->whereColumn('weddings.couple_id', 'couples.id');
+
+                    $this->matching($messages, ['messages.body'], [$term]);
+                });
+            });
+        }
+
+        $conversations = $conversationQuery->orderByDesc('id')->limit(5)
             ->get(['id', 'partner1_first_name', 'partner2_first_name', 'email'])
             ->map(fn (object $couple): array => [
                 'id' => 'conversation-'.$couple->id,

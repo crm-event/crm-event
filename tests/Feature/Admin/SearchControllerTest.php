@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\CalendarEvent;
 use App\Models\Couple;
 use App\Models\Document;
+use App\Models\Message;
 use App\Models\User;
 use App\Models\Venue;
 use App\Models\Wedding;
@@ -76,6 +77,70 @@ class SearchControllerTest extends TestCase
                 ->where('selectedCouple.id', $couple->id)->has('documents', 1));
         $this->get(route('calendrier', ['event' => 'event-'.$event->id]))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Calendrier'));
+    }
+
+    public function test_new_messages_are_searchable_immediately_without_marking_them_read(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+        $this->actingAs(User::factory()->admin()->create())
+            ->getJson(route('recherche', ['q' => 'GuirlandesTerrasse']))
+            ->assertOk()->assertExactJson(['results' => []]);
+
+        $message = Message::factory()->for($wedding)->create(['body' => 'Installer les GuirlandesTerrasse.']);
+
+        $this->getJson(route('recherche', ['q' => 'guirlandesterrasse']))
+            ->assertOk()->assertJsonCount(1, 'results')
+            ->assertJsonPath('results.0.id', 'conversation-'.$couple->id)
+            ->assertJsonPath('results.0.url', route('admin.messages.show', $couple->id));
+
+        $this->assertNull($message->fresh()->read_at);
+    }
+
+    public function test_a_conversation_can_match_names_and_messages_across_weddings_without_duplicates(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create([
+            'partner1_first_name' => 'Camille', 'partner2_first_name' => 'Alex',
+        ]);
+        $oldWedding = Wedding::factory()->for($couple)->create();
+        $newWedding = Wedding::factory()->for($couple)->create();
+        Message::factory()->for($oldWedding)->count(2)->create(['body' => 'Installer les guirlandes.']);
+        Message::factory()->for($newWedding)->create(['body' => 'La terrasse est disponible.']);
+        $otherCouple = Couple::factory()->withPortalAccess()->create(['partner1_first_name' => 'Camille']);
+        Message::factory()->for(Wedding::factory()->for($otherCouple))->create(['body' => 'Installer les guirlandes.']);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->getJson(route('recherche', ['q' => 'Camille guirlandes terrasse']))
+            ->assertOk()->assertJsonCount(1, 'results')
+            ->assertJsonPath('results.0.id', 'conversation-'.$couple->id);
+    }
+
+    public function test_message_matches_do_not_include_closed_access_or_deleted_messages(): void
+    {
+        Message::factory()->create(['body' => 'MotIntrouvableConversation']);
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $deleted = Message::factory()->for(Wedding::factory()->for($couple))->create([
+            'body' => 'MotIntrouvableConversation',
+        ]);
+        $deleted->delete();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->getJson(route('recherche', ['q' => 'MotIntrouvableConversation']))
+            ->assertOk()->assertExactJson(['results' => []]);
+    }
+
+    public function test_message_search_treats_wildcards_as_literal_characters(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+        Message::factory()->for($wedding)->create(['body' => 'Remise 10%_test']);
+        $otherCouple = Couple::factory()->withPortalAccess()->create();
+        Message::factory()->for(Wedding::factory()->for($otherCouple))->create(['body' => 'Remise 100Xtest']);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->getJson(route('recherche', ['q' => '10%_']))
+            ->assertOk()->assertJsonCount(1, 'results')
+            ->assertJsonPath('results.0.id', 'conversation-'.$couple->id);
     }
 
     public function test_names_can_match_multiple_fields_case_insensitively(): void
