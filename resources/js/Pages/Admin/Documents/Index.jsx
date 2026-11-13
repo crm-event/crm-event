@@ -171,7 +171,7 @@ export default function Documents({ couples, categories, selectedCouple, documen
 
 function DocumentRow({ document }) {
     return (
-        <article className="border border-hairline bg-white px-5 py-4">
+        <article id={"document-" + document.id} className="scroll-mt-28 border border-hairline bg-white px-5 py-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

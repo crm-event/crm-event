@@ -1,31 +1,10 @@
 import Dropdown from '@/Components/Dropdown';
 import Icone from '@/Components/Icone';
+import RechercheGlobale from '@/Components/RechercheGlobale';
 import { anneauFocus } from '@/charte';
+import { NAVIGATION } from '@/navigation';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-
-/**
- * Coque du back-office de Jessica : barre latérale de navigation à gauche,
- * bandeau de recherche en haut, contenu au centre.
- *
- * Le tableau de bord, les demandes et les paramètres (profil) existent ;
- * les autres entrées sont affichées comme dans la maquette mais sans lien.
- */
-const NAVIGATION = [
-    { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
-    { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread', route: 'demandes' },
-    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite', route: 'wedding' },
-    { cle: 'espaces-clients', libelle: 'Espaces clients', icone: 'group', route: 'admin.couples.index' },
-    { cle: 'messages', libelle: 'Messages', icone: 'chat', route: 'admin.messages.index' },
-    { cle: 'avis', libelle: 'Avis', icone: 'reviews', route: 'admin.reviews.index' },
-    { cle: 'documents', libelle: 'Documents', icone: 'description', route: 'admin.documents.index' },
-    { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today', route: 'calendrier' },
-    { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long' },
-    { cle: 'depenses', libelle: 'Dépenses', icone: 'payments' },
-    { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
-    { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up', route: 'rentabilite.index' },
-    { cle: 'parametres', libelle: 'Paramètres', icone: 'settings', route: 'profile.edit' },
-];
 
 const classesLien =
     'flex items-center gap-3 rounded-lg px-3 py-2 text-body transition-colors';
@@ -38,7 +17,7 @@ function EntreeNavigation({ entree, active }) {
         </>
     );
 
-    if (!entree.route) {
+    if (!entree.route || !route().has(entree.route)) {
         return (
             <span
                 className={`${classesLien} cursor-not-allowed text-sage/60`}
@@ -202,7 +181,7 @@ export default function BackOfficeLayout({
                         >
                             <Icone nom="menu" className="text-[22px]" />
                         </button>
-                        <div className="flex items-center gap-2 text-body-sm text-sage">
+                        <div className="hidden items-center gap-2 text-body-sm text-sage md:flex">
                             <span>Maison</span>
                             <span className="text-[10px] text-subtle">/</span>
                             <span className="truncate font-medium text-ink">
@@ -211,19 +190,8 @@ export default function BackOfficeLayout({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="relative hidden items-center sm:flex">
-                            <Icone
-                                nom="search"
-                                className="absolute left-3 text-[18px] text-sage"
-                            />
-                            <input
-                                type="search"
-                                aria-label="Rechercher"
-                                placeholder="Rechercher un dossier, prestataire..."
-                                className="w-72 rounded-lg border border-hairline bg-white py-1.5 pl-9 pr-4 text-body-sm text-ink placeholder:text-sage focus:border-ink focus:outline-none focus:ring-0"
-                            />
-                        </div>
+                    <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-6">
+                        <RechercheGlobale />
 
                         <div className="hidden items-center gap-1.5 text-caps uppercase text-sage xl:flex">
                             <Icone nom="today" className="text-[16px]" />

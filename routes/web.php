@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Admin\RentabiliteController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Couple\AppointmentController as CoupleAppointmentController;
 use App\Http\Controllers\Couple\CommunityController;
 use App\Http\Controllers\Couple\DesignController;
@@ -95,6 +96,8 @@ Route::middleware(['auth', 'role:admin'])
     });
 
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
+
+Route::get('/recherche', SearchController::class)->middleware(['auth', 'verified', 'role:admin', 'throttle:60,1'])->name('recherche');
 
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('demandes')->group(function () {
     Route::get('/', [DemandeController::class, 'index'])->name('demandes');

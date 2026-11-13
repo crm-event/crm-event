@@ -325,11 +325,15 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
     const filtres = [{ cle: 'toutes', libelle: 'Toutes les prestations' }, ...prestations, { cle: 'budget', libelle: 'Budget > 5 000 €' }];
     const [recherche, setRecherche] = useState('');
     const [filtre, setFiltre] = useState('toutes');
-    const [demandeOuverte, setDemandeOuverte] = useState(null);
+    const [demandeOuverte, setDemandeOuverte] = useState(() => new URLSearchParams(pageUrl.split('?')[1] ?? '').get('demande'));
     const [creationOuverte, setCreationOuverte] = useState(() => new URLSearchParams(pageUrl.split('?')[1] ?? '').get('nouvelle') === '1');
 
     useEffect(() => {
         const parametres = new URLSearchParams(pageUrl.split('?')[1] ?? '');
+        if (parametres.has('demande')) {
+            setDemandeOuverte(parametres.get('demande'));
+            setCreationOuverte(false);
+        }
         if (parametres.get('nouvelle') === '1') {
             setCreationOuverte(true);
         }
