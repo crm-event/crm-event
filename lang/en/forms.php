@@ -53,6 +53,12 @@ return [
         'avoid_max' => 'This text cannot be longer than 2,000 characters.',
     ],
 
+    'review' => [
+        'rating_required' => 'Please choose a rating from 1 to 5 stars.',
+        'recommend_required' => 'Please tell us whether you would recommend us.',
+        'body_max' => 'Your review cannot be longer than :max characters.',
+    ],
+
     'password' => [
         'required' => 'Please choose a password.',
         'new_required' => 'Please choose a new password.',

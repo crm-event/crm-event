@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Review;
 use App\Models\Setting;
 use App\Models\Wedding;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +18,8 @@ use Inertia\Response;
 class ReviewController extends Controller
 {
     /**
-     * List the couples that can now be invited to leave a review.
+     * List the couples that can now be invited to leave a review, the couples
+     * invited who have not answered yet and the reviews received.
      */
     public function index(): Response
     {
@@ -26,11 +28,31 @@ class ReviewController extends Controller
             ->orderBy('wedding_date')
             ->get();
 
+        $requested = Review::query()
+            ->whereNotNull('requested_at')
+            ->with('wedding.couple')
+            ->get();
+
+        [$received, $pending] = $requested->partition(fn (Review $review) => $review->submitted_at !== null);
+
         return Inertia::render('Admin/Reviews/Index', [
             'weddings' => $weddings->map(fn (Wedding $wedding) => [
                 'id' => $wedding->id,
                 'title' => $wedding->couple->threadTitle(),
                 'wedding_date' => $wedding->wedding_date->toDateString(),
+            ])->values(),
+            'pending' => $pending->sortBy('requested_at')->map(fn (Review $review) => [
+                'id' => $review->id,
+                'title' => $review->wedding->couple->threadTitle(),
+                'requested_at' => $review->requested_at->toIso8601String(),
+            ])->values(),
+            'received' => $received->sortByDesc('submitted_at')->map(fn (Review $review) => [
+                'id' => $review->id,
+                'title' => $review->wedding->couple->threadTitle(),
+                'rating' => $review->rating,
+                'would_recommend' => $review->would_recommend,
+                'body' => $review->body,
+                'submitted_at' => $review->submitted_at->toIso8601String(),
             ])->values(),
         ]);
     }
@@ -52,7 +74,8 @@ class ReviewController extends Controller
         $wedding->messages()->create([
             'sender_id' => auth()->id(),
             'body' => 'Bonjour, nous espérons que votre mariage vous a laissé de beaux souvenirs. '
-                .'Si vous le souhaitez, nous serions heureuses de recueillir votre avis. Merci !',
+                .'Si vous le souhaitez, nous serions heureuses de recueillir votre avis, '
+                .'depuis l’onglet « Votre avis » de votre espace. Merci !',
         ]);
 
         return to_route('admin.reviews.index')->with('success', 'Invitation envoyée au couple.');

@@ -53,6 +53,12 @@ return [
         'avoid_max' => 'Ce texte ne peut pas dépasser 2 000 caractères.',
     ],
 
+    'review' => [
+        'rating_required' => 'Choisissez une note de 1 à 5 étoiles.',
+        'recommend_required' => 'Dites-nous si vous nous recommanderiez.',
+        'body_max' => 'Votre avis ne peut pas dépasser :max caractères.',
+    ],
+
     'password' => [
         'required' => 'Choisissez un mot de passe.',
         'new_required' => 'Choisissez un nouveau mot de passe.',

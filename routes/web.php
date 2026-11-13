@@ -17,6 +17,7 @@ use App\Http\Controllers\Couple\DesignController;
 use App\Http\Controllers\Couple\DocumentController;
 use App\Http\Controllers\Couple\HomeController as CoupleHomeController;
 use App\Http\Controllers\Couple\MessageController as CoupleMessageController;
+use App\Http\Controllers\Couple\ReviewController as CoupleReviewController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\LandingController;
@@ -45,6 +46,8 @@ Route::middleware(['auth', 'role:couple'])
         Route::post('/design/versions/{proposal}/commentaires', [DesignController::class, 'storeComment'])->name('design.comments.store');
         Route::get('/rendez-vous', [CoupleAppointmentController::class, 'index'])->name('appointments.index');
         Route::inertia('/mentions-legales', 'Couple/LegalNotice')->name('legal-notice');
+        Route::get('/avis', [CoupleReviewController::class, 'show'])->name('review.show');
+        Route::post('/avis', [CoupleReviewController::class, 'store'])->name('review.store');
 
         Route::get('/communaute', [CommunityController::class, 'index'])->name('community.index');
         Route::post('/communaute', [CommunityController::class, 'store'])->name('community.store');

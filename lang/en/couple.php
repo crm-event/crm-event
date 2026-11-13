@@ -48,6 +48,8 @@ return [
 
     'proposal_not_approvable' => 'This version can no longer be approved: it is already approved or a newer version exists.',
 
+    'review_not_open' => 'Your review has already been sent, or Jessica has not asked for it yet.',
+
     'notifications' => [
         'messages_title' => '{1} New message from Jessica|[2,*] :count new messages from Jessica',
         'messages_text' => 'Open your messages to read them.',
@@ -67,6 +69,9 @@ return [
         'design_replies_title' => 'Jessica replied to your remarks',
         'design_replies_text' => 'Find her answer under the version concerned.',
         'design_replies_date' => 'Received on',
+        'review_title' => 'Jessica would love your review',
+        'review_text' => 'Tell us in a few words how you experienced your wedding with La Dernière Touche.',
+        'review_date' => 'Requested on',
     ],
 
 ];
