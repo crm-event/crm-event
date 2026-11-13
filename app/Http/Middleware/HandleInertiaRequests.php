@@ -44,13 +44,32 @@ class HandleInertiaRequests extends Middleware
                 'homeUrl' => $request->user()?->homeUrl(),
             ],
             'coupleNotifications' => fn (): array => $this->coupleNotifications($request->user()),
+            'coupleReview' => fn (): ?string => $this->coupleReviewStatus($request->user()),
         ];
+    }
+
+    /**
+     * Where the couple stands with their review, for the "Votre avis" entry of
+     * the navigation: null until Jessica invites them, then "awaiting", then
+     * "submitted".
+     */
+    private function coupleReviewStatus(?User $user): ?string
+    {
+        $review = $user?->hasRole(UserRole::Couple)
+            ? $user->couple?->latestWedding?->review
+            : null;
+
+        if ($review === null || $review->requested_at === null) {
+            return null;
+        }
+
+        return $review->isAwaitingAnswer() ? 'awaiting' : 'submitted';
     }
 
     /**
      * What is waiting for a couple, shown in the bell of the couple space:
      * unread messages, new documents, documents to approve, an appointment
-     * coming within two weeks and the design (ideas to share, proposals to
+     * coming within two weeks, the review Jessica asked for and the design (ideas to share, proposals to
      * answer, Jessica's replies). Each one disappears once dealt with. The
      * texts follow the language of the visitor (lang/{fr,en}/couple.php).
      *
@@ -126,6 +145,20 @@ class HandleInertiaRequests extends Middleware
                 'date' => $nextAppointment->starts_at->format('Y-m-d\TH:i:s'),
                 'date_label' => __('couple.notifications.appointment_date'),
                 'route' => 'couple.appointments.index',
+            ];
+        }
+
+        $review = $couple->latestWedding?->review;
+
+        if ($review?->isAwaitingAnswer()) {
+            $notifications[] = [
+                'key' => 'review',
+                'icon' => 'reviews',
+                'title' => __('couple.notifications.review_title'),
+                'text' => __('couple.notifications.review_text'),
+                'date' => $review->requested_at->toIso8601String(),
+                'date_label' => __('couple.notifications.review_date'),
+                'route' => 'couple.review.show',
             ];
         }
 

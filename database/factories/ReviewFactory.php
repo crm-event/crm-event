@@ -28,4 +28,17 @@ class ReviewFactory extends Factory
             'submitted_at' => null,
         ];
     }
+
+    /**
+     * A review the couple has already given.
+     */
+    public function submitted(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'rating' => fake()->numberBetween(4, 5),
+            'would_recommend' => true,
+            'body' => fake()->paragraph(),
+            'submitted_at' => now(),
+        ]);
+    }
 }

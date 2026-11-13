@@ -43,6 +43,14 @@ class Review extends Model
     }
 
     /**
+     * Whether the couple was invited and has not answered yet.
+     */
+    public function isAwaitingAnswer(): bool
+    {
+        return $this->requested_at !== null && $this->submitted_at === null;
+    }
+
+    /**
      * The wedding this review is about.
      *
      * @return BelongsTo<Wedding, $this>

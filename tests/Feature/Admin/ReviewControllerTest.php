@@ -62,6 +62,24 @@ class ReviewControllerTest extends TestCase
         $this->assertDatabaseCount('messages', 1);
     }
 
+    public function test_jessica_sees_the_couples_waiting_to_answer_and_the_reviews_received(): void
+    {
+        $waiting = Review::factory()->create(['requested_at' => now()->subDays(3)]);
+        $received = Review::factory()->submitted()->create(['rating' => 4, 'body' => 'Très belle journée.']);
+
+        $this->actingAs($this->jessica)
+            ->get(route('admin.reviews.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('pending', 1)
+                ->where('pending.0.id', $waiting->id)
+                ->has('received', 1)
+                ->where('received.0.id', $received->id)
+                ->where('received.0.rating', 4)
+                ->where('received.0.would_recommend', true)
+                ->where('received.0.body', 'Très belle journée.')
+            );
+    }
+
     public function test_couples_and_guests_cannot_invite(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
