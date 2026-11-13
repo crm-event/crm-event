@@ -205,12 +205,10 @@ export default function Wedding({
                                 className={classesAction}
                             >
                                 
-                                
                                 <Link href={route('admin.wedding.index')}>
                                 Accès portail mariés
                                 <Icone nom="open_in_new" className="text-[11px]" />
                                 </Link>
-                                
                                 
                             </button>
 
@@ -219,8 +217,10 @@ export default function Wedding({
                                 onClick={onEditWedding}
                                 className={classesAction}
                             >
-                                <Icone nom="edit" className="text-[14px]" />
+                                <Link href={route('admin.wedding.edit', wedding.id)}> 
                                 Modifier le dossier
+                                <Icone nom="open_in_new" className="text-[11px]" />
+                                </Link>
                             </button>
                         </div>
                     </div>
