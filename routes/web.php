@@ -135,6 +135,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/', [WeddingSelectionController::class, 'index'])->name('index');
         Route::get('/{id}', [WeddingSelectionController::class, 'show'])->whereNumber('id')->name('show');
 
+        Route::get('/{id}/edit', [WeddingSelectionController::class, 'edit'])->whereNumber('id')->name('edit');
+        Route::put('/{id}', [WeddingSelectionController::class, 'update'])->whereNumber('id')->name('update');
+
         Route::post('/{wedding}/design/versions', [AdminDesignController::class, 'storeProposal'])->whereNumber('wedding')->name('design.proposals.store');
         Route::post('/design/versions/{proposal}/commentaires', [AdminDesignController::class, 'storeComment'])->name('design.comments.store');
         Route::get('/design/images/{mediaItem}', [AdminDesignController::class, 'showMedia'])->name('design.media.show');
