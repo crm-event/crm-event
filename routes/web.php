@@ -117,7 +117,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
 Route::get('/wedding', function () {
     return Inertia::render('Wedding');
-})->middleware(['auth', 'verified'])->name('wedding');
+})->middleware(['auth', 'verified', 'role:admin'])->name('wedding');
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('rentabilite')

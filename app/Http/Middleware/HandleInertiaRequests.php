@@ -36,7 +36,9 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'locale' => app()->getLocale(),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user()?->only([
+                    'id', 'name', 'email', 'email_verified_at', 'role', 'must_change_password',
+                ]),
                 'homeUrl' => $request->user()?->homeUrl(),
             ],
             'coupleNotifications' => fn (): array => $this->coupleNotifications($request->user()),
