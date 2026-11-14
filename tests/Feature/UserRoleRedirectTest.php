@@ -52,14 +52,14 @@ class UserRoleRedirectTest extends TestCase
     {
         $this->actingAs(User::factory()->make());
 
-        foreach (['dashboard', 'demandes', 'calendrier', 'admin.wedding.index', 'facturation.index', 'mariages.prestations'] as $routeName) {
+        foreach (['dashboard', 'demandes', 'calendrier', 'admin.wedding.index', 'facturation.index', 'depenses.index', 'mariages.prestations'] as $routeName) {
             $this->get(route($routeName))->assertForbidden();
         }
     }
 
     public function test_guests_must_log_in_to_open_billing_pages(): void
     {
-        foreach (['facturation.index', 'mariages.prestations'] as $routeName) {
+        foreach (['facturation.index', 'depenses.index', 'mariages.prestations'] as $routeName) {
             $this->get(route($routeName))->assertRedirect(route('login'));
         }
     }
@@ -68,7 +68,7 @@ class UserRoleRedirectTest extends TestCase
     {
         $this->actingAs(User::factory()->admin()->make());
 
-        foreach (['dashboard', 'demandes', 'calendrier', 'admin.wedding.index', 'facturation.index', 'mariages.prestations'] as $routeName) {
+        foreach (['dashboard', 'demandes', 'calendrier', 'admin.wedding.index', 'facturation.index', 'depenses.index', 'mariages.prestations'] as $routeName) {
             $this->get(route($routeName))->assertOk();
         }
     }

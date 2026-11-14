@@ -22,7 +22,7 @@ const NAVIGATION = [
     { cle: 'documents', libelle: 'Documents', icone: 'description', route: 'admin.documents.index' },
     { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today', route: 'calendrier' },
     { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long', route: 'facturation.index' },
-    { cle: 'depenses', libelle: 'Dépenses', icone: 'payments' },
+    { cle: 'depenses', libelle: 'Dépenses', icone: 'payments', route: 'depenses.index' },
     { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
     { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up', route: 'rentabilite.index' },
     { cle: 'parametres', libelle: 'Paramètres', icone: 'settings', route: 'profile.edit' },

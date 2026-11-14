@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\CoupleController as AdminCoupleController;
+use App\Http\Controllers\Admin\DepenseController;
 use App\Http\Controllers\Admin\DesignController as AdminDesignController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\FacturationController;
@@ -108,6 +109,7 @@ Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verif
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/facturation', FacturationController::class)->name('facturation.index');
+    Route::get('/depenses', DepenseController::class)->name('depenses.index');
     Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
 });
 

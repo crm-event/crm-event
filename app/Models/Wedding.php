@@ -81,6 +81,12 @@ class Wedding extends Model
         return $this->belongsToMany(Service::class, 'wedding_services')->withTimestamps();
     }
 
+    /** @return HasMany<Expense, $this> */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
     /**
      * The creative brief written by the couple on the Design page.
      *
