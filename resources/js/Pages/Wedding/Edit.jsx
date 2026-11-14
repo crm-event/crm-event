@@ -236,6 +236,7 @@ export default function Edit({
                                 {services.map((service) => {
                                     const id = Number(service.id);
                                     const checked = data.service_ids.includes(id);
+                                    const verrouille = selectedServices.some((item) => Number(item.service_id) === id && item.locked);
 
                                     return (
                                         <div
@@ -250,6 +251,7 @@ export default function Edit({
                                                 <input
                                                     type="checkbox"
                                                     checked={checked}
+                                                    disabled={verrouille}
                                                     onChange={(e) =>
                                                         changeService(service.id, e.target.checked)
                                                     }
@@ -281,7 +283,8 @@ export default function Edit({
                                                             onChange={(e) =>
                                                                 changeAmount(id, e.target.value)
                                                             }
-                                                            required
+                                                            readOnly={verrouille}
+                                                            required={!verrouille}
                                                             placeholder="Ex. 1200.00"
                                                             className="w-full rounded-lg border border-[#d8d2ca] bg-white px-3 py-2 pr-10 focus:border-[#72746a] focus:ring-[#72746a]"
                                                         />
@@ -290,6 +293,8 @@ export default function Edit({
                                                             €
                                                         </span>
                                                     </div>
+
+                                                    {verrouille && <p className="mt-1 text-sm text-gray-500">Devis accepté ou contrat signé : utilisez un avenant pour modifier le montant.</p>}
 
                                                     {errors[`service_amounts.${id}`] && (
                                                         <p className="mt-1 text-sm text-red-600">

@@ -108,9 +108,13 @@ Route::middleware(['auth', 'role:admin'])
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-    Route::get('/facturation', FacturationController::class)->name('facturation.index');
+    Route::get('/facturation', [FacturationController::class, 'index'])->name('facturation.index');
+    Route::post('/facturation/paiements', [FacturationController::class, 'store'])->name('facturation.payments.store');
+    Route::put('/facturation/paiements/{payment}', [FacturationController::class, 'update'])->name('facturation.payments.update');
     Route::get('/depenses', DepenseController::class)->name('depenses.index');
-    Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
+    Route::get('/mariages/prestations-devis', [PrestationsDevisController::class, 'index'])->name('mariages.prestations');
+    Route::post('/mariages/prestations-devis/avenants', [PrestationsDevisController::class, 'storeAmendment'])->name('mariages.amendments.store');
+    Route::post('/mariages/prestations-devis/avenants/{amendment}/signature', [PrestationsDevisController::class, 'recordSignature'])->name('mariages.amendments.signature');
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('demandes')->group(function () {

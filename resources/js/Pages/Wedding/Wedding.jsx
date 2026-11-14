@@ -453,6 +453,13 @@ export default function Wedding({
                             </strong>
                         </div>
 
+                        <Link
+                            href={route('mariages.prestations', { wedding_id: wedding.id })}
+                            className="mb-4 inline-block text-body underline"
+                        >
+                            Voir les devis et avenants
+                        </Link>
+
                         {prestations.length > 0 ? (
                             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                                 {prestations.map((prestation) => (
