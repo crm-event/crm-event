@@ -6,7 +6,8 @@ import BackOfficeLayout from '@/Layouts/BackOfficeLayout';
 import EtapeTimeline from '@/Pages/Wedding/Partials/EtapeTimeline.jsx';
 import Prestations from '@/Pages/Wedding/Partials/Prestations.jsx';
 import Prestataires from '@/Pages/Wedding/Partials/Prestataires.jsx';
-import Document from '@/Pages/Wedding/Partials/Document.jsx';
+import Documents from '@/Pages/Wedding/Partials/Document.jsx';
+import Design from '@/Pages/Wedding/Partials/Design.jsx';
 import Icone from '@/Components/Icone';
 
 import { anneauFocus } from '@/charte';
@@ -18,6 +19,7 @@ const ONGLET = [
     { id: 'facturation', label: 'Facturation', icon: 'receipt_long' },
     { id: 'prestataires', label: 'Prestataires', icon: 'groups' },
     { id: 'timeline', label: 'Timeline jour J', icon: 'schedule' },
+    { id: 'design', label: 'Design', icon: 'palette' },
     { id: 'documents', label: 'Documents', icon: 'folder_open' },
 ];
 
@@ -91,12 +93,18 @@ export default function Wedding({
     prestataires = [],
     milestones = [],
     documents = [],
+    design = null,
     onOpenTab,
     onOpenPortal,
     onEditWedding,
     onManageProviders,
 }) {
-    const [ongletActif, setOngletActif] = useState('resume');
+    // The tab can be given in the address (?onglet=design), e.g. after an action.
+    const [ongletActif, setOngletActif] = useState(() => {
+        const demande = new URLSearchParams(window.location.search).get('onglet');
+
+        return ONGLET.some((onglet) => onglet.id === demande) ? demande : 'resume';
+    });
 
     // Informations du couple
     const couple = wedding?.couple;
@@ -197,12 +205,10 @@ export default function Wedding({
                                 className={classesAction}
                             >
                                 
-                                
                                 <Link href={route('admin.wedding.index')}>
                                 Accès portail mariés
                                 <Icone nom="open_in_new" className="text-[11px]" />
                                 </Link>
-                                
                                 
                             </button>
 
@@ -211,8 +217,10 @@ export default function Wedding({
                                 onClick={onEditWedding}
                                 className={classesAction}
                             >
-                                <Icone nom="edit" className="text-[14px]" />
+                                <Link href={route('admin.wedding.edit', wedding.id)}> 
                                 Modifier le dossier
+                                <Icone nom="open_in_new" className="text-[11px]" />
+                                </Link>
                             </button>
                         </div>
                     </div>
@@ -528,6 +536,9 @@ export default function Wedding({
                         )}
                     </section>
                 )}
+
+                {/* Onglet design */}
+                {ongletActif === 'design' && design && <Design design={design} weddingId={wedding.id} />}
 
                 {/* Onglet documents */}
                 {ongletActif === 'documents' && (

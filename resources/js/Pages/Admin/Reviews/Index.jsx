@@ -14,10 +14,24 @@ function formatDate(value) {
 }
 
 /**
- * Couples whose wedding is over: Jessica invites them to leave a review with
- * one click.
+ * Rating out of five, drawn with stars.
  */
-export default function Reviews({ weddings }) {
+function Stars({ rating }) {
+    return (
+        <span className="text-[18px] tracking-[0.1em] text-sage" role="img" aria-label={`${rating} étoile${rating > 1 ? 's' : ''} sur 5`}>
+            <span aria-hidden="true">
+                {'★'.repeat(rating)}
+                <span className="text-hairline">{'★'.repeat(5 - rating)}</span>
+            </span>
+        </span>
+    );
+}
+
+/**
+ * Reviews: the couples whose wedding is over, whom Jessica invites with one
+ * click, the couples who have not answered yet, and the reviews received.
+ */
+export default function Reviews({ weddings, pending = [], received = [] }) {
     const success = usePage().props.flash?.success;
 
     const invite = (wedding) => {
@@ -59,6 +73,51 @@ export default function Reviews({ weddings }) {
                         ))}
                     </ul>
                 )}
+
+                {pending.length > 0 && (
+                    <section className="mt-14">
+                        <h2 className="font-display text-2xl tracking-tight text-ink">En attente de réponse</h2>
+                        <p className="mt-2 text-body text-sage">
+                            Ces couples ont été invités et peuvent répondre depuis l’onglet « Votre avis » de leur espace.
+                        </p>
+                        <ul className="mt-6 divide-y divide-hairline rounded-lg border border-hairline bg-white">
+                            {pending.map((review) => (
+                                <li key={review.id} className="flex items-center justify-between gap-4 px-6 py-4">
+                                    <p className="font-display text-title-sm text-ink">{review.title}</p>
+                                    <p className="text-body-sm text-sage">Invités le {formatDate(review.requested_at)}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
+
+                <section className="mt-14">
+                    <h2 className="font-display text-2xl tracking-tight text-ink">Avis reçus</h2>
+
+                    {received.length === 0 ? (
+                        <p className="mt-4 text-body text-sage">Aucun avis reçu pour le moment.</p>
+                    ) : (
+                        <ul className="mt-6 space-y-4">
+                            {received.map((review) => (
+                                <li key={review.id} className="rounded-lg border border-hairline bg-white p-6">
+                                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                        <p className="font-display text-title-sm text-ink">{review.title}</p>
+                                        <p className="text-body-sm text-sage">Reçu le {formatDate(review.submitted_at)}</p>
+                                    </div>
+                                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+                                        <Stars rating={review.rating} />
+                                        <span className="text-body-sm text-ink">
+                                            {review.would_recommend ? 'Recommande La Dernière Touche' : 'Ne recommande pas La Dernière Touche'}
+                                        </span>
+                                    </div>
+                                    {review.body && (
+                                        <p className="mt-4 whitespace-pre-line text-body text-ink">{review.body}</p>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
             </div>
         </BackOfficeLayout>
     );

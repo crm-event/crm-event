@@ -26,6 +26,11 @@ return [
         'voice_not_editable' => 'Un message vocal ne peut pas être modifié.',
     ],
 
+    'proposal_comment' => [
+        'body_required' => 'Votre message est vide.',
+        'body_max' => 'Votre message ne peut pas dépasser :max caractères.',
+    ],
+
     'community_post' => [
         'body_required' => 'Votre message est vide.',
         'body_max' => 'Votre message ne peut pas dépasser :max caractères.',
@@ -46,6 +51,12 @@ return [
         'palette_max' => 'Indiquez 12 couleurs au plus.',
         'palette_item_max' => 'Chaque couleur doit tenir en 50 caractères.',
         'avoid_max' => 'Ce texte ne peut pas dépasser 2 000 caractères.',
+    ],
+
+    'review' => [
+        'rating_required' => 'Choisissez une note de 1 à 5 étoiles.',
+        'recommend_required' => 'Dites-nous si vous nous recommanderiez.',
+        'body_max' => 'Votre avis ne peut pas dépasser :max caractères.',
     ],
 
     'password' => [

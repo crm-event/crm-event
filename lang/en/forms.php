@@ -26,6 +26,11 @@ return [
         'voice_not_editable' => 'A voice message cannot be edited.',
     ],
 
+    'proposal_comment' => [
+        'body_required' => 'Your message is empty.',
+        'body_max' => 'Your message cannot be longer than :max characters.',
+    ],
+
     'community_post' => [
         'body_required' => 'Your message is empty.',
         'body_max' => 'Your message cannot be longer than :max characters.',
@@ -46,6 +51,12 @@ return [
         'palette_max' => 'Enter 12 colours at most.',
         'palette_item_max' => 'Each colour must fit in 50 characters.',
         'avoid_max' => 'This text cannot be longer than 2,000 characters.',
+    ],
+
+    'review' => [
+        'rating_required' => 'Please choose a rating from 1 to 5 stars.',
+        'recommend_required' => 'Please tell us whether you would recommend us.',
+        'body_max' => 'Your review cannot be longer than :max characters.',
     ],
 
     'password' => [

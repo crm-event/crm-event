@@ -21,7 +21,12 @@ import { useEffect, useState } from 'react';
  * they are opened (messages, documents): they are only prefetched when the
  * button is pressed, never on a mere hover.
  */
-function buildNavigationGroups(t) {
+function buildNavigationGroups(t, reviewStatus) {
+    // "Votre avis" only appears once Jessica has asked the couple for it.
+    const reviewEntries = reviewStatus
+        ? [{ key: 'review', label: t('review'), icon: 'reviews', route: 'couple.review.show' }]
+        : [];
+
     return [
         {
             label: t('yourWedding'),
@@ -43,6 +48,7 @@ function buildNavigationGroups(t) {
                     route: 'couple.messages.index',
                     prefetchOnPress: true,
                 },
+                ...reviewEntries,
             ],
         },
         {
@@ -73,6 +79,7 @@ function buildPageLabels(t) {
         appointments: t('appointments'),
         messages: t('messages'),
         community: t('community'),
+        review: t('review'),
         account: t('account'),
     };
 }
@@ -117,7 +124,7 @@ function NavigationEntry({ entry, isActive }) {
 }
 
 function Sidebar({ activeKey, t }) {
-    const navigationGroups = buildNavigationGroups(t);
+    const navigationGroups = buildNavigationGroups(t, usePage().props.coupleReview);
 
     return (
         <div className="flex h-full flex-col bg-blush">

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AccessRequestTest extends TestCase
@@ -37,12 +38,28 @@ class AccessRequestTest extends TestCase
         ];
     }
 
+    public function test_the_access_request_page_is_displayed(): void
+    {
+        $this->get(route('access-request.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('AccessRequest'));
+    }
+
+    public function test_a_logged_in_user_is_sent_to_their_space(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+
+        $this->actingAs($couple->user)
+            ->get(route('access-request.create'))
+            ->assertRedirect(route('couple.home'));
+    }
+
     public function test_a_visitor_can_request_access(): void
     {
         $this->withUnencryptedCookie(SetLocale::COOKIE, 'en')
             ->post(route('access-request.store'), $this->validRequest(['email' => ' Nina.Hugo@Example.test ']))
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('access-request.create'));
 
         $couple = Couple::query()->awaitingAccess()->sole();
         $this->assertSame('nina.hugo@example.test', $couple->email);
@@ -60,7 +77,7 @@ class AccessRequestTest extends TestCase
 
         $this->post(route('access-request.store'), $this->validRequest(['email' => 'pris@example.test']))
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('access-request.create'));
 
         $this->assertDatabaseCount('couples', 0);
     }
@@ -68,7 +85,7 @@ class AccessRequestTest extends TestCase
     public function test_a_second_request_with_the_same_address_is_ignored(): void
     {
         $this->post(route('access-request.store'), $this->validRequest());
-        $this->post(route('access-request.store'), $this->validRequest())->assertRedirect(route('home'));
+        $this->post(route('access-request.store'), $this->validRequest())->assertRedirect(route('access-request.create'));
 
         $this->assertDatabaseCount('couples', 1);
     }
@@ -87,7 +104,7 @@ class AccessRequestTest extends TestCase
     {
         $this->post(route('access-request.store'), $this->validRequest(['website' => 'https://spam.example']))
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('access-request.create'));
 
         $this->assertDatabaseCount('couples', 0);
     }

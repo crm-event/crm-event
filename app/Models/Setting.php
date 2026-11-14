@@ -22,12 +22,28 @@ class Setting extends Model
      */
     public static function reviewDelayDays(): int
     {
-        $value = static::query()
-            ->where('key', 'review_delay_days')
+        return (int) (static::currentValue('review_delay_days') ?? 30);
+    }
+
+    /**
+     * Number of revisions of the design book included in the price
+     * (`max_design_revisions`, 3 when not set, as in the terms and
+     * conditions).
+     */
+    public static function maxDesignRevisions(): int
+    {
+        return (int) (static::currentValue('max_design_revisions') ?? 3);
+    }
+
+    /**
+     * The value of a parameter in force today, or null when it is not set.
+     */
+    private static function currentValue(string $key): ?string
+    {
+        return static::query()
+            ->where('key', $key)
             ->whereDate('valid_from', '<=', today())
             ->orderByDesc('valid_from')
             ->value('value');
-
-        return $value === null ? 30 : (int) $value;
     }
 }

@@ -44,7 +44,6 @@ class DocumentController extends Controller
             'categories' => [
                 ['value' => 'contract', 'label' => 'Contrat'],
                 ['value' => 'terms', 'label' => 'Conditions générales de vente'],
-                ['value' => 'design', 'label' => 'Carnet de design'],
                 ['value' => 'appointment', 'label' => 'Rendez-vous'],
                 ['value' => 'misc', 'label' => 'Autre'],
             ],
