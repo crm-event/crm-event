@@ -109,7 +109,10 @@ Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verif
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/facturation', FacturationController::class)->name('facturation.index');
-    Route::get('/depenses', DepenseController::class)->name('depenses.index');
+    Route::get('/depenses', [DepenseController::class, 'index'])->name('depenses.index');
+    Route::post('/depenses', [DepenseController::class, 'store'])->name('depenses.store');
+    Route::get('/depenses/{expense}/justificatif', [DepenseController::class, 'receipt'])->name('depenses.receipt');
+    Route::post('/depenses/{expense}/justificatif', [DepenseController::class, 'storeReceipt'])->name('depenses.receipt.store');
     Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
 });
 
