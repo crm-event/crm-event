@@ -20,10 +20,10 @@ class TimelineItemFactory extends Factory
     {
         return [
             'wedding_id' => Wedding::factory(),
-            'starts_at'=> fake()->dateTime(),
+            'starts_at' => fake()->dateTime(),
             'title' => fake()->sentence(4),
             'notes' => null,
-            'sort_order' => fake()->sort()
+            'sort_order' => fake()->sort(),
         ];
     }
 }
