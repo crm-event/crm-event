@@ -109,6 +109,8 @@ Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verif
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/facturation', FacturationController::class)->name('facturation.index');
+    Route::post('/facturation/paiements', [FacturationController::class, 'store'])->name('facturation.payments.store');
+    Route::patch('/facturation/paiements/{payment}', [FacturationController::class, 'update'])->whereNumber('payment')->name('facturation.payments.update');
     Route::get('/depenses', DepenseController::class)->name('depenses.index');
     Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
 });
