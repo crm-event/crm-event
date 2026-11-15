@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Database\Factories\VendorFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,7 +23,7 @@ class Vendor extends Model
         'email',
         'phone',
         'website',
-        'notes'
+        'notes',
     ];
 
     /**
@@ -46,7 +46,7 @@ class Vendor extends Model
      *
      * @return BelongsTo<VendorCategory, $this>
      */
-    public function category() : BelongsTo
+    public function category(): BelongsTo
     {
         return $this->belongsTo(VendorCategory::class, 'vendor_category_id');
     }

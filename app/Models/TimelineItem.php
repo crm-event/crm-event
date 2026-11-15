@@ -20,10 +20,10 @@ class TimelineItem extends Model
         'starts_at',
         'title',
         'notes',
-        'sort_order'
+        'sort_order',
     ];
 
-     /**
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
