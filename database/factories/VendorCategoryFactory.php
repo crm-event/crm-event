@@ -18,9 +18,9 @@ class VendorCategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'=> fake()->name,
-            'photo_path'=> 'photo/'.fake()->uuid().'.pdf',
-            'is_active' => true
+            'name' => fake()->name,
+            'photo_path' => 'photo/'.fake()->uuid().'.pdf',
+            'is_active' => true,
         ];
     }
 }

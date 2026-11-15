@@ -25,7 +25,7 @@ class VendorFactory extends Factory
             'email' => fake()->email(),
             'phone' => fake()->phoneNumber(),
             'website' => null,
-            'notes' => null
+            'notes' => null,
         ];
     }
 }
