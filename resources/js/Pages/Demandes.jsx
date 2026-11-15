@@ -325,6 +325,7 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
     const filtres = [{ cle: 'toutes', libelle: 'Toutes les prestations' }, ...prestations, { cle: 'budget', libelle: 'Budget > 5 000 €' }];
     const [recherche, setRecherche] = useState('');
     const [filtre, setFiltre] = useState('toutes');
+    const [annee, setAnnee] = useState('');
     const [demandeOuverte, setDemandeOuverte] = useState(null);
     const [creationOuverte, setCreationOuverte] = useState(() => new URLSearchParams(pageUrl.split('?')[1] ?? '').get('nouvelle') === '1');
 
@@ -335,12 +336,16 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
         }
     }, [pageUrl]);
 
+    const annees = useMemo(() => [...new Set(demandes.map((demande) => demande.date?.slice(0, 4)).filter(Boolean))]
+        .sort((a, b) => Number(b) - Number(a)), [demandes]);
+
     const demandesFiltrees = useMemo(() => demandes.filter((demande) => {
         const texte = `${demande.nom} ${demande.date} ${demande.lieu} ${demande.prestations.map((cle) => prestations.find((prestation) => prestation.cle === cle)?.libelle ?? cle).join(' ')}`.toLocaleLowerCase('fr-FR');
         const rechercheValide = texte.includes(recherche.trim().toLocaleLowerCase('fr-FR'));
         const filtreValide = filtre === 'toutes' || (filtre === 'budget' ? demande.budget > 5000 : demande.prestations.includes(filtre));
-        return rechercheValide && filtreValide;
-    }), [demandes, filtre, recherche, prestations]);
+        const anneeDemande = demande.date?.slice(0, 4) ?? 'sans-date';
+        return rechercheValide && filtreValide && (!annee || anneeDemande === annee);
+    }), [demandes, filtre, recherche, prestations, annee]);
 
     const demandeSelectionnee = demandes.find((demande) => demande.id === demandeOuverte);
     const nombreDemandesActives = statistiques.actives;
@@ -393,8 +398,18 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
                 {aImporter.length > 0 && <div className="rounded-lg border border-hairline bg-ivory p-4 text-body"><p>{aImporter.length} ancienne(s) demande(s) créée(s) dans ce navigateur peuvent être importées en base. Les exemples de la maquette sont exclus.</p><button type="button" disabled={enCours} onClick={importerDemandes} className={anneauFocus + ' mt-2 text-ink underline disabled:opacity-50'}>{enCours ? 'Import en cours…' : 'Importer mes anciennes demandes locales'}</button></div>}
                 {Object.keys(erreurs).length > 0 && !demandeSelectionnee && <p role="alert" className="text-body text-warning">{Object.values(erreurs)[0]}</p>}
                 <section aria-label="Recherche et filtres" className="flex flex-col gap-3 rounded-lg bg-ivory p-4 xl:flex-row xl:items-center">
-                    <div className="relative w-full shrink-0 xl:w-72"><Icone nom="search" className="absolute left-3 top-2.5 text-[18px] text-sage" /><input type="search" aria-label="Rechercher une demande" value={recherche} onChange={(event) => setRecherche(event.target.value)} placeholder="Rechercher un couple, une date, un lieu..." className="w-full rounded-md border-0 bg-white py-2 pl-10 pr-4 text-body italic placeholder:text-sage focus:ring-0" /></div>
-                    <div className="flex min-w-0 gap-2 overflow-x-auto whitespace-nowrap">{filtres.map((option) => <button key={option.cle} type="button" aria-pressed={filtre === option.cle} onClick={() => setFiltre(option.cle)} className={`${anneauFocus} rounded-full px-3 py-1.5 text-caps uppercase transition-colors ${filtre === option.cle ? 'bg-ink text-white' : 'bg-white text-sage hover:text-ink'}`}>{option.libelle}</button>)}</div>
+                    <div className="relative w-full shrink-0 xl:w-72"><Icone nom="search" className="absolute left-3 top-2.5 text-[18px] text-sage" /><input type="search" aria-label="Rechercher une demande" value={recherche} onChange={(event) => setRecherche(event.target.value)} placeholder="Couple, date ou lieu" className="w-full rounded-md border-0 bg-white py-2 pl-10 pr-4 text-body italic placeholder:text-sage focus:ring-0" /></div>
+                    <select
+                        aria-label="Année du mariage"
+                        value={annee}
+                        onChange={(event) => setAnnee(event.target.value)}
+                        className={anneauFocus + ' w-full shrink-0 rounded-md border-0 bg-white py-2 pl-3 pr-9 text-body text-ink xl:w-auto'}
+                    >
+                        <option value="">Toutes les années</option>
+                        {annees.map((valeur) => <option key={valeur} value={valeur}>{valeur}</option>)}
+                        {demandes.some((demande) => !demande.date) && <option value="sans-date">Sans date</option>}
+                    </select>
+                    <div className="flex min-w-0 gap-2 overflow-x-auto whitespace-nowrap py-2">{filtres.map((option) => <button key={option.cle} type="button" aria-pressed={filtre === option.cle} onClick={() => setFiltre(option.cle)} className={`${anneauFocus} rounded-full px-3 py-1.5 text-caps uppercase transition-colors ${filtre === option.cle ? 'bg-ink text-white' : 'bg-white text-sage hover:text-ink'}`}>{option.libelle}</button>)}</div>
                 </section>
 
                 <section aria-label="Pipeline des demandes" className="-mx-4 space-y-2 sm:-mx-8">
