@@ -18,6 +18,18 @@ use Inertia\Response;
 class ReviewController extends Controller
 {
     /**
+     * Statuses of the weddings whose couple can be invited to leave a review.
+     */
+    private const INVITABLE_STATUSES = ['booked', 'completed', 'closed'];
+
+    /**
+     * Text of the message sent to the couple to invite them.
+     */
+    private const INVITATION_TEXT = 'Bonjour, nous espérons que votre mariage vous a laissé de beaux souvenirs. '
+        .'Si vous le souhaitez, nous serions heureuses de recueillir votre avis, '
+        .'depuis l’onglet « Votre avis » de votre espace. Merci !';
+
+    /**
      * List the couples that can now be invited to leave a review, the couples
      * invited who have not answered yet and the reviews received.
      */
@@ -73,9 +85,7 @@ class ReviewController extends Controller
 
         $wedding->messages()->create([
             'sender_id' => auth()->id(),
-            'body' => 'Bonjour, nous espérons que votre mariage vous a laissé de beaux souvenirs. '
-                .'Si vous le souhaitez, nous serions heureuses de recueillir votre avis, '
-                .'depuis l’onglet « Votre avis » de votre espace. Merci !',
+            'body' => self::INVITATION_TEXT,
         ]);
 
         return to_route('admin.reviews.index')->with('success', 'Invitation envoyée au couple.');
@@ -90,7 +100,7 @@ class ReviewController extends Controller
     private function awaitingReview(): Builder
     {
         return Wedding::query()
-            ->whereIn('status', ['booked', 'completed', 'closed'])
+            ->whereIn('status', self::INVITABLE_STATUSES)
             ->whereDate('wedding_date', '<=', now()->subDays(Setting::reviewDelayDays()))
             ->whereHas('couple', fn (Builder $couple) => $couple->whereNotNull('user_id'))
             ->whereDoesntHave('review', fn (Builder $review) => $review->whereNotNull('requested_at'));
