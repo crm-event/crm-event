@@ -73,7 +73,8 @@ class ReviewControllerTest extends TestCase
 
         $this->actingAs($this->jessica)
             ->post(route('admin.reviews.store', $wedding))
-            ->assertStatus(422);
+            ->assertRedirect(route('admin.reviews.index'))
+            ->assertSessionHas('error');
 
         $this->assertDatabaseCount('messages', 1);
     }
