@@ -59,6 +59,26 @@ class AppointmentControllerTest extends TestCase
         );
     }
 
+    public function test_appointment_details_are_sent(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+
+        Appointment::factory()->for($wedding)->create([
+            'starts_at' => '2099-05-10 14:00:00',
+            'location' => 'Domaine des Tilleuls',
+            'notes' => 'Prévoir 2 h sur place.',
+        ]);
+
+        $response = $this->actingAs($couple->user)->get(route('couple.appointments.index'));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('upcoming.0.starts_at', '2099-05-10T14:00:00')
+            ->where('upcoming.0.location', 'Domaine des Tilleuls')
+            ->where('upcoming.0.notes', 'Prévoir 2 h sur place.')
+        );
+    }
+
     public function test_other_couple_appointments_hidden(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
