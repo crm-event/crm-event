@@ -36,6 +36,7 @@ class ReviewController extends Controller
         [$received, $pending] = $requested->partition(fn (Review $review) => $review->submitted_at !== null);
 
         return Inertia::render('Admin/Reviews/Index', [
+            'delay_days' => Setting::reviewDelayDays(),
             'weddings' => $weddings->map(fn (Wedding $wedding) => [
                 'id' => $wedding->id,
                 'title' => $wedding->couple->threadTitle(),
