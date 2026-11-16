@@ -36,6 +36,41 @@ class LocaleTest extends TestCase
         $response->assertPlainCookie(SetLocale::COOKIE, 'en');
     }
 
+    public function test_a_signed_in_couple_choosing_a_language_saves_it_as_their_preference(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create(['preferred_language' => 'fr']);
+
+        $this->actingAs($couple->user)
+            ->from(route('couple.home'))
+            ->post(route('locale.update'), ['locale' => 'en'])
+            ->assertRedirect(route('couple.home'))
+            ->assertPlainCookie(SetLocale::COOKIE, 'en');
+
+        $this->assertSame('en', $couple->fresh()->preferred_language);
+    }
+
+    public function test_the_saved_preference_applies_on_a_new_device(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create(['preferred_language' => 'fr']);
+        Wedding::factory()->for($couple)->booked()->create();
+
+        $this->actingAs($couple->user)->post(route('locale.update'), ['locale' => 'en']);
+
+        $this->actingAs($couple->user)
+            ->get(route('couple.home'))
+            ->assertInertia(fn (Assert $page) => $page->where('locale', 'en'));
+    }
+
+    public function test_a_guest_choosing_a_language_only_sets_the_cookie(): void
+    {
+        $couple = Couple::factory()->create(['preferred_language' => 'fr']);
+
+        $this->post(route('locale.update'), ['locale' => 'en'])
+            ->assertPlainCookie(SetLocale::COOKIE, 'en');
+
+        $this->assertSame('fr', $couple->fresh()->preferred_language);
+    }
+
     public function test_the_chosen_language_applies_to_the_pages_and_to_the_server_texts(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
