@@ -208,9 +208,10 @@ class SearchSecurityTest extends TestCase
     {
         $cases = [];
         foreach ([
-            'dashboard', 'demandes', 'wedding', 'calendrier', 'admin.couples.index',
+            'dashboard', 'demandes', 'admin.wedding.index', 'calendrier', 'admin.couples.index',
             'admin.documents.index', 'admin.messages.index', 'admin.reviews.index',
             'rentabilite.index', 'rentabilite.rapport', 'recherche',
+            'facturation.index', 'depenses.index', 'mariages.prestations',
         ] as $name) {
             foreach (['html', 'json', 'inertia'] as $mode) {
                 $cases[$name.' '.$mode] = [$name, $mode];
