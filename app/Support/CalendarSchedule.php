@@ -37,7 +37,7 @@ class CalendarSchedule
                 'titre' => $record->title,
                 'libelle' => $record->title,
                 'couple' => $record->event_type === 'jour-j' ? $record->title : null,
-                'date' => $startsAt?->toDateString() ?? $record->event_date,
+                'date' => $startsAt?->toDateString() ?? substr($record->event_date, 0, 10),
                 'heure' => $startsAt?->format('H:i') ?? ($record->event_time === null ? null : substr($record->event_time, 0, 5)),
                 'lieu' => $record->location,
                 'notes' => $record->notes,
@@ -87,8 +87,10 @@ class CalendarSchedule
                 couples.partner1_first_name AS partner1, couples.partner2_first_name AS partner2");
 
         $appointments = DB::table('appointments')
-            ->selectRaw("'appointment' AS source, id, title, NULL AS event_date,
-                NULL AS event_time, starts_at, location, notes, NULL AS event_type,
+            ->join('weddings', 'weddings.id', '=', 'appointments.wedding_id')
+            ->where('weddings.status', '!=', 'cancelled')
+            ->selectRaw("'appointment' AS source, appointments.id, title, NULL AS event_date,
+                NULL AS event_time, starts_at, location, appointments.notes, NULL AS event_type,
                 NULL AS legacy_id, NULL AS deleted_at, NULL AS wedding_status,
                 NULL AS guest_count, NULL AS partner1, NULL AS partner2");
 
@@ -109,7 +111,7 @@ class CalendarSchedule
             'categorie' => $confirmed ? 'Mariage confirmé' : 'Date souhaitée',
             'titre' => $couple,
             'couple' => $couple,
-            'date' => $record->event_date,
+            'date' => substr($record->event_date, 0, 10),
             'lieu' => $record->location,
             'invites' => $record->guest_count === null ? null : (int) $record->guest_count,
         ];

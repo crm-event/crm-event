@@ -1,5 +1,7 @@
 import Icone from '@/Components/Icone';
 import { dateCourte, euros } from '@/Pages/Dashboard/presentation';
+import { anneauFocus } from '@/charte';
+import { Link } from '@inertiajs/react';
 
 function Carte({ titre, icone, children, pied }) {
     return (
@@ -40,7 +42,9 @@ export default function CartesIndicateurs({ suivi, finances }) {
                 <span className="font-display text-[48px] leading-none text-ink">{suivi.demandes}</span>
             </Carte>
             <Carte titre="Prochain jalon" icone="event_note" pied={prochainJalon && dateCourte(prochainJalon.date)}>
-                <div className="font-display text-[22px] leading-7 text-ink">{prochainJalon?.libelle ?? 'Aucun jalon à venir'}</div>
+                <div className="font-display text-[22px] leading-7 text-ink">
+                    {prochainJalon ? <Link href={prochainJalon.url} className={`${anneauFocus} rounded hover:underline`}>{prochainJalon.libelle}</Link> : 'Aucun jalon à venir'}
+                </div>
                 {prochainJalon?.lieu && <p className="mt-1 text-body-sm text-sage">{prochainJalon.lieu}</p>}
             </Carte>
         </section>
