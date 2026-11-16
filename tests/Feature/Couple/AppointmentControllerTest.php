@@ -39,6 +39,26 @@ class AppointmentControllerTest extends TestCase
         );
     }
 
+    public function test_appointments_are_sorted(): void
+    {
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create();
+
+        $later = Appointment::factory()->for($wedding)->create(['starts_at' => now()->addMonths(3)]);
+        $soon = Appointment::factory()->for($wedding)->create(['starts_at' => now()->addWeek()]);
+        $older = Appointment::factory()->for($wedding)->create(['starts_at' => now()->subMonths(3)]);
+        $recent = Appointment::factory()->for($wedding)->create(['starts_at' => now()->subWeek()]);
+
+        $response = $this->actingAs($couple->user)->get(route('couple.appointments.index'));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('upcoming.0.id', $soon->id)
+            ->where('upcoming.1.id', $later->id)
+            ->where('past.0.id', $recent->id)
+            ->where('past.1.id', $older->id)
+        );
+    }
+
     public function test_other_couple_appointments_hidden(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
