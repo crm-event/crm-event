@@ -49,6 +49,12 @@ class ReviewControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->has('weddings', 0));
     }
 
+    public function test_the_page_receives_the_delay(): void
+    {
+        $this->actingAs($this->jessica)
+            ->get(route('admin.reviews.index'))
+            ->assertInertia(fn (Assert $page) => $page->where('delay_days', 30));
+    }
 
     public function test_jessica_invites_a_couple_once(): void
     {
