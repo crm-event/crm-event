@@ -326,11 +326,15 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
     const [recherche, setRecherche] = useState('');
     const [filtre, setFiltre] = useState('toutes');
     const [annee, setAnnee] = useState('');
-    const [demandeOuverte, setDemandeOuverte] = useState(null);
+    const [demandeOuverte, setDemandeOuverte] = useState(() => new URLSearchParams(pageUrl.split('?')[1] ?? '').get('demande'));
     const [creationOuverte, setCreationOuverte] = useState(() => new URLSearchParams(pageUrl.split('?')[1] ?? '').get('nouvelle') === '1');
 
     useEffect(() => {
         const parametres = new URLSearchParams(pageUrl.split('?')[1] ?? '');
+        if (parametres.has('demande')) {
+            setDemandeOuverte(parametres.get('demande'));
+            setCreationOuverte(false);
+        }
         if (parametres.get('nouvelle') === '1') {
             setCreationOuverte(true);
         }
