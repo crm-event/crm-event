@@ -26,9 +26,9 @@ class ReviewControllerTest extends TestCase
 
     public function test_the_list_only_has_the_couples_that_can_be_invited(): void
     {
-        $due = Wedding::factory()->booked()->create(['wedding_date' => now()->subDays(40)]);
-        Wedding::factory()->booked()->create(['wedding_date' => now()->subDays(5)]);
-        $invited = Wedding::factory()->booked()->create(['wedding_date' => now()->subDays(60)]);
+        $due = $this->bookedWedding(40);
+        $this->bookedWedding(5);
+        $invited = $this->bookedWedding(60);
         Review::factory()->for($invited)->create();
 
         $this->actingAs($this->jessica)
@@ -39,6 +39,16 @@ class ReviewControllerTest extends TestCase
                 ->where('weddings.0.id', $due->id)
             );
     }
+
+    public function test_a_couple_without_portal_access_is_not_listed(): void
+    {
+        Wedding::factory()->booked()->create(['wedding_date' => now()->subDays(40)]);
+
+        $this->actingAs($this->jessica)
+            ->get(route('admin.reviews.index'))
+            ->assertInertia(fn (Assert $page) => $page->has('weddings', 0));
+    }
+
 
     public function test_jessica_invites_a_couple_once(): void
     {
@@ -91,5 +101,13 @@ class ReviewControllerTest extends TestCase
         auth()->logout();
 
         $this->get(route('admin.reviews.index'))->assertRedirect(route('login'));
+    }
+
+    private function bookedWedding(int $daysAgo): Wedding
+    {
+        return Wedding::factory()
+            ->booked()
+            ->for(Couple::factory()->withPortalAccess())
+            ->create(['wedding_date' => now()->subDays($daysAgo)]);
     }
 }
