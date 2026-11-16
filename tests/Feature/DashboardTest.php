@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -297,7 +298,7 @@ class DashboardTest extends TestCase
             ->assertJsonCount(0, 'props.suivi.rappels')
             ->assertJsonPath('props.finances.encaisse', 25050)
             ->assertJsonPath('props.finances.reste', 0)
-            ->assertJsonCount(4, 'props.evenementsTous')
+            ->assertJsonCount(0, 'props.evenementsTous')
             ->assertJsonMissingPath('props.planning');
     }
 
@@ -348,6 +349,129 @@ class DashboardTest extends TestCase
             ->getJson(route('dashboard', ['mois' => '2026-13']))
             ->assertUnprocessable()
             ->assertJsonValidationErrors('mois');
+    }
+
+    public function test_selected_year_filters_indicators_finances_calendar_and_activity(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $booked = $this->wedding('booked', '2025-12-20');
+        $this->wedding('inquiry', '2025-12-22', '3000.50');
+        $this->wedding('booked', '2026-12-20');
+        $this->wedding('quote_sent', '2026-12-22', '9000.00');
+        $service = DB::table('services')->insertGetId(['name' => 'Coordination']);
+        $sold = DB::table('wedding_services')->insertGetId(['wedding_id' => $booked, 'service_id' => $service]);
+        DB::table('payments')->insert([
+            ['wedding_service_id' => $sold, 'type' => 'deposit', 'amount' => '1200.55', 'paid_at' => '2025-12-31', 'due_date' => null],
+            ['wedding_service_id' => $sold, 'type' => 'balance', 'amount' => '500.25', 'paid_at' => null, 'due_date' => '2025-12-20'],
+            ['wedding_service_id' => $sold, 'type' => 'deposit', 'amount' => '9999.00', 'paid_at' => '2026-01-01', 'due_date' => null],
+        ]);
+        DB::table('settings')->insert([
+            ['key' => 'vat_threshold', 'value' => '30000', 'valid_from' => '2025-01-01'],
+            ['key' => 'vat_threshold', 'value' => '37500', 'valid_from' => '2026-01-01'],
+        ]);
+        CalendarEvent::query()->create(['type' => 'jalon', 'title' => 'Jalon de 2026', 'event_date' => '2026-11-10']);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard', ['annee' => 2025]))
+            ->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('annee', 2025)
+            ->where('annees', fn ($years): bool => collect($years)->contains(2025) && collect($years)->contains(2026))
+            ->where('suivi.mariages', 1)
+            ->where('suivi.demandes', 1)
+            ->where('finances.encaisse', 120055)
+            ->where('finances.reste', 50025)
+            ->where('finances.seuil', 3000000)
+            ->where('finances.mois.11.encaisse', 120055)
+            ->where('finances.mois.11.previsionnel', 300050)
+            ->where('planning.mois', '2025-11')
+            ->where('evenementsTous', fn ($events): bool => collect($events)->every(fn ($event): bool => str_starts_with($event['date'], '2025-')))
+            ->has('suivi.rappels', 1)
+            ->where('suivi.rappels.0.type', 'paiement')
+            ->has('activites', 1)
+            ->where('activites.0.montant', 120055));
+    }
+
+    public function test_a_future_year_shows_forecasts_without_counting_future_receipts(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $wedding = Wedding::factory()->booked()->create(['wedding_date' => '2027-07-20']);
+        $service = WeddingService::factory()->for($wedding)->create();
+        Payment::factory()->for($service)->create(['amount' => '1200.55', 'paid_at' => '2027-01-01']);
+        Payment::factory()->for($service)->create(['amount' => '500.25', 'paid_at' => null, 'due_date' => '2027-07-20']);
+        $this->wedding('inquiry', '2027-12-12', '3000.50');
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard', ['annee' => 2027]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('annee', 2027)
+                ->where('suivi.mariages', 1)
+                ->where('suivi.demandes', 1)
+                ->where('finances.encaisse', 0)
+                ->where('finances.reste', 50025)
+                ->where('finances.mois.11.previsionnel', 300050)
+                ->has('activites', 0));
+    }
+
+    public function test_an_empty_selected_year_is_available_and_survives_partial_refresh(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard', ['annee' => 2031, 'mois' => '2031-01']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('annee', 2031)
+                ->where('annees', [2031, 2027, 2026])
+                ->where('planning.mois', '2031-01')
+                ->where('finances.encaisse', 0)
+                ->where('suivi.mariages', 0)
+                ->has('evenementsTous', 0)
+                ->has('activites', 0));
+
+        $this->get(route('dashboard', ['annee' => 2031, 'mois' => '2031-01']), [
+            'X-Inertia' => 'true', 'X-Inertia-Partial-Component' => 'Dashboard',
+            'X-Inertia-Version' => Inertia::getVersion() ?? '',
+            'X-Inertia-Partial-Data' => 'annee,annees,finances,suivi,planning,evenementsTous,activites',
+        ])->assertOk()
+            ->assertJsonPath('props.annee', 2031)
+            ->assertJsonPath('props.planning.mois', '2031-01')
+            ->assertJsonPath('props.finances.encaisse', 0);
+    }
+
+    public function test_year_choices_include_recorded_payment_and_automatic_milestone_years(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $wedding = Wedding::factory()->booked()->create(['wedding_date' => '2029-02-20']);
+        Payment::factory()->for(WeddingService::factory()->for($wedding))->create([
+            'paid_at' => '2024-12-31', 'due_date' => '2025-01-01',
+        ]);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('annee', 2026)
+                ->where('annees', [2029, 2028, 2027, 2026, 2025, 2024]));
+    }
+
+    public function test_undated_inquiries_use_their_first_contact_or_creation_year(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        Wedding::factory()->create(['wedding_date' => null, 'first_contact_at' => '2025-12-31']);
+        Wedding::factory()->create(['wedding_date' => null, 'first_contact_at' => null, 'created_at' => '2025-11-01 10:00:00']);
+        Wedding::factory()->create(['wedding_date' => null, 'first_contact_at' => '2026-01-01']);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard', ['annee' => 2025]))
+            ->assertInertia(fn (Assert $page) => $page->where('suivi.demandes', 2));
+    }
+
+    #[TestWith([1999])]
+    #[TestWith([2101])]
+    #[TestWith(['invalide'])]
+    #[TestWith([[2025]])]
+    public function test_the_dashboard_rejects_invalid_years(mixed $year): void
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->getJson(route('dashboard', ['annee' => $year]))
+            ->assertUnprocessable()->assertJsonValidationErrors('annee');
     }
 
     private function wedding(string $status, string $date, ?string $budget = null): int

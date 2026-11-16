@@ -18,31 +18,41 @@ class DashboardController extends Controller
 
     public function __invoke(Request $request, CalendarSchedule $calendar): Response
     {
-        $data = $request->validate(['mois' => ['nullable', 'date_format:Y-m']]);
+        $data = $request->validate([
+            'mois' => ['nullable', 'date_format:Y-m'],
+            'annee' => ['nullable', 'integer', 'between:2000,2100'],
+        ]);
         $now = now()->toImmutable();
         $today = $now->startOfDay();
+        $year = (int) ($data['annee'] ?? $today->year);
         $month = isset($data['mois'])
             ? CarbonImmutable::createFromFormat('!Y-m', $data['mois'], $today->getTimezone())
             : $today->startOfMonth();
+        $month = $month->setYear($year);
 
         return Inertia::render('Dashboard', [
             'aujourdhui' => $today->toDateString(),
-            'annee' => $today->year,
-            'finances' => fn (): array => $this->finances($today),
-            'suivi' => fn (): array => $this->followUp($now, $calendar),
+            'annee' => $year,
+            'annees' => fn (): array => $this->availableYears($today, $year, $calendar),
+            'finances' => fn (): array => $this->finances($today, $year),
+            'suivi' => fn (): array => $this->followUp($now, $calendar, $year),
             'planning' => fn (): array => $this->planning($month),
-            'evenementsTous' => fn (): Collection => $calendar->events(),
-            'activites' => fn (): Collection => $this->activity($now),
+            'evenementsTous' => fn (): Collection => $calendar->events()
+                ->filter(fn (array $event): bool => str_starts_with($event['date'], $year.'-'))->values(),
+            'activites' => fn (): Collection => $this->activity($now, $year),
         ]);
     }
 
     /** @return array{encaisse: int, reste: int, moyenne: ?int, seuil: ?int, seuilMajore: ?int, mois: list<array{encaisse: int, signe: int, previsionnel: int}>} */
-    private function finances(CarbonImmutable $today): array
+    private function finances(CarbonImmutable $today, int $year): array
     {
-        $start = $today->startOfYear()->toDateString();
-        $end = $today->startOfYear()->addYear()->toDateString();
+        $yearStart = $today->startOfYear()->setYear($year);
+        $start = $yearStart->toDateString();
+        $end = $yearStart->addYear()->toDateString();
+        $paidUntil = $today->addDay()->min($yearStart->addYear())->toDateString();
+        $reference = $year === $today->year ? $today : $yearStart->endOfYear();
 
-        $paid = $this->payments()->where('paid_at', '>=', $start)->where('paid_at', '<', $today->addDay()->toDateString())
+        $paid = $this->payments()->where('paid_at', '>=', $start)->where('paid_at', '<', $paidUntil)
             ->get(['payments.amount', 'paid_at', 'weddings.id as wedding_id']);
         $pending = $this->payments()->whereNull('paid_at')
             ->whereIn('weddings.status', self::CONFIRMED)
@@ -68,7 +78,7 @@ class DashboardController extends Controller
         }
 
         $settings = DB::table('settings')->whereIn('key', ['vat_threshold', 'vat_threshold_immediate'])
-            ->where('valid_from', '<=', $today->toDateString())
+            ->where('valid_from', '<=', $reference->toDateString())
             ->orderByDesc('valid_from')->get(['key', 'value'])->unique('key')->pluck('value', 'key');
         $total = array_sum(array_column($months, 'encaisse'));
         $paidWeddings = $paid->pluck('wedding_id')->unique()->count();
@@ -124,18 +134,22 @@ class DashboardController extends Controller
     }
 
     /** @return array{mariages: int, demandes: int, prochainJalon: ?array<string, mixed>, rappels: Collection<int, array<string, mixed>>} */
-    private function followUp(CarbonImmutable $now, CalendarSchedule $calendar): array
+    private function followUp(CarbonImmutable $now, CalendarSchedule $calendar, int $year): array
     {
         $today = $now->startOfDay();
         $date = $today->toDateString();
         $end = $today->addDays(7)->toDateString();
-        $tasks = $this->tasks()->where('due_date', '<=', $end)->orderBy('due_date')->orderBy('tasks.id')->limit(4)
+        $tasks = $this->forYear($this->tasks(), 'due_date', $year)
+            ->where('due_date', '<=', $end)->orderBy('due_date')->orderBy('tasks.id')->limit(4)
             ->get(['tasks.id', 'tasks.wedding_id', 'title', 'due_date'])
             ->map(fn (object $row): array => [
                 ...$this->event('tache', $row->id, 'jalon', $row->due_date, $row->title),
                 'url' => route('admin.wedding.show', $row->wedding_id),
             ]);
-        $scheduled = $calendar->events()->filter(function (array $event) use ($date, $now): bool {
+        $scheduled = $calendar->events()->filter(function (array $event) use ($date, $now, $year): bool {
+            if (! str_starts_with($event['date'], $year.'-')) {
+                return false;
+            }
             if (! in_array($event['type'], ['jalon', 'rdv', 'jour-j'], true)) {
                 return false;
             }
@@ -154,7 +168,7 @@ class DashboardController extends Controller
             'lieu' => $event['couple'] ?? $event['lieu'] ?? null,
             'url' => route('calendrier', ['date' => $event['date'], 'event' => $event['id']]),
         ]);
-        $payments = $this->payments()->whereNull('paid_at')->where('weddings.status', '!=', 'cancelled')
+        $payments = $this->forYear($this->payments(), 'due_date', $year)->whereNull('paid_at')->where('weddings.status', '!=', 'cancelled')
             ->where('due_date', '<=', $end)->orderBy('due_date')->orderBy('payments.id')->limit(4)
             ->get(['payments.id', 'due_date', 'invoice_number', 'couples.partner1_first_name', 'couples.partner2_first_name'])
             ->map(fn (object $row): array => [
@@ -164,7 +178,7 @@ class DashboardController extends Controller
                 ),
                 'url' => route('facturation.index'),
             ]);
-        $nextTask = $this->tasks()->where('due_date', '>=', $date)->orderBy('due_date')->orderBy('tasks.id')
+        $nextTask = $this->forYear($this->tasks(), 'due_date', $year)->where('due_date', '>=', $date)->orderBy('due_date')->orderBy('tasks.id')
             ->first(['tasks.id', 'tasks.wedding_id', 'title', 'due_date']);
         $milestones = $scheduled->where('type', 'jalon')->where('date', '>=', $date)->values();
         if ($nextTask !== null) {
@@ -174,9 +188,13 @@ class DashboardController extends Controller
             ]);
         }
 
+        $weddings = DB::table('weddings')
+            ->whereRaw('COALESCE(wedding_date, first_contact_at, created_at) >= ?', [$year.'-01-01'])
+            ->whereRaw('COALESCE(wedding_date, first_contact_at, created_at) < ?', [($year + 1).'-01-01']);
+
         return [
-            'mariages' => DB::table('weddings')->where('status', 'booked')->count(),
-            'demandes' => DB::table('weddings')->whereIn('status', ['inquiry', 'quote_sent'])->count(),
+            'mariages' => (clone $weddings)->where('status', 'booked')->count(),
+            'demandes' => (clone $weddings)->whereIn('status', ['inquiry', 'quote_sent'])->count(),
             'prochainJalon' => $milestones->sortBy('date')->first(),
             'rappels' => $tasks->concat($scheduled->where('date', '<=', $end))->concat($payments)
                 ->sortBy(fn (array $event): string => $event['date'].' '.($event['heure'] ?? '00:00'))
@@ -184,10 +202,12 @@ class DashboardController extends Controller
         ];
     }
 
-    private function activity(CarbonImmutable $now): Collection
+    private function activity(CarbonImmutable $now, int $year): Collection
     {
         $timestamp = $now->toDateTimeString();
         $contacts = $this->weddings()->whereRaw('COALESCE(weddings.created_at, weddings.first_contact_at) <= ?', [$timestamp])
+            ->whereRaw('COALESCE(weddings.created_at, weddings.first_contact_at) >= ?', [$year.'-01-01'])
+            ->whereRaw('COALESCE(weddings.created_at, weddings.first_contact_at) < ?', [($year + 1).'-01-01'])
             ->orderByRaw('COALESCE(weddings.created_at, weddings.first_contact_at) DESC')->orderByDesc('weddings.id')->limit(4)
             ->get(['weddings.id', 'weddings.status', 'couples.partner1_first_name', 'couples.partner2_first_name',
                 DB::raw('COALESCE(weddings.created_at, weddings.first_contact_at) as occurred_at')])
@@ -196,18 +216,19 @@ class DashboardController extends Controller
                 $row->status === 'inquiry' ? 'Nouvelle demande' : 'Nouveau dossier', $this->couple($row),
                 route('admin.wedding.show', $row->id),
             ));
-        $receipts = $this->payments()->where('paid_at', '<', $now->addDay()->startOfDay()->toDateString())
+        $receipts = $this->forYear($this->payments(), 'paid_at', $year)->where('paid_at', '<', $now->addDay()->startOfDay()->toDateString())
             ->orderByDesc('paid_at')->orderByDesc('payments.id')->limit(4)
             ->get(['payments.id', 'paid_at', 'payments.amount', 'couples.partner1_first_name', 'couples.partner2_first_name'])
             ->map(fn (object $row): array => [
                 ...$this->activityEvent('encaissement', $row->id, 'euro', substr($row->paid_at, 0, 10), 'Paiement encaissé', $this->couple($row), route('facturation.index')),
                 'montant' => $this->cents($row->amount),
             ]);
-        $proposals = DB::table('proposals')->where('approved_at', '<=', $timestamp)
+        $proposals = $this->forYear(DB::table('proposals'), 'approved_at', $year)->where('approved_at', '<=', $timestamp)
             ->orderByDesc('approved_at')->orderByDesc('id')->limit(4)->get(['id', 'wedding_id', 'approved_at', 'title'])
             ->map(fn (object $row): array => $this->activityEvent('proposition', $row->id, 'palette', $row->approved_at, 'Proposition validée', $row->title, route('admin.wedding.show', $row->wedding_id)));
         $messages = $this->weddings()->join('messages', 'messages.wedding_id', '=', 'weddings.id')
             ->leftJoin('users as senders', 'senders.id', '=', 'messages.sender_id')
+            ->where('messages.created_at', '>=', $year.'-01-01')->where('messages.created_at', '<', ($year + 1).'-01-01')
             ->where('messages.created_at', '<=', $timestamp)
             ->orderByDesc('messages.created_at')->orderByDesc('messages.id')->limit(4)
             ->get(['messages.id', 'messages.created_at', 'senders.role', 'couples.id as couple_id', 'couples.user_id', 'weddings.id as wedding_id', 'couples.partner1_first_name', 'couples.partner2_first_name'])
@@ -217,6 +238,7 @@ class DashboardController extends Controller
                 $row->user_id === null ? route('admin.wedding.show', $row->wedding_id) : route('admin.messages.show', $row->couple_id),
             ));
         $documents = $this->weddings()->join('documents', 'documents.wedding_id', '=', 'weddings.id')
+            ->where('documents.created_at', '>=', $year.'-01-01')->where('documents.created_at', '<', ($year + 1).'-01-01')
             ->where('documents.created_at', '<=', $timestamp)
             ->orderByDesc('documents.created_at')->orderByDesc('documents.id')->limit(4)
             ->get(['documents.id', 'documents.created_at', 'documents.title', 'couples.id as couple_id', 'couples.user_id', 'weddings.id as wedding_id'])
@@ -225,6 +247,7 @@ class DashboardController extends Controller
                 $row->user_id === null ? route('admin.wedding.show', $row->wedding_id) : route('admin.documents.index', ['couple_id' => $row->couple_id]),
             ));
         $events = $this->calendarEvents()?->where('created_at', '<=', $timestamp)
+            ->where('created_at', '>=', $year.'-01-01')->where('created_at', '<', ($year + 1).'-01-01')
             ->orderByDesc('created_at')->orderByDesc('id')->limit(4)->get(['id', 'created_at', 'title', 'event_date'])
             ->map(fn (object $row): array => $this->activityEvent(
                 'calendrier', $row->id, 'calendar_today', $row->created_at, 'Événement ajouté', $row->title,
@@ -244,6 +267,38 @@ class DashboardController extends Controller
             'heure' => strlen($date) > 10 ? substr($date, 11, 5) : null,
             'url' => $url,
         ];
+    }
+
+    private function forYear(Builder $query, string $column, int $year): Builder
+    {
+        return $query->where($column, '>=', $year.'-01-01')->where($column, '<', ($year + 1).'-01-01');
+    }
+
+    /** @return list<int> */
+    private function availableYears(CarbonImmutable $today, int $selectedYear, CalendarSchedule $calendar): array
+    {
+        $query = DB::table('weddings')->whereNotNull('wedding_date')->selectRaw('SUBSTR(wedding_date, 1, 4) as year');
+        $sources = [
+            'weddings' => ['first_contact_at', 'created_at'],
+            'payments' => ['paid_at', 'due_date', 'invoiced_at'],
+            'tasks' => ['due_date'],
+            'messages' => ['created_at'],
+            'documents' => ['created_at'],
+            'proposals' => ['approved_at'],
+            'calendar_events' => ['created_at'],
+        ];
+        foreach ($sources as $table => $columns) {
+            foreach ($columns as $column) {
+                $query->unionAll(DB::table($table)->whereNotNull($column)->selectRaw("SUBSTR({$column}, 1, 4) as year"));
+            }
+        }
+
+        return DB::query()->fromSub($query, 'dashboard_years')->distinct()->pluck('year')
+            ->map(fn (string|int $year): int => (int) $year)
+            ->concat($calendar->events()->map(fn (array $event): int => (int) substr($event['date'], 0, 4)))
+            ->concat([$today->year, $today->year + 1, $selectedYear])
+            ->filter(fn (int $year): bool => $year >= 2000 && $year <= 2100)
+            ->unique()->sortDesc()->values()->all();
     }
 
     private function weddings(): Builder

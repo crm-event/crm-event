@@ -88,11 +88,8 @@ function Case({ jour, mois, annee, horsMois, index, derniereLigne, evenements })
     );
 }
 
-export default function CalendrierMensuel({ evenementsTous }) {
-    const [moisAffiche, setMoisAffiche] = useState(() => {
-        const aujourdHui = new Date();
-        return new Date(aujourdHui.getFullYear(), aujourdHui.getMonth(), 1);
-    });
+export default function CalendrierMensuel({ evenementsTous, moisInitial, onChangerAnnee }) {
+    const [moisAffiche, setMoisAffiche] = useState(() => new Date(`${moisInitial}-01T12:00:00`));
     const annee = moisAffiche.getFullYear();
     const mois = moisAffiche.getMonth() + 1;
     const cases = useMemo(() => construireCases(annee, mois), [annee, mois]);
@@ -104,7 +101,12 @@ export default function CalendrierMensuel({ evenementsTous }) {
     const dateDuMois = `${annee}-${String(mois).padStart(2, '0')}-01`;
 
     const changerMois = (delta) => {
-        setMoisAffiche((date) => new Date(date.getFullYear(), date.getMonth() + delta, 1));
+        const prochain = new Date(annee, moisAffiche.getMonth() + delta, 1);
+        if (prochain.getFullYear() !== annee) {
+            onChangerAnnee(prochain.getFullYear(), `${prochain.getFullYear()}-${String(prochain.getMonth() + 1).padStart(2, '0')}`);
+        } else {
+            setMoisAffiche(prochain);
+        }
     };
 
     return (
@@ -137,6 +139,7 @@ export default function CalendrierMensuel({ evenementsTous }) {
                         <button
                             type="button"
                             aria-label="Mois précédent"
+                            disabled={annee === 2000 && mois === 1}
                             onClick={() => changerMois(-1)}
                             className={`${anneauFocus} p-1.5 text-sage transition-colors hover:bg-ivory hover:text-ink`}
                         >
@@ -146,6 +149,7 @@ export default function CalendrierMensuel({ evenementsTous }) {
                         <button
                             type="button"
                             aria-label="Mois suivant"
+                            disabled={annee === 2100 && mois === 12}
                             onClick={() => changerMois(1)}
                             className={`${anneauFocus} p-1.5 text-sage transition-colors hover:bg-ivory hover:text-ink`}
                         >
