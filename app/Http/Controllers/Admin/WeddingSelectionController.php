@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\Venue;
 use App\Models\Wedding;
+use App\Models\WeddingService;
 use App\Support\WeddingDesign;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -94,6 +95,7 @@ class WeddingSelectionController extends Controller
                 ->map(fn ($service) => [
                     'service_id' => (int) $service->service_id,
                     'amount' => $service->amount,
+                    'locked' => $service->quote_accepted_at !== null || $service->contract_signed_at !== null,
                 ])
                 ->values(),
         ]);
@@ -119,7 +121,7 @@ class WeddingSelectionController extends Controller
                 Rule::exists('services', 'id'),
             ],
             'service_amounts' => ['present', 'array'],
-            'service_amounts.*' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+            'service_amounts.*' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
 
         // Ensure that each selected service has exactly one amount.
@@ -142,7 +144,37 @@ class WeddingSelectionController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($wedding, $validated) {
+        DB::transaction(function () use ($wedding, $validated, $selectedServiceIds) {
+            $lockedServices = $wedding->weddingServices()->lockForUpdate()->get()
+                ->filter(fn (WeddingService $sold): bool => $sold->quote_accepted_at !== null || $sold->contract_signed_at !== null);
+
+            $lockedByService = $lockedServices->keyBy('service_id');
+
+            foreach ($selectedServiceIds as $serviceId) {
+                if (! $lockedByService->has($serviceId) && $validated['service_amounts'][$serviceId] === null) {
+                    throw ValidationException::withMessages([
+                        'service_amounts.'.$serviceId => 'Le montant de cette prestation est obligatoire.',
+                    ]);
+                }
+            }
+
+            foreach ($lockedServices as $sold) {
+                if (! in_array((string) $sold->service_id, $selectedServiceIds, true)) {
+                    throw ValidationException::withMessages([
+                        'service_ids' => 'Une prestation dont le devis est accepté ou le contrat signé ne peut pas être retirée.',
+                    ]);
+                }
+
+                $submittedAmount = $validated['service_amounts'][$sold->service_id];
+                $amountChanged = $sold->amount === null
+                    ? $submittedAmount !== null
+                    : $submittedAmount === null || round((float) $sold->amount * 100) !== round((float) $submittedAmount * 100);
+                if ($amountChanged) {
+                    throw ValidationException::withMessages([
+                        'service_amounts.'.$sold->service_id => 'Le montant d’un devis accepté ou d’un contrat signé ne peut pas être modifié. Utilisez un avenant.',
+                    ]);
+                }
+            }
 
             // Update wedding information.
             $wedding->update([
@@ -163,6 +195,10 @@ class WeddingSelectionController extends Controller
 
             // Create or update selected services.
             foreach ($validated['service_ids'] as $serviceId) {
+                if ($lockedByService->has($serviceId)) {
+                    continue;
+                }
+
                 $wedding->weddingServices()->updateOrCreate(
                     ['service_id' => $serviceId],
                     [

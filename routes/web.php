@@ -112,11 +112,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/facturation', FacturationController::class)->name('facturation.index');
     Route::post('/facturation/paiements', [FacturationController::class, 'store'])->name('facturation.payments.store');
     Route::patch('/facturation/paiements/{payment}', [FacturationController::class, 'update'])->whereNumber('payment')->name('facturation.payments.update');
+    Route::patch('/facturation/paiements/{payment}/facture', [FacturationController::class, 'attachInvoice'])->whereNumber('payment')->name('facturation.payments.invoice');
     Route::get('/depenses', [DepenseController::class, 'index'])->name('depenses.index');
     Route::post('/depenses', [DepenseController::class, 'store'])->name('depenses.store');
     Route::get('/depenses/{expense}/justificatif', [DepenseController::class, 'receipt'])->name('depenses.receipt');
     Route::post('/depenses/{expense}/justificatif', [DepenseController::class, 'storeReceipt'])->name('depenses.receipt.store');
-    Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
+    Route::get('/mariages/prestations-devis', [PrestationsDevisController::class, 'index'])->name('mariages.prestations');
+    Route::post('/mariages/prestations-devis/avenants', [PrestationsDevisController::class, 'storeAmendment'])->name('mariages.amendments.store');
+    Route::post('/mariages/prestations-devis/avenants/{amendment}/signature', [PrestationsDevisController::class, 'recordSignature'])->name('mariages.amendments.signature');
 });
 Route::get('/recherche', SearchController::class)->middleware(['auth', 'verified', 'role:admin', 'throttle:60,1'])->name('recherche');
 
