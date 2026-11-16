@@ -1,12 +1,10 @@
-import Icone from '@/Components/Icone';
 import BackOfficeLayout from '@/Layouts/BackOfficeLayout';
 import ActiviteRecente from '@/Pages/Dashboard/Partials/ActiviteRecente';
 import CalendrierMensuel from '@/Pages/Dashboard/Partials/CalendrierMensuel';
 import CartesIndicateurs from '@/Pages/Dashboard/Partials/CartesIndicateurs';
 import GraphiqueChiffreAffaires from '@/Pages/Dashboard/Partials/GraphiqueChiffreAffaires';
 import RappelsPrioritaires from '@/Pages/Dashboard/Partials/RappelsPrioritaires';
-import { anneauFocus } from '@/charte';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 
 export default function Dashboard({ aujourdhui, annee, finances, suivi, evenementsTous, activites }) {
     const prenom = usePage().props.auth.user.name.split(' ')[0];
@@ -32,15 +30,6 @@ export default function Dashboard({ aujourdhui, annee, finances, suivi, evenemen
                         </p>
                     </div>
 
-                    {route().has('demandes') && (
-                        <Link
-                            href={route('demandes', { nouvelle: 1 })}
-                            className={anneauFocus + ' inline-flex items-center gap-2 rounded-lg border border-hairline bg-white px-4 py-2 text-label text-ink hover:bg-ivory'}
-                        >
-                            <Icone nom="add_circle" className="text-[17px] text-sage" />
-                            Nouvelle demande
-                        </Link>
-                    )}
                 </header>
 
                 <CartesIndicateurs suivi={suivi} finances={finances} />

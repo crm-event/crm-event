@@ -33,16 +33,15 @@ class BillingManagementTest extends TestCase
 
         $this->actingAs(User::factory()->admin()->create())->get(route('facturation.index'))
             ->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Facturation')->has('encaissements', 1)->has('prestations', 1)
-            ->where('encaissements.0.id', $payment->id)
-            ->where('encaissements.0.montant', '125.50')
-            ->where('encaissements.0.paiement', '2026-03-05')
-            ->where('encaissements.0.facture_numero', 'FACT-TEST-1')
-            ->where('encaissements.0.facture_url', 'https://example.com/invoice/test')
-            ->where('encaissements.0.facture_lien', 'https://example.com/invoice/test')
+            ->component('Facturation')->has('payments', 1)->has('services', 1)
+            ->where('payments.0.id', $payment->id)
+            ->where('payments.0.amount', fn ($amount) => (float) $amount === 125.50)
+            ->where('payments.0.paid_at', fn ($date) => str_starts_with($date, '2026-03-05'))
+            ->where('payments.0.invoice_number', 'FACT-TEST-1')
+            ->where('payments.0.invoice_url', 'https://example.com/invoice/test')
             ->where('seuils.0.cle', 'vat_threshold')
             ->where('seuils.0.valeur', '37500')
-            ->where('prestations.0.id', $sold->id));
+            ->where('services.0.id', $sold->id));
     }
 
     public function test_an_admin_can_create_and_update_a_payment_and_external_invoice_reference(): void
@@ -60,7 +59,7 @@ class BillingManagementTest extends TestCase
         $this->assertSame('100.50', $payment->amount);
         $this->assertNull($payment->paid_at);
 
-        $this->put(route('facturation.payments.update', $payment), [...$data, 'paid_at' => '2026-04-12'])
+        $this->patch(route('facturation.payments.update', $payment), ['paid_at' => '2026-04-12'])
             ->assertRedirect(route('facturation.index'))->assertSessionHasNoErrors();
         $this->assertSame('2026-04-12', $payment->fresh()->paid_at->toDateString());
         $this->assertDatabaseCount('payments', 1);
@@ -72,8 +71,7 @@ class BillingManagementTest extends TestCase
 
         $this->actingAs(User::factory()->admin()->create())->get(route('facturation.index'))
             ->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->where('encaissements.0.facture_url', 'javascript:alert(1)')
-            ->where('encaissements.0.facture_lien', null));
+            ->where('payments.0.invoice_url', null));
     }
 
     public function test_invalid_payment_data_and_duplicate_invoice_numbers_are_rejected(): void
@@ -91,10 +89,50 @@ class BillingManagementTest extends TestCase
 
         $payment = Payment::factory()->for($sold, 'weddingService')->create();
         $other = WeddingService::factory()->create();
-        $this->put(route('facturation.payments.update', $payment), [
-            'wedding_service_id' => $other->id, 'type' => 'deposit', 'amount' => '10.00',
-        ])->assertSessionHasErrors('wedding_service_id');
+        $this->patch(route('facturation.payments.update', $payment), [
+            'wedding_service_id' => $other->id, 'type' => 'balance', 'amount' => '10.00', 'paid_at' => null,
+        ])->assertSessionHasNoErrors();
         $this->assertSame($sold->id, $payment->fresh()->wedding_service_id);
+    }
+
+    public function test_an_invoice_can_be_added_to_an_amendment_payment_without_overwriting_it(): void
+    {
+        $payment = Payment::factory()->create(['type' => 'amendment', 'amount' => '80.00', 'invoice_number' => null]);
+        $this->actingAs(User::factory()->admin()->create());
+        $data = ['invoice_number' => 'FACT-AVENANT-TEST', 'invoiced_at' => '2026-04-01', 'invoice_url' => 'https://example.com/test'];
+
+        $this->patch(route('facturation.payments.invoice', $payment), $data)
+            ->assertRedirect(route('facturation.index'))->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'amount' => 80, 'type' => 'amendment', 'invoice_number' => 'FACT-AVENANT-TEST']);
+
+        $this->patch(route('facturation.payments.invoice', $payment), [...$data, 'invoice_number' => 'AUTRE-FACTURE'])
+            ->assertSessionHasErrors('invoice_number');
+        $this->assertSame('FACT-AVENANT-TEST', $payment->fresh()->invoice_number);
+    }
+
+    public function test_an_invoice_reference_rejects_invalid_or_duplicate_values(): void
+    {
+        Payment::factory()->create(['invoice_number' => 'FACT-EXISTANTE']);
+        $payment = Payment::factory()->create(['invoice_number' => null]);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->patch(route('facturation.payments.invoice', $payment), [
+                'invoice_number' => 'FACT-EXISTANTE', 'invoiced_at' => 'invalid', 'invoice_url' => 'javascript:alert(1)',
+            ])->assertSessionHasErrors(['invoice_number', 'invoiced_at', 'invoice_url']);
+
+        $this->assertNull($payment->fresh()->invoice_number);
+    }
+
+    public function test_attaching_an_invoice_keeps_an_existing_link_when_no_new_link_is_sent(): void
+    {
+        $payment = Payment::factory()->create(['invoice_number' => null, 'invoice_url' => 'https://example.com/existing']);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->patch(route('facturation.payments.invoice', $payment), [
+                'invoice_number' => 'FACT-TEST-LINK', 'invoiced_at' => '2026-04-01', 'invoice_url' => null,
+            ])->assertRedirect(route('facturation.index'))->assertSessionHasNoErrors();
+
+        $this->assertSame('https://example.com/existing', $payment->fresh()->invoice_url);
     }
 
     public function test_the_prestations_page_shows_only_the_selected_wedding_and_its_amendments(): void
@@ -181,10 +219,12 @@ class BillingManagementTest extends TestCase
         $payment = Payment::factory()->create();
         $amendment = QuoteAmendment::factory()->create();
         $this->post(route('facturation.payments.store'))->assertRedirect(route('login'));
+        $this->patch(route('facturation.payments.invoice', $payment))->assertRedirect(route('login'));
         $this->post(route('mariages.amendments.store'))->assertRedirect(route('login'));
         $this->actingAs(User::factory()->create());
         $this->post(route('facturation.payments.store'))->assertForbidden();
-        $this->put(route('facturation.payments.update', $payment))->assertForbidden();
+        $this->patch(route('facturation.payments.update', $payment))->assertForbidden();
+        $this->patch(route('facturation.payments.invoice', $payment))->assertForbidden();
         $this->post(route('mariages.amendments.store'))->assertForbidden();
         $this->post(route('mariages.amendments.signature', $amendment))->assertForbidden();
     }
