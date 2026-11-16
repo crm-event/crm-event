@@ -94,6 +94,15 @@ class AppointmentControllerTest extends TestCase
         );
     }
 
+    public function test_admin_cannot_open_the_page(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('couple.appointments.index'))
+            ->assertForbidden();
+    }
+
     public function test_other_couple_appointments_hidden(): void
     {
         $couple = Couple::factory()->withPortalAccess()->create();
