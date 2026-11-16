@@ -49,6 +49,17 @@ class ReviewControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->has('weddings', 0));
     }
 
+    public function test_a_cancelled_wedding_is_not_listed(): void
+    {
+        Wedding::factory()
+            ->for(Couple::factory()->withPortalAccess())
+            ->create(['status' => 'cancelled', 'wedding_date' => now()->subDays(40)]);
+
+        $this->actingAs($this->jessica)
+            ->get(route('admin.reviews.index'))
+            ->assertInertia(fn (Assert $page) => $page->has('weddings', 0));
+    }
+
     public function test_the_page_receives_the_delay(): void
     {
         $this->actingAs($this->jessica)
