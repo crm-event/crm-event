@@ -21,10 +21,7 @@ class AppointmentController extends Controller
 
         $appointments = $couple === null
             ? collect()
-            : Appointment::query()
-                ->whereHas('wedding', fn ($query) => $query->where('couple_id', $couple->id))
-                ->orderBy('starts_at')
-                ->get();
+            : $couple->appointments()->orderBy('appointments.starts_at')->get();
 
         [$upcoming, $past] = $appointments->partition(
             fn (Appointment $appointment) => $appointment->starts_at->isFuture()
