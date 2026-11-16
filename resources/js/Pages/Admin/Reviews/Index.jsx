@@ -33,7 +33,7 @@ function Stars({ rating }) {
  */
 export default function Reviews({ weddings, delay_days, pending = [], received = [] }) {
     const success = usePage().props.flash?.success;
-
+    const error = usePage().props.flash?.error;
     const invite = (wedding) => {
         router.post(route('admin.reviews.store', wedding.id), {}, { preserveScroll: true });
     };
@@ -49,7 +49,7 @@ export default function Reviews({ weddings, delay_days, pending = [], received =
                 </p>
 
                 {success && <p className="mt-6 text-body text-ink">{success}</p>}
-
+                {error && <p className="mt-6 text-body text-ink">{error}</p>}
                 {weddings.length === 0 ? (
                     <p className="mt-8 text-body text-sage">Aucun couple à solliciter pour le moment.</p>
                 ) : (
