@@ -112,7 +112,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/facturation', FacturationController::class)->name('facturation.index');
     Route::post('/facturation/paiements', [FacturationController::class, 'store'])->name('facturation.payments.store');
     Route::patch('/facturation/paiements/{payment}', [FacturationController::class, 'update'])->whereNumber('payment')->name('facturation.payments.update');
-    Route::get('/depenses', DepenseController::class)->name('depenses.index');
+    Route::get('/depenses', [DepenseController::class, 'index'])->name('depenses.index');
+    Route::post('/depenses', [DepenseController::class, 'store'])->name('depenses.store');
+    Route::get('/depenses/{expense}/justificatif', [DepenseController::class, 'receipt'])->name('depenses.receipt');
+    Route::post('/depenses/{expense}/justificatif', [DepenseController::class, 'storeReceipt'])->name('depenses.receipt.store');
     Route::get('/mariages/prestations-devis', PrestationsDevisController::class)->name('mariages.prestations');
 });
 Route::get('/recherche', SearchController::class)->middleware(['auth', 'verified', 'role:admin', 'throttle:60,1'])->name('recherche');
