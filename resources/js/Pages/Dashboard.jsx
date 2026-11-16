@@ -4,10 +4,11 @@ import CalendrierMensuel from '@/Pages/Dashboard/Partials/CalendrierMensuel';
 import CartesIndicateurs from '@/Pages/Dashboard/Partials/CartesIndicateurs';
 import GraphiqueChiffreAffaires from '@/Pages/Dashboard/Partials/GraphiqueChiffreAffaires';
 import RappelsPrioritaires from '@/Pages/Dashboard/Partials/RappelsPrioritaires';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, usePoll } from '@inertiajs/react';
 
 export default function Dashboard({ aujourdhui, annee, finances, suivi, evenementsTous, activites }) {
     const prenom = usePage().props.auth.user.name.split(' ')[0];
+    usePoll(60000, { only: ['aujourdhui', 'annee', 'finances', 'suivi', 'evenementsTous', 'activites'] });
 
     return (
         <BackOfficeLayout actif="dashboard">
@@ -28,6 +29,7 @@ export default function Dashboard({ aujourdhui, annee, finances, suivi, evenemen
                         <p className="mt-0.5 text-body text-sage">
                             Suivi des dossiers · {annee}
                         </p>
+                        <p className="mt-1 text-body-sm text-sage">Actualisation automatique chaque minute.</p>
                     </div>
 
                 </header>

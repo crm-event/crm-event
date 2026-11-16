@@ -1,5 +1,7 @@
 import Icone from '@/Components/Icone';
 import { dateCourte, euros } from '@/Pages/Dashboard/presentation';
+import { anneauFocus } from '@/charte';
+import { Link } from '@inertiajs/react';
 
 export default function ActiviteRecente({ activites }) {
     return (
@@ -16,8 +18,8 @@ export default function ActiviteRecente({ activites }) {
                         </span>
                         <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-1">
-                                <span className="font-medium text-ink">{activite.libelle}</span>
-                                <time dateTime={activite.date} className="text-[10px] text-sage">{dateCourte(activite.date)}</time>
+                                <Link href={activite.url} className={`${anneauFocus} rounded font-medium text-ink hover:underline`}>{activite.libelle}</Link>
+                                <time dateTime={activite.dateHeure.replace(' ', 'T')} className="text-[10px] text-sage">{dateCourte(activite.date)}{activite.heure && ` à ${activite.heure}`}</time>
                             </div>
                             <p className="mt-0.5 break-words text-sage">
                                 {activite.lieu}

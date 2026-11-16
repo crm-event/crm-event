@@ -19,7 +19,8 @@ class DashboardController extends Controller
     public function __invoke(Request $request, CalendarSchedule $calendar): Response
     {
         $data = $request->validate(['mois' => ['nullable', 'date_format:Y-m']]);
-        $today = now()->toImmutable()->startOfDay();
+        $now = now()->toImmutable();
+        $today = $now->startOfDay();
         $month = isset($data['mois'])
             ? CarbonImmutable::createFromFormat('!Y-m', $data['mois'], $today->getTimezone())
             : $today->startOfMonth();
@@ -28,10 +29,10 @@ class DashboardController extends Controller
             'aujourdhui' => $today->toDateString(),
             'annee' => $today->year,
             'finances' => fn (): array => $this->finances($today),
-            'suivi' => fn (): array => $this->followUp($today),
+            'suivi' => fn (): array => $this->followUp($now, $calendar),
             'planning' => fn (): array => $this->planning($month),
             'evenementsTous' => fn (): Collection => $calendar->events(),
-            'activites' => fn (): Collection => $this->activity($today),
+            'activites' => fn (): Collection => $this->activity($now),
         ]);
     }
 
@@ -39,15 +40,15 @@ class DashboardController extends Controller
     private function finances(CarbonImmutable $today): array
     {
         $start = $today->startOfYear()->toDateString();
-        $end = $today->endOfYear()->toDateString();
+        $end = $today->startOfYear()->addYear()->toDateString();
 
-        $paid = $this->payments()->whereBetween('paid_at', [$start, $today->toDateString()])
+        $paid = $this->payments()->where('paid_at', '>=', $start)->where('paid_at', '<', $today->addDay()->toDateString())
             ->get(['payments.amount', 'paid_at', 'weddings.id as wedding_id']);
         $pending = $this->payments()->whereNull('paid_at')
             ->whereIn('weddings.status', self::CONFIRMED)
-            ->whereBetween('due_date', [$start, $end])->get(['payments.amount', 'due_date']);
+            ->where('due_date', '>=', $start)->where('due_date', '<', $end)->get(['payments.amount', 'due_date']);
         $estimates = DB::table('weddings')->whereIn('status', ['inquiry', 'quote_sent'])
-            ->whereBetween('wedding_date', [$start, $end])
+            ->where('wedding_date', '>=', $start)->where('wedding_date', '<', $end)
             ->whereNotNull('estimated_budget')
             ->whereNotExists(function (Builder $query): void {
                 $query->select('payments.id')->from('payments')
@@ -123,63 +124,126 @@ class DashboardController extends Controller
     }
 
     /** @return array{mariages: int, demandes: int, prochainJalon: ?array<string, mixed>, rappels: Collection<int, array<string, mixed>>} */
-    private function followUp(CarbonImmutable $today): array
+    private function followUp(CarbonImmutable $now, CalendarSchedule $calendar): array
     {
+        $today = $now->startOfDay();
         $date = $today->toDateString();
         $end = $today->addDays(7)->toDateString();
         $tasks = $this->tasks()->where('due_date', '<=', $end)->orderBy('due_date')->orderBy('tasks.id')->limit(4)
-            ->get(['tasks.id', 'title', 'due_date'])
-            ->map(fn (object $row): array => $this->event('tache', $row->id, 'jalon', $row->due_date, $row->title));
-        $appointments = $this->appointments()->where('starts_at', '>=', $date)
-            ->where('starts_at', '<', $today->addDays(8)->toDateString())
-            ->orderBy('starts_at')->orderBy('appointments.id')->limit(4)
-            ->get(['appointments.id', 'title', 'starts_at', 'location'])
-            ->map(fn (object $row): array => $this->event('rdv', $row->id, 'rdv', substr($row->starts_at, 0, 10), $row->title, $row->location));
+            ->get(['tasks.id', 'tasks.wedding_id', 'title', 'due_date'])
+            ->map(fn (object $row): array => [
+                ...$this->event('tache', $row->id, 'jalon', $row->due_date, $row->title),
+                'url' => route('admin.wedding.show', $row->wedding_id),
+            ]);
+        $scheduled = $calendar->events()->filter(function (array $event) use ($date, $now): bool {
+            if (! in_array($event['type'], ['jalon', 'rdv', 'jour-j'], true)) {
+                return false;
+            }
+            if ($event['date'] < $date) {
+                return $event['type'] === 'jalon' && isset($event['editableId']);
+            }
+
+            return $event['type'] !== 'rdv' || $event['date'] > $date
+                || empty($event['heure']) || $event['heure'] >= $now->format('H:i');
+        })->map(fn (array $event): array => [
+            'id' => $event['id'],
+            'type' => $event['type'],
+            'date' => $event['date'],
+            'heure' => $event['heure'] ?? null,
+            'libelle' => $event['titre'],
+            'lieu' => $event['couple'] ?? $event['lieu'] ?? null,
+            'url' => route('calendrier', ['date' => $event['date'], 'event' => $event['id']]),
+        ]);
         $payments = $this->payments()->whereNull('paid_at')->where('weddings.status', '!=', 'cancelled')
             ->where('due_date', '<=', $end)->orderBy('due_date')->orderBy('payments.id')->limit(4)
             ->get(['payments.id', 'due_date', 'invoice_number', 'couples.partner1_first_name', 'couples.partner2_first_name'])
-            ->map(fn (object $row): array => $this->event(
-                'paiement', $row->id, 'paiement', $row->due_date,
-                $row->invoice_number ? 'Facture '.$row->invoice_number : 'Paiement à recevoir', $this->couple($row),
-            ));
+            ->map(fn (object $row): array => [
+                ...$this->event(
+                    'paiement', $row->id, 'paiement', $row->due_date,
+                    $row->invoice_number ? 'Facture '.$row->invoice_number : 'Paiement à recevoir', $this->couple($row),
+                ),
+                'url' => route('facturation.index'),
+            ]);
         $nextTask = $this->tasks()->where('due_date', '>=', $date)->orderBy('due_date')->orderBy('tasks.id')
-            ->first(['tasks.id', 'title', 'due_date']);
-        $nextManual = $this->calendarEvents()?->where('type', 'jalon')->where('event_date', '>=', $date)
-            ->orderBy('event_date')->orderBy('id')->first(['id', 'title', 'event_date', 'location']);
-        $milestones = collect();
+            ->first(['tasks.id', 'tasks.wedding_id', 'title', 'due_date']);
+        $milestones = $scheduled->where('type', 'jalon')->where('date', '>=', $date)->values();
         if ($nextTask !== null) {
-            $milestones->push($this->event('tache', $nextTask->id, 'jalon', $nextTask->due_date, $nextTask->title));
-        }
-        if ($nextManual !== null) {
-            $milestones->push($this->event('calendrier', $nextManual->id, 'jalon', $nextManual->event_date, $nextManual->title, $nextManual->location));
+            $milestones->push([
+                ...$this->event('tache', $nextTask->id, 'jalon', $nextTask->due_date, $nextTask->title),
+                'url' => route('admin.wedding.show', $nextTask->wedding_id),
+            ]);
         }
 
         return [
             'mariages' => DB::table('weddings')->where('status', 'booked')->count(),
             'demandes' => DB::table('weddings')->whereIn('status', ['inquiry', 'quote_sent'])->count(),
             'prochainJalon' => $milestones->sortBy('date')->first(),
-            'rappels' => $tasks->concat($appointments)->concat($payments)->sortBy('date')->take(4)->values(),
+            'rappels' => $tasks->concat($scheduled->where('date', '<=', $end))->concat($payments)
+                ->sortBy(fn (array $event): string => $event['date'].' '.($event['heure'] ?? '00:00'))
+                ->take(4)->values(),
         ];
     }
 
-    private function activity(CarbonImmutable $today): Collection
+    private function activity(CarbonImmutable $now): Collection
     {
-        $contacts = $this->weddings()->where('first_contact_at', '<=', $today->toDateString())
-            ->orderByDesc('first_contact_at')->orderByDesc('weddings.id')->limit(4)
-            ->get(['weddings.id', 'first_contact_at', 'couples.partner1_first_name', 'couples.partner2_first_name'])
-            ->map(fn (object $row): array => $this->event('contact', $row->id, 'person_add', $row->first_contact_at, 'Premier contact', $this->couple($row)));
-        $receipts = $this->payments()->where('paid_at', '<=', $today->toDateString())
+        $timestamp = $now->toDateTimeString();
+        $contacts = $this->weddings()->whereRaw('COALESCE(weddings.created_at, weddings.first_contact_at) <= ?', [$timestamp])
+            ->orderByRaw('COALESCE(weddings.created_at, weddings.first_contact_at) DESC')->orderByDesc('weddings.id')->limit(4)
+            ->get(['weddings.id', 'weddings.status', 'couples.partner1_first_name', 'couples.partner2_first_name',
+                DB::raw('COALESCE(weddings.created_at, weddings.first_contact_at) as occurred_at')])
+            ->map(fn (object $row): array => $this->activityEvent(
+                'contact', $row->id, 'person_add', $row->occurred_at,
+                $row->status === 'inquiry' ? 'Nouvelle demande' : 'Nouveau dossier', $this->couple($row),
+                route('admin.wedding.show', $row->id),
+            ));
+        $receipts = $this->payments()->where('paid_at', '<', $now->addDay()->startOfDay()->toDateString())
             ->orderByDesc('paid_at')->orderByDesc('payments.id')->limit(4)
             ->get(['payments.id', 'paid_at', 'payments.amount', 'couples.partner1_first_name', 'couples.partner2_first_name'])
             ->map(fn (object $row): array => [
-                ...$this->event('encaissement', $row->id, 'euro', $row->paid_at, 'Paiement encaissé', $this->couple($row)),
+                ...$this->activityEvent('encaissement', $row->id, 'euro', substr($row->paid_at, 0, 10), 'Paiement encaissé', $this->couple($row), route('facturation.index')),
                 'montant' => $this->cents($row->amount),
             ]);
-        $proposals = DB::table('proposals')->where('approved_at', '<', $today->addDay()->toDateString())
-            ->orderByDesc('approved_at')->orderByDesc('id')->limit(4)->get(['id', 'approved_at', 'title'])
-            ->map(fn (object $row): array => $this->event('proposition', $row->id, 'palette', substr($row->approved_at, 0, 10), 'Proposition validée', $row->title));
+        $proposals = DB::table('proposals')->where('approved_at', '<=', $timestamp)
+            ->orderByDesc('approved_at')->orderByDesc('id')->limit(4)->get(['id', 'wedding_id', 'approved_at', 'title'])
+            ->map(fn (object $row): array => $this->activityEvent('proposition', $row->id, 'palette', $row->approved_at, 'Proposition validée', $row->title, route('admin.wedding.show', $row->wedding_id)));
+        $messages = $this->weddings()->join('messages', 'messages.wedding_id', '=', 'weddings.id')
+            ->leftJoin('users as senders', 'senders.id', '=', 'messages.sender_id')
+            ->where('messages.created_at', '<=', $timestamp)
+            ->orderByDesc('messages.created_at')->orderByDesc('messages.id')->limit(4)
+            ->get(['messages.id', 'messages.created_at', 'senders.role', 'couples.id as couple_id', 'couples.user_id', 'weddings.id as wedding_id', 'couples.partner1_first_name', 'couples.partner2_first_name'])
+            ->map(fn (object $row): array => $this->activityEvent(
+                'message', $row->id, 'chat', $row->created_at,
+                $row->role === 'admin' ? 'Message envoyé' : 'Message reçu', $this->couple($row),
+                $row->user_id === null ? route('admin.wedding.show', $row->wedding_id) : route('admin.messages.show', $row->couple_id),
+            ));
+        $documents = $this->weddings()->join('documents', 'documents.wedding_id', '=', 'weddings.id')
+            ->where('documents.created_at', '<=', $timestamp)
+            ->orderByDesc('documents.created_at')->orderByDesc('documents.id')->limit(4)
+            ->get(['documents.id', 'documents.created_at', 'documents.title', 'couples.id as couple_id', 'couples.user_id', 'weddings.id as wedding_id'])
+            ->map(fn (object $row): array => $this->activityEvent(
+                'document', $row->id, 'description', $row->created_at, 'Document ajouté', $row->title,
+                $row->user_id === null ? route('admin.wedding.show', $row->wedding_id) : route('admin.documents.index', ['couple_id' => $row->couple_id]),
+            ));
+        $events = $this->calendarEvents()?->where('created_at', '<=', $timestamp)
+            ->orderByDesc('created_at')->orderByDesc('id')->limit(4)->get(['id', 'created_at', 'title', 'event_date'])
+            ->map(fn (object $row): array => $this->activityEvent(
+                'calendrier', $row->id, 'calendar_today', $row->created_at, 'Événement ajouté', $row->title,
+                route('calendrier', ['date' => substr($row->event_date, 0, 10), 'event' => 'event-'.$row->id]),
+            )) ?? collect();
 
-        return $contacts->concat($receipts)->concat($proposals)->sortByDesc('date')->take(4)->values();
+        return $contacts->concat($receipts)->concat($proposals)->concat($messages)->concat($documents)->concat($events)
+            ->sortByDesc('dateHeure')->take(4)->values();
+    }
+
+    /** @return array<string, mixed> */
+    private function activityEvent(string $source, int $id, string $type, string $date, string $label, ?string $place, string $url): array
+    {
+        return [
+            ...$this->event($source, $id, $type, substr($date, 0, 10), $label, $place),
+            'dateHeure' => strlen($date) === 10 ? $date.' 00:00:00' : $date,
+            'heure' => strlen($date) > 10 ? substr($date, 11, 5) : null,
+            'url' => $url,
+        ];
     }
 
     private function weddings(): Builder
@@ -218,7 +282,7 @@ class DashboardController extends Controller
     /** @return array{id: string, type: string, date: string, libelle: string, lieu: ?string} */
     private function event(string $source, int $id, string $type, string $date, string $label, ?string $place = null): array
     {
-        return ['id' => $source.'-'.$id, 'type' => $type, 'date' => $date, 'libelle' => $label, 'lieu' => $place];
+        return ['id' => $source.'-'.$id, 'type' => $type, 'date' => substr($date, 0, 10), 'libelle' => $label, 'lieu' => $place];
     }
 
     private function couple(object $row): string

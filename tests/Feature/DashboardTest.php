@@ -2,12 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Models\Appointment;
+use App\Models\CalendarEvent;
+use App\Models\Couple;
+use App\Models\Document;
+use App\Models\Message;
+use App\Models\Payment;
+use App\Models\Proposal;
 use App\Models\User;
+use App\Models\Wedding;
+use App\Models\WeddingService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -122,8 +132,214 @@ class DashboardTest extends TestCase
                 ->has('planning.evenements', 4)
                 ->where('planning.evenements.3.libelle', 'Préparation manuelle')
                 ->where('suivi.prochainJalon.libelle', 'Jalon saisi dans le calendrier')
-                ->has('suivi.rappels', 1)
+                ->has('suivi.rappels', 3)
                 ->where('suivi.rappels.0.libelle', 'Ancienne échéance'));
+    }
+
+    public function test_reminders_include_calendar_milestones_tasks_appointments_and_unpaid_invoices_in_due_order(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $wedding = Wedding::factory()->booked()->create(['wedding_date' => '2027-07-20']);
+        $overdue = CalendarEvent::query()->create([
+            'type' => 'jalon', 'title' => 'Validation du plan de table', 'event_date' => '2026-11-08',
+        ]);
+        $task = DB::table('tasks')->insertGetId([
+            'wedding_id' => $wedding->id, 'title' => 'Appeler le traiteur', 'due_date' => '2026-11-09',
+        ]);
+        $appointment = Appointment::factory()->for($wedding)->create(['starts_at' => '2026-11-09 14:30:00']);
+        $payment = Payment::factory()->for(WeddingService::factory()->for($wedding))->create([
+            'paid_at' => null, 'due_date' => '2026-11-10', 'invoice_number' => 'FAC-001',
+        ]);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('suivi.rappels', 4)
+                ->where('suivi.rappels.0.id', 'event-'.$overdue->id)
+                ->where('suivi.rappels.0.url', route('calendrier', ['date' => '2026-11-08', 'event' => 'event-'.$overdue->id]))
+                ->where('suivi.rappels.1.id', 'tache-'.$task)
+                ->where('suivi.rappels.1.url', route('admin.wedding.show', $wedding->id))
+                ->where('suivi.rappels.2.id', 'appointment-'.$appointment->id)
+                ->where('suivi.rappels.2.heure', '14:30')
+                ->where('suivi.rappels.3.id', 'paiement-'.$payment->id)
+                ->where('suivi.rappels.3.url', route('facturation.index')));
+    }
+
+    public function test_reminders_hide_past_appointments_deleted_events_completed_tasks_and_cancelled_weddings(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $wedding = Wedding::factory()->booked()->create(['wedding_date' => '2027-07-20']);
+        $cancelled = Wedding::factory()->create(['status' => 'cancelled', 'wedding_date' => '2026-11-10']);
+        Appointment::factory()->for($wedding)->create(['starts_at' => '2026-11-09 09:00:00']);
+        Appointment::factory()->for($wedding)->create(['starts_at' => '2026-11-17 09:00:00']);
+        $cancelledAppointment = Appointment::factory()->for($cancelled)->create(['starts_at' => '2026-11-10 09:00:00']);
+        $deleted = CalendarEvent::query()->create([
+            'type' => 'jalon', 'title' => 'Supprimé', 'event_date' => '2026-11-09',
+        ]);
+        $deleted->delete();
+        CalendarEvent::query()->create([
+            'type' => 'rdv', 'title' => 'Rendez-vous terminé', 'event_date' => '2026-11-09', 'event_time' => '10:00:00',
+        ]);
+        CalendarEvent::query()->create([
+            'type' => 'jalon', 'title' => 'Hors période', 'event_date' => '2026-11-17',
+        ]);
+        DB::table('tasks')->insert([
+            ['wedding_id' => $wedding->id, 'title' => 'Faite', 'due_date' => '2026-11-09', 'status' => 'done', 'completed_at' => null, 'deleted_at' => null],
+            ['wedding_id' => $wedding->id, 'title' => 'Terminée', 'due_date' => '2026-11-09', 'status' => 'todo', 'completed_at' => now(), 'deleted_at' => null],
+            ['wedding_id' => $wedding->id, 'title' => 'Supprimée', 'due_date' => '2026-11-09', 'status' => 'todo', 'completed_at' => null, 'deleted_at' => now()],
+        ]);
+        Payment::factory()->for(WeddingService::factory()->for($wedding))->create([
+            'paid_at' => '2026-11-08', 'due_date' => '2026-11-09',
+        ]);
+        Payment::factory()->for(WeddingService::factory()->for($cancelled))->create([
+            'paid_at' => null, 'due_date' => '2026-11-09',
+        ]);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('suivi.rappels', 0)
+                ->where('evenementsTous', fn ($events): bool => collect($events)->where('id', 'appointment-'.$cancelledAppointment->id)->isEmpty()));
+    }
+
+    public function test_automatic_wedding_milestones_feed_the_next_milestone_and_reminders(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $wedding = Wedding::factory()->booked()->create(['wedding_date' => '2027-05-09']);
+        Wedding::factory()->booked()->create(['wedding_date' => '2026-11-01']);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('suivi.prochainJalon.id', 'wedding-'.$wedding->id.'-m6')
+                ->where('suivi.prochainJalon.date', '2026-11-09')
+                ->where('suivi.prochainJalon.url', route('calendrier', ['date' => '2026-11-09', 'event' => 'wedding-'.$wedding->id.'-m6']))
+                ->has('suivi.rappels', 1)
+                ->where('suivi.rappels.0.id', 'wedding-'.$wedding->id.'-m6'));
+    }
+
+    public function test_recent_activity_includes_new_dossiers_without_a_first_contact_date_and_excludes_future_records(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        Wedding::factory()->create(['first_contact_at' => '2026-11-08', 'created_at' => '2026-11-08 09:00:00']);
+        $wedding = Wedding::factory()->create(['first_contact_at' => null, 'created_at' => '2026-11-09 11:00:00']);
+        Wedding::factory()->create(['created_at' => '2026-11-09 15:00:00']);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('activites', 2)
+                ->where('activites.0.id', 'contact-'.$wedding->id)
+                ->where('activites.0.libelle', 'Nouvelle demande')
+                ->where('activites.0.heure', '11:00')
+                ->where('activites.0.url', route('admin.wedding.show', $wedding->id)));
+    }
+
+    public function test_recent_activity_merges_real_events_in_timestamp_order_and_limits_the_list(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $couple = Couple::factory()->withPortalAccess()->create();
+        $wedding = Wedding::factory()->for($couple)->create(['created_at' => '2026-11-08 12:00:00']);
+        $proposal = Proposal::factory()->for($wedding)->create([
+            'document_id' => null, 'approved_at' => '2026-11-09 09:00:00',
+        ]);
+        $document = Document::factory()->for($wedding)->create(['created_at' => '2026-11-09 10:00:00']);
+        $message = Message::factory()->for($wedding)->create(['sender_id' => $couple->user_id, 'created_at' => '2026-11-09 11:00:00']);
+        $event = CalendarEvent::query()->create([
+            'type' => 'jalon', 'title' => 'Nouveau jalon', 'event_date' => '2026-12-01',
+        ]);
+        $event->forceFill(['created_at' => '2026-11-09 11:30:00'])->save();
+        $deleted = CalendarEvent::query()->create(['type' => 'jalon', 'title' => 'Supprimé', 'event_date' => '2026-12-01']);
+        $deleted->delete();
+        Proposal::factory()->for($wedding)->create(['document_id' => null, 'approved_at' => '2026-11-09 15:00:00']);
+        Message::factory()->for($wedding)->create(['created_at' => '2026-11-09 15:00:00']);
+        Document::factory()->for($wedding)->create(['created_at' => '2026-11-09 15:00:00']);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('activites', 4)
+                ->where('activites.0.id', 'calendrier-'.$event->id)
+                ->where('activites.0.date', '2026-11-09')
+                ->where('activites.0.url', route('calendrier', ['date' => '2026-12-01', 'event' => 'event-'.$event->id]))
+                ->where('activites.1.id', 'message-'.$message->id)
+                ->where('activites.1.libelle', 'Message reçu')
+                ->where('activites.1.url', route('admin.messages.show', $couple->id))
+                ->where('activites.2.id', 'document-'.$document->id)
+                ->where('activites.2.url', route('admin.documents.index', ['couple_id' => $couple->id]))
+                ->where('activites.3.id', 'proposition-'.$proposal->id));
+    }
+
+    public function test_partial_dashboard_refresh_reads_changed_payments_tasks_and_deleted_events_from_the_database(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $wedding = Wedding::factory()->booked()->create(['wedding_date' => '2027-07-20']);
+        $payment = Payment::factory()->for(WeddingService::factory()->for($wedding))->create([
+            'amount' => '250.50', 'paid_at' => null, 'due_date' => '2026-11-09',
+        ]);
+        $task = DB::table('tasks')->insertGetId([
+            'wedding_id' => $wedding->id, 'title' => 'À terminer', 'due_date' => '2026-11-09',
+        ]);
+        $event = CalendarEvent::query()->create(['type' => 'jalon', 'title' => 'À supprimer', 'event_date' => '2026-11-09']);
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->has('suivi.rappels', 3)->where('finances.encaisse', 0));
+
+        $payment->update(['paid_at' => '2026-11-09']);
+        DB::table('tasks')->where('id', $task)->update(['status' => 'done', 'completed_at' => now()]);
+        $event->delete();
+
+        $this->get(route('dashboard'), [
+            'X-Inertia' => 'true', 'X-Inertia-Partial-Component' => 'Dashboard',
+            'X-Inertia-Version' => Inertia::getVersion() ?? '',
+            'X-Inertia-Partial-Data' => 'finances,suivi,activites,evenementsTous',
+        ])->assertOk()
+            ->assertJsonCount(0, 'props.suivi.rappels')
+            ->assertJsonPath('props.finances.encaisse', 25050)
+            ->assertJsonPath('props.finances.reste', 0)
+            ->assertJsonCount(4, 'props.evenementsTous')
+            ->assertJsonMissingPath('props.planning');
+    }
+
+    public function test_activity_links_to_the_dossier_for_couples_without_portal_access(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 12:00:00'));
+        $this->withoutVite();
+        $admin = User::factory()->admin()->create();
+        $couple = Couple::factory()->create(['user_id' => null]);
+        $wedding = Wedding::factory()->for($couple)->create(['created_at' => '2026-11-08 12:00:00']);
+        $document = Document::factory()->for($wedding)->create(['created_at' => '2026-11-09 10:00:00']);
+        $message = Message::factory()->for($wedding)->create(['sender_id' => $admin->id, 'created_at' => '2026-11-09 11:00:00']);
+
+        $this->actingAs($admin)->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('activites.0.id', 'message-'.$message->id)
+                ->where('activites.0.libelle', 'Message envoyé')
+                ->where('activites.0.url', route('admin.wedding.show', $wedding->id))
+                ->where('activites.1.id', 'document-'.$document->id)
+                ->where('activites.1.url', route('admin.wedding.show', $wedding->id)));
+    }
+
+    public function test_year_end_totals_include_december_31_and_exclude_next_year(): void
+    {
+        $this->travelTo(Carbon::parse('2026-12-31 12:00:00'));
+        $this->withoutVite();
+        $wedding = Wedding::factory()->booked()->create(['wedding_date' => '2027-07-20']);
+        $service = WeddingService::factory()->for($wedding)->create();
+        Payment::factory()->for($service)->create(['amount' => '12.34', 'paid_at' => '2026-12-31']);
+        Payment::factory()->for($service)->create(['amount' => '5.25', 'due_date' => '2026-12-31', 'paid_at' => null]);
+        Payment::factory()->for($service)->create(['amount' => '999.00', 'paid_at' => '2027-01-01']);
+        Payment::factory()->for($service)->create(['amount' => '999.00', 'due_date' => '2027-01-01', 'paid_at' => null]);
+        Wedding::factory()->create(['wedding_date' => '2026-12-31', 'estimated_budget' => '100.25']);
+        Wedding::factory()->create(['wedding_date' => '2027-01-01', 'estimated_budget' => '999.00']);
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('finances.encaisse', 1234)
+                ->where('finances.reste', 525)
+                ->where('finances.mois.11.encaisse', 1234)
+                ->where('finances.mois.11.signe', 525)
+                ->where('finances.mois.11.previsionnel', 10025));
     }
 
     public function test_the_dashboard_rejects_an_invalid_month(): void
