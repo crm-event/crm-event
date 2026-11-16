@@ -4,6 +4,7 @@ namespace Tests\Feature\Couple;
 
 use App\Models\Appointment;
 use App\Models\Couple;
+use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -76,6 +77,20 @@ class AppointmentControllerTest extends TestCase
             ->where('upcoming.0.starts_at', '2099-05-10T14:00:00')
             ->where('upcoming.0.location', 'Domaine des Tilleuls')
             ->where('upcoming.0.notes', 'Prévoir 2 h sur place.')
+        );
+    }
+
+    public function test_account_without_couple_record_sees_empty_lists(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('couple.appointments.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Couple/Appointments/Index')
+            ->has('upcoming', 0)
+            ->has('past', 0)
         );
     }
 
