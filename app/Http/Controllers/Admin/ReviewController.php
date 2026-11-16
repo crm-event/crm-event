@@ -64,11 +64,10 @@ class ReviewController extends Controller
      */
     public function store(Wedding $wedding): RedirectResponse
     {
-        abort_unless(
-            $this->awaitingReview()->whereKey($wedding->id)->exists(),
-            422,
-            'Ce couple ne peut pas être sollicité (déjà invité, trop tôt ou mariage annulé).',
-        );
+        if (! $this->awaitingReview()->whereKey($wedding->id)->exists()) {
+            return to_route('admin.reviews.index')
+                ->with('error', 'Ce couple ne peut pas être sollicité (déjà invité, trop tôt ou mariage annulé).');
+        }
 
         $wedding->review()->updateOrCreate([], ['requested_at' => now()]);
 
