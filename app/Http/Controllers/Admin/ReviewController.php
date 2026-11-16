@@ -92,6 +92,7 @@ class ReviewController extends Controller
         return Wedding::query()
             ->whereIn('status', ['booked', 'completed', 'closed'])
             ->whereDate('wedding_date', '<=', now()->subDays(Setting::reviewDelayDays()))
+            ->whereHas('couple', fn (Builder $couple) => $couple->whereNotNull('user_id'))
             ->whereDoesntHave('review', fn (Builder $review) => $review->whereNotNull('requested_at'));
     }
 }
