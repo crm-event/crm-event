@@ -31,7 +31,7 @@ function Stars({ rating }) {
  * Reviews: the couples whose wedding is over, whom Jessica invites with one
  * click, the couples who have not answered yet, and the reviews received.
  */
-export default function Reviews({ weddings, pending = [], received = [] }) {
+export default function Reviews({ weddings, delay_days, pending = [], received = [] }) {
     const success = usePage().props.flash?.success;
 
     const invite = (wedding) => {
@@ -45,7 +45,7 @@ export default function Reviews({ weddings, pending = [], received = [] }) {
             <div className="w-full max-w-3xl">
                 <h1 className="font-display text-3xl tracking-tight text-ink">Avis à solliciter</h1>
                 <p className="mt-2 text-body text-sage">
-                    Ces couples se sont mariés il y a plus de 30 jours et n’ont pas encore été invités à laisser un avis.
+                    Ces couples se sont mariés il y a plus de {delay_days} jours et n’ont pas encore été invités à laisser un avis.
                 </p>
 
                 {success && <p className="mt-6 text-body text-ink">{success}</p>}
