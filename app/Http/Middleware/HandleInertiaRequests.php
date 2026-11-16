@@ -47,6 +47,10 @@ class HandleInertiaRequests extends Middleware
             ],
             'coupleNotifications' => fn (): array => $this->coupleNotifications($request->user()),
             'coupleReview' => fn (): ?string => $this->coupleReviewStatus($request->user()),
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
         ];
     }
 
