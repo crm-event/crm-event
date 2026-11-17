@@ -45,7 +45,7 @@ export default function WeddingSelection({ weddings = [] }) {
     const weddingCount = useMemo(() => weddings.length, [weddings]);
 
     return (
-        <BackOfficeLayout>
+        <BackOfficeLayout actif="mariages">
             <Head title="Sélection d'un mariage" />
 
             <main className="min-h-screen bg-ivory px-6 py-10 text-ink md:px-12">
