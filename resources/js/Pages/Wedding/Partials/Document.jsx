@@ -55,9 +55,6 @@ function Document({ document }) {
     return (
         <article className="flex flex-col gap-4 rounded-xl border border-[#e8e3dc] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#f1e9e3] text-[#72746a]">
-                    <Icone nom="file-text" />
-                </div>
 
                 <div className="min-w-0">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -86,7 +83,6 @@ function Document({ document }) {
 
                     {document.requires_approval && (
                         <p className="mt-2 flex items-center gap-1 text-xs text-amber-700">
-                            <Icone nom="clock" />
                             Validation requise
                         </p>
                     )}
@@ -100,7 +96,6 @@ function Document({ document }) {
                     rel="noopener noreferrer"
                     className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-[#72746a] px-3 py-2 text-sm text-[#72746a] transition hover:bg-[#f8f6f2]"
                 >
-                    <Icone nom="external-link" />
                     Consulter
                 </a>
             ) : (
