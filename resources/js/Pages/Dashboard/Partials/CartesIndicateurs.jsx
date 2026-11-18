@@ -16,7 +16,7 @@ function Carte({ titre, icone, children, pied }) {
     );
 }
 
-export default function CartesIndicateurs({ suivi, finances }) {
+export default function CartesIndicateurs({ suivi, finances, annee }) {
     const { prochainJalon } = suivi;
     const plafond = finances.seuilMajore ?? finances.seuil;
     const progression = plafond ? Math.max(0, Math.min(100, 100 * finances.encaisse / plafond)) : 0;
@@ -26,7 +26,7 @@ export default function CartesIndicateurs({ suivi, finances }) {
             <Carte titre="Mariages en cours" icone="favorite" pied="Dossiers confirmés en préparation">
                 <span className="font-display text-[48px] leading-none text-ink">{suivi.mariages}</span>
             </Carte>
-            <Carte titre="CA encaissé cette année" icone="euro" pied={'Échéances signées à encaisser : ' + euros(finances.reste)}>
+            <Carte titre={`CA encaissé en ${annee}`} icone="euro" pied={'Échéances signées à encaisser : ' + euros(finances.reste)}>
                 <span className="font-display text-kpi text-ink">{euros(finances.encaisse)}</span>
                 {plafond !== null && (
                     <div className="mt-2 space-y-1">
