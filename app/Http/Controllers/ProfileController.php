@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,8 +19,7 @@ class ProfileController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
+            'canDeleteAccount' => $request->user()->hasRole(UserRole::Couple),
         ]);
     }
 
@@ -45,8 +44,14 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Deleting the administrator account would lock Jessica out of the application.
+        abort_unless($request->user()->hasRole(UserRole::Couple), 403);
+
         $request->validate([
             'password' => ['required', 'current_password'],
+        ], [
+            'password.required' => 'Saisissez votre mot de passe pour confirmer.',
+            'password.current_password' => 'Ce mot de passe est incorrect.',
         ]);
 
         $user = $request->user();

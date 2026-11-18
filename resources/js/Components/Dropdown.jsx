@@ -1,19 +1,38 @@
 import { Transition } from '@headlessui/react';
 import { Link } from '@inertiajs/react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 const DropDownContext = createContext();
 
 const Dropdown = ({ children }) => {
     const [open, setOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     const toggleOpen = () => {
         setOpen((previousState) => !previousState);
     };
 
+    useEffect(() => {
+        if (!open) {
+            return undefined;
+        }
+
+        const closeOnOutsideClick = (event) => {
+            if (!dropdownRef.current?.contains(event.target)) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener('click', closeOnOutsideClick);
+
+        return () => document.removeEventListener('click', closeOnOutsideClick);
+    }, [open]);
+
     return (
         <DropDownContext.Provider value={{ open, setOpen, toggleOpen }}>
-            <div className="relative">{children}</div>
+            <div ref={dropdownRef} className="relative">
+                {children}
+            </div>
         </DropDownContext.Provider>
     );
 };
@@ -25,12 +44,6 @@ const Trigger = ({ children }) => {
         <>
             <div onClick={toggleOpen}>{children}</div>
 
-            {open && (
-                <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setOpen(false)}
-                ></div>
-            )}
         </>
     );
 };
@@ -55,6 +68,8 @@ const Content = ({
 
     if (width === '48') {
         widthClasses = 'w-48';
+    } else if (width === '96') {
+        widthClasses = 'w-96 max-w-[calc(100vw-2rem)]';
     }
 
     return (

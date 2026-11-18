@@ -62,7 +62,7 @@ class FacturationTest extends TestCase
 
         $this->actingAs($this->admin())->post('/facturation/paiements', $data)
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('facturation'));
+            ->assertRedirect(route('facturation.index'));
 
         $this->assertDatabaseHas('payments', $data);
         $this->get('/facturation')->assertInertia(fn (Assert $page) => $page
@@ -78,7 +78,7 @@ class FacturationTest extends TestCase
 
         $this->actingAs($this->admin())->patch('/facturation/paiements/'.$id, ['paid_at' => $date])
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('facturation'));
+            ->assertRedirect(route('facturation.index'));
         $this->assertDatabaseHas('payments', ['id' => $id, 'paid_at' => $date, 'amount' => '1250.45']);
 
         $this->patch('/facturation/paiements/'.$id, ['paid_at' => null, 'amount' => '1.00'])
@@ -121,7 +121,7 @@ class FacturationTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->admin()->create();
     }
 
     private function soldService(): int

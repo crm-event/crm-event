@@ -70,4 +70,26 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_resetting_the_password_counts_as_choosing_it(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->mustChangePassword()->create();
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'mon-nouveau-mot-de-passe',
+                'password_confirmation' => 'mon-nouveau-mot-de-passe',
+            ])->assertSessionHasNoErrors();
+
+            return true;
+        });
+
+        $this->assertFalse($user->fresh()->must_change_password);
+    }
 }

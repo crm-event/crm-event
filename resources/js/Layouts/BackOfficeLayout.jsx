@@ -1,27 +1,10 @@
 import Dropdown from '@/Components/Dropdown';
 import Icone from '@/Components/Icone';
+import RechercheGlobale from '@/Components/RechercheGlobale';
 import { anneauFocus } from '@/charte';
+import { NAVIGATION } from '@/navigation';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-
-/**
- * Coque du back-office de Jessica : barre latérale de navigation à gauche,
- * bandeau de recherche en haut, contenu au centre.
- *
- * Le tableau de bord, la facturation et le profil sont accessibles ;
- * les autres entrées sont affichées comme dans la maquette mais sans lien.
- */
-const NAVIGATION = [
-    { cle: 'dashboard', libelle: 'Dashboard', icone: 'space_dashboard', route: 'dashboard' },
-    { cle: 'demandes', libelle: 'Demandes', icone: 'mark_email_unread' },
-    { cle: 'mariages', libelle: 'Mariages', icone: 'favorite' },
-    { cle: 'calendrier', libelle: 'Calendrier', icone: 'calendar_today' },
-    { cle: 'facturation', libelle: 'Facturation', icone: 'receipt_long', route: 'facturation' },
-    { cle: 'depenses', libelle: 'Dépenses', icone: 'payments' },
-    { cle: 'temps-passe', libelle: 'Temps passé', icone: 'hourglass_empty' },
-    { cle: 'rentabilite', libelle: 'Rentabilité', icone: 'trending_up' },
-    { cle: 'parametres', libelle: 'Paramètres', icone: 'settings', route: 'profile.edit' },
-];
 
 const classesLien =
     'flex items-center gap-3 rounded-lg px-3 py-2 text-body transition-colors';
@@ -34,7 +17,7 @@ function EntreeNavigation({ entree, active }) {
         </>
     );
 
-    if (!entree.route) {
+    if (!entree.route || !route().has(entree.route)) {
         return (
             <span
                 className={`${classesLien} cursor-not-allowed text-sage/60`}
@@ -63,8 +46,8 @@ function EntreeNavigation({ entree, active }) {
 
 function BarreLaterale({ actif, utilisateur }) {
     return (
-        <div className="flex h-full flex-col justify-between bg-ivory">
-            <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-full flex-col justify-between bg-ivory">
+            <div className="flex flex-1 flex-col">
                 <div className="flex h-20 items-center gap-3 border-b border-hairline px-6">
                     <Link href="/" className={anneauFocus}>
                         <img
@@ -93,7 +76,7 @@ function BarreLaterale({ actif, utilisateur }) {
 
                 <nav
                     aria-label="Navigation principale"
-                    className="flex-1 space-y-0.5 overflow-y-auto px-2"
+                    className="flex-1 space-y-0.5 px-2"
                 >
                     {NAVIGATION.map((entree) => (
                         <EntreeNavigation
@@ -153,14 +136,25 @@ function MenuUtilisateur({ utilisateur }) {
 export default function BackOfficeLayout({
     actif = 'dashboard',
     filAriane = 'Atelier de Production',
+    policeStitch = false,
     children,
 }) {
     const utilisateur = usePage().props.auth.user;
     const [menuOuvert, setMenuOuvert] = useState(false);
+    const dateDuJour = new Date().toLocaleDateString('fr-FR', {
+        timeZone: 'Europe/Paris',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
 
     return (
-        <div className="min-h-screen bg-blush font-sans text-ink antialiased">
-            <aside className="fixed left-0 top-0 z-50 hidden h-screen w-sidebar border-r border-hairline lg:block">
+        <div
+            className="min-h-screen bg-blush font-sans text-ink antialiased"
+            style={policeStitch ? { fontFamily: 'Inter, sans-serif', '--font-display': 'Playfair Display, serif' } : undefined}
+        >
+            <aside className="fixed left-0 top-0 z-50 hidden h-screen w-sidebar overflow-y-auto border-r border-hairline lg:block">
                 <BarreLaterale actif={actif} utilisateur={utilisateur} />
             </aside>
 
@@ -170,7 +164,7 @@ export default function BackOfficeLayout({
                         className="absolute inset-0 bg-ink/40"
                         onClick={() => setMenuOuvert(false)}
                     />
-                    <aside className="relative h-full w-sidebar max-w-[85vw] border-r border-hairline">
+                    <aside className="relative h-full w-sidebar max-w-[85vw] overflow-y-auto border-r border-hairline">
                         <BarreLaterale actif={actif} utilisateur={utilisateur} />
                     </aside>
                 </div>
@@ -187,7 +181,7 @@ export default function BackOfficeLayout({
                         >
                             <Icone nom="menu" className="text-[22px]" />
                         </button>
-                        <div className="flex items-center gap-2 text-body-sm text-sage">
+                        <div className="hidden items-center gap-2 text-body-sm text-sage md:flex">
                             <span>Maison</span>
                             <span className="text-[10px] text-subtle">/</span>
                             <span className="truncate font-medium text-ink">
@@ -196,23 +190,12 @@ export default function BackOfficeLayout({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="relative hidden items-center sm:flex">
-                            <Icone
-                                nom="search"
-                                className="absolute left-3 text-[18px] text-sage"
-                            />
-                            <input
-                                type="search"
-                                aria-label="Rechercher"
-                                placeholder="Rechercher un dossier, prestataire..."
-                                className="w-72 rounded-lg border border-hairline bg-white py-1.5 pl-9 pr-4 text-body-sm text-ink placeholder:text-sage focus:border-ink focus:outline-none focus:ring-0"
-                            />
-                        </div>
+                    <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-6">
+                        <RechercheGlobale />
 
                         <div className="hidden items-center gap-1.5 text-caps uppercase text-sage xl:flex">
                             <Icone nom="today" className="text-[16px]" />
-                            <span>Mardi 15 Avril 2025</span>
+                            <span>{dateDuJour}</span>
                         </div>
 
                         <div className="hidden h-5 w-px bg-hairline xl:block" />

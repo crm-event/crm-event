@@ -1,47 +1,32 @@
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
+import { focusRing, primaryButton, secondaryButton } from '@/brand';
+import { useTranslation } from '@/i18n';
 import { Head, Link } from '@inertiajs/react';
-import { anneauFocus, boutonPrincipal, boutonSecondaire } from '@/charte';
+
+/** Statuses that have their own message in i18n/errors.js. */
+const KNOWN_STATUSES = [403, 404, 405, 419, 500, 503];
 
 /**
- * Page d'erreur du site, dans la charte du projet.
+ * Error page, following the project's brand guidelines.
  *
- * Elle est rendue par le gestionnaire d'exceptions (bootstrap/app.php) à la
- * place des pages par défaut de Laravel : un couple ne doit jamais tomber sur
- * un « 404 | Not Found » brut ni sur une trace technique.
+ * It is rendered by the exception handler (bootstrap/app.php) instead of
+ * Laravel's default pages: a couple must never land on a raw
+ * "404 | Not Found" or on a stack trace.
  */
-
-const MESSAGES = {
-    404: {
-        titre: 'Cette page n’existe pas.',
-        texte: 'Le lien que vous avez suivi n’est plus valide, ou il a été recopié incomplètement.',
-    },
-    403: {
-        titre: 'Cette page ne vous est pas accessible.',
-        texte: 'Votre compte n’a pas accès à cette partie du site. Si cela vous semble anormal, dites-le à Jessica.',
-    },
-    500: {
-        titre: 'Quelque chose s’est mal passé.',
-        texte: 'La page n’a pas pu s’afficher. Réessayez dans un instant ; si cela se reproduit, prévenez Jessica.',
-    },
-    503: {
-        titre: 'Le site est en maintenance.',
-        texte: 'Il sera de retour dans quelques minutes. Merci de votre patience.',
-    },
-};
-
-const PAR_DEFAUT = {
-    titre: 'Une erreur est survenue.',
-    texte: 'La page n’a pas pu s’afficher. Réessayez dans un instant.',
-};
-
 export default function Error({ status }) {
-    const message = MESSAGES[status] ?? PAR_DEFAUT;
+    const { t } = useTranslation();
+    const messageKey = KNOWN_STATUSES.includes(status) ? `errors.${status}` : 'errors.default';
 
     return (
         <>
-            <Head title={`Erreur ${status}`} />
+            <Head title={t('errors.caption', { status })} />
 
-            <main className="flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-20 text-center font-sans text-ink">
-                <Link href="/" className={`${anneauFocus} block`}>
+            <main className="relative flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-20 text-center font-sans text-ink">
+                <div className="absolute right-6 top-6 sm:right-10">
+                    <LanguageSwitcher variant="outlined" />
+                </div>
+
+                <Link href={route('home')} className={`${focusRing} block`}>
                     <img
                         src="/logo-ldt.png"
                         alt="La Dernière Touche"
@@ -52,23 +37,23 @@ export default function Error({ status }) {
                 </Link>
 
                 <p className="mt-10 text-[11px] uppercase tracking-brand text-sage">
-                    Erreur {status}
+                    {t('errors.caption', { status })}
                 </p>
 
                 <h1 className="mt-6 font-display text-2xl leading-snug sm:text-3xl">
-                    {message.titre}
+                    {t(`${messageKey}.title`)}
                 </h1>
 
                 <p className="mt-6 max-w-md text-base leading-relaxed text-ink/70">
-                    {message.texte}
+                    {t(`${messageKey}.text`)}
                 </p>
 
                 <div className="mt-12 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                    <Link href="/" className={boutonPrincipal}>
-                        Retour à l’accueil
+                    <Link href={route('home')} className={primaryButton}>
+                        {t('errors.backHome')}
                     </Link>
-                    <Link href={route('login')} className={boutonSecondaire}>
-                        Se connecter
+                    <Link href={route('login')} className={secondaryButton}>
+                        {t('errors.login')}
                     </Link>
                 </div>
             </main>

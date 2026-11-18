@@ -1,10 +1,19 @@
-import InputError from '@/Components/InputError';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import FieldError from '@/Components/FieldError';
+import AuthLayout, { StatusMessage } from '@/Layouts/AuthLayout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { fieldLabel, primaryButton, textField, textLink } from '@/brand';
+import { useTranslation } from '@/i18n';
 
+/**
+ * Forgotten password page: the user enters their e-mail address and receives
+ * a link to choose a new password.
+ *
+ * This lets couples get back into their space on their own, without having to
+ * ask Jessica. The form and its submission are Breeze's
+ * (PasswordResetLinkController), only the presentation changes.
+ */
 export default function ForgotPassword({ status }) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
@@ -16,40 +25,49 @@ export default function ForgotPassword({ status }) {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Forgot Password" />
+        <AuthLayout
+            caption={t('auth.forgotPassword.caption')}
+            title={t('auth.forgotPassword.title')}
+            intro={t('auth.forgotPassword.intro')}
+        >
+            <Head title={t('auth.forgotPassword.caption')} />
 
-            <div className="mb-4 text-sm text-gray-600">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
-            </div>
+            <StatusMessage message={status} />
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
-
-            <form onSubmit={submit}>
-                <TextInput
+            <form onSubmit={submit} className="mt-10">
+                <label htmlFor="email" className={fieldLabel}>
+                    {t('auth.email')}
+                </label>
+                <input
                     id="email"
                     type="email"
                     name="email"
                     value={data.email}
-                    className="mt-1 block w-full"
-                    isFocused={true}
+                    className={`${textField} mt-2`}
+                    autoComplete="username"
+                    autoFocus
+                    required
+                    aria-invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? 'email-error' : undefined}
                     onChange={(e) => setData('email', e.target.value)}
                 />
+                <FieldError id="email-error" message={errors.email} />
 
-                <InputError message={errors.email} className="mt-2" />
-
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Email Password Reset Link
-                    </PrimaryButton>
-                </div>
+                <button
+                    type="submit"
+                    className={`${primaryButton} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
+                    disabled={processing}
+                >
+                    {processing ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
+                </button>
             </form>
-        </GuestLayout>
+
+            <p className="mt-10 text-sm text-ink/70">
+                {t('auth.forgotPassword.remembered')}{' '}
+                <Link href={route('login')} className={`${textLink} text-ink`}>
+                    {t('auth.forgotPassword.backToLogin')}
+                </Link>
+            </p>
+        </AuthLayout>
     );
 }

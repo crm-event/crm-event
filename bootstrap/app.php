@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsurePasswordIsChosen;
+use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,11 +20,23 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            SetLocale::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            EnsurePasswordIsChosen::class,
         ]);
 
-        //
+        $middleware->alias([
+            'role' => EnsureUserHasRole::class,
+        ]);
+
+        // The language is not a secret, and the error pages, rendered without
+        // the "web" middleware, must be able to read it.
+        $middleware->encryptCookies(except: [SetLocale::COOKIE]);
+
+        // A logged-in user opening a guest page (e.g. /login) is sent back to
+        // their own space instead of Laravel's default /dashboard.
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()->homeUrl());
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -29,30 +44,34 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         /*
-         * Pages d'erreur maison, dans la charte du projet : un couple ne doit
-         * jamais voir le « 404 | Not Found » brut de Laravel.
+         * Custom error pages following the brand guidelines: a couple must
+         * never see Laravel's raw "404 | Not Found" page.
          *
-         * 404 et 403 ne sont pas des bugs mais des situations normales : on les
-         * rend toujours. 500 et 503 en revanche ne sont remplacés qu'en dehors
-         * du poste de développement, pour garder la page de debug de Laravel
-         * quand on travaille.
+         * 404 and 403 are not bugs but expected situations, so they are always
+         * replaced. 500 and 503 are only replaced outside of development, to
+         * keep Laravel's debug page while working.
          */
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
             if ($request->expectsJson()) {
                 return $response;
             }
 
-            $statut = $response->getStatusCode();
+            $status = $response->getStatusCode();
 
-            $aRemplacer = in_array($statut, [403, 404], true)
-                || (in_array($statut, [500, 503], true) && ! app()->environment('local', 'testing'));
+            // 419: the session has expired (e.g. a form sent after two hours).
+            $shouldRenderCustomPage = in_array($status, [403, 404, 405, 419], true)
+                || (in_array($status, [500, 503], true) && ! app()->environment('local', 'testing'));
 
-            if (! $aRemplacer) {
+            if (! $shouldRenderCustomPage) {
                 return $response;
             }
 
-            return Inertia::render('Error', ['status' => $statut])
+            // A missing page never goes through the "web" middleware: the
+            // language is resolved here so that the page follows the switcher.
+            app()->setLocale(SetLocale::resolve($request));
+
+            return Inertia::render('Error', ['status' => $status, 'locale' => app()->getLocale()])
                 ->toResponse($request)
-                ->setStatusCode($statut);
+                ->setStatusCode($status);
         });
     })->create();

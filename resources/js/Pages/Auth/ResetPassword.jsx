@@ -1,11 +1,19 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
+import FieldError from '@/Components/FieldError';
+import PasswordField from '@/Components/PasswordField';
+import AuthLayout from '@/Layouts/AuthLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { fieldLabel, primaryButton, textField } from '@/brand';
+import { useTranslation } from '@/i18n';
 
+/**
+ * Password reset page, reached from the link received by e-mail.
+ *
+ * The e-mail address comes pre-filled from the link. Once the new password is
+ * saved, Breeze (NewPasswordController) sends the user back to the login page
+ * with a confirmation message; only the presentation changes here.
+ */
 export default function ResetPassword({ token, email }) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         token: token,
         email: email,
@@ -22,73 +30,65 @@ export default function ResetPassword({ token, email }) {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Reset Password" />
+        <AuthLayout
+            caption={t('auth.resetPassword.caption')}
+            title={t('auth.resetPassword.title')}
+            intro={t('auth.resetPassword.intro')}
+        >
+            <Head title={t('auth.resetPassword.caption')} />
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="mt-10">
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
+                    <label htmlFor="email" className={fieldLabel}>
+                        {t('auth.email')}
+                    </label>
+                    <input
                         id="email"
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className={`${textField} mt-2`}
                         autoComplete="username"
+                        required
+                        aria-invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? 'email-error' : undefined}
                         onChange={(e) => setData('email', e.target.value)}
                     />
-
-                    <InputError message={errors.email} className="mt-2" />
+                    <FieldError id="email-error" message={errors.email} />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
+                <div className="mt-8">
+                    <PasswordField
                         id="password"
-                        type="password"
-                        name="password"
+                        label={t('auth.newPassword')}
                         value={data.password}
-                        className="mt-1 block w-full"
+                        error={errors.password}
                         autoComplete="new-password"
-                        isFocused={true}
+                        autoFocus
+                        hint={t('auth.passwordHint')}
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        type="password"
+                <div className="mt-8">
+                    <PasswordField
                         id="password_confirmation"
-                        name="password_confirmation"
+                        label={t('auth.confirmPassword')}
                         value={data.password_confirmation}
-                        className="mt-1 block w-full"
+                        error={errors.password_confirmation}
                         autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
+                        onChange={(e) => setData('password_confirmation', e.target.value)}
                     />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Reset Password
-                    </PrimaryButton>
-                </div>
+                <button
+                    type="submit"
+                    className={`${primaryButton} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
+                    disabled={processing}
+                >
+                    {processing ? t('auth.saving') : t('auth.resetPassword.submit')}
+                </button>
             </form>
-        </GuestLayout>
+        </AuthLayout>
     );
 }

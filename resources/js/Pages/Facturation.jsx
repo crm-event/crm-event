@@ -17,7 +17,7 @@ const classeChamp = 'mt-1 w-full rounded-lg border-hairline text-body';
 
 function celluleCsv(valeur) {
     let texte = String(valeur ?? '');
-    if (/^[=+@\-\t\r]/.test(texte)) {
+    if (/^[\s\u0000-\u001f]*[=+\-@]/.test(texte)) {
         texte = "'" + texte;
     }
     return '"' + texte.replaceAll('"', '""') + '"';
@@ -27,12 +27,14 @@ function Champ({ titre, erreur, children }) {
     return <label className="block text-label">{titre}{children}<InputError message={erreur} className="mt-1" /></label>;
 }
 
-export default function Facturation({ payments, services, today }) {
+export default function Facturation({ payments, services, today, seuils = [] }) {
     const [annee, setAnnee] = useState(today.slice(0, 4));
     const [factureOuverte, setFactureOuverte] = useState(false);
     const [paiementSelectionne, setPaiementSelectionne] = useState(null);
+    const [paiementSansFacture, setPaiementSansFacture] = useState(null);
     const facture = useForm({ wedding_service_id: '', type: 'deposit', amount: '', due_date: today, invoice_number: '', invoice_url: '', invoiced_at: today, paid_at: '' });
     const reglement = useForm({ paid_at: today });
+    const reference = useForm({ invoice_number: '', invoice_url: '', invoiced_at: today });
     const annees = useMemo(() => [...new Set([today.slice(0, 4), annee, ...payments.map((ligne) => dateExercice(ligne).slice(0, 4) || 'sans-date')])].sort().reverse(), [payments, today, annee]);
     const encaissements = useMemo(() => payments.filter((ligne) => (dateExercice(ligne).slice(0, 4) || 'sans-date') === annee), [payments, annee]);
     const totaux = useMemo(() => encaissements.reduce((resultat, ligne) => {
@@ -41,6 +43,10 @@ export default function Facturation({ payments, services, today }) {
         resultat[statutPaiement(ligne, today)] += centimes;
         return resultat;
     }, { total: 0, 'Réglé': 0, 'En attente': 0, 'En retard': 0 }), [encaissements, today]);
+    const dateReference = /^\d{4}$/.test(annee) ? (annee === today.slice(0, 4) ? today : annee + '-12-31') : null;
+    const seuilPour = (cle) => dateReference ? seuils.filter((seuil) => seuil.cle === cle && seuil.date <= dateReference).at(-1) : null;
+    const seuilNormal = seuilPour('vat_threshold');
+    const seuilMajore = seuilPour('vat_threshold_immediate');
     const csv = '\uFEFF' + [
         ['Mariage', 'Dossier', 'Facture', 'Type', 'Prestation', 'Montant', 'Échéance', 'Paiement', 'Statut'],
         ...encaissements.map((ligne) => [nomCouple(ligne), 'DOS-' + ligne.wedding_id, ligne.invoice_number, typesPaiement[ligne.type] ?? ligne.type, ligne.service_name, ligne.amount, ligne.due_date, ligne.paid_at, statutPaiement(ligne, today)]),
@@ -74,6 +80,19 @@ export default function Facturation({ payments, services, today }) {
             onSuccess: () => setPaiementSelectionne(null),
         });
     };
+    const ouvrirReference = (ligne) => {
+        reference.reset();
+        reference.clearErrors();
+        reference.setData({ invoice_number: '', invoice_url: ligne.invoice_url ?? '', invoiced_at: ligne.invoiced_at?.slice(0, 10) ?? today });
+        setPaiementSansFacture(ligne);
+    };
+    const enregistrerReference = (event) => {
+        event.preventDefault();
+        reference.patch(route('facturation.payments.invoice', paiementSansFacture.id), {
+            preserveScroll: true,
+            onSuccess: () => setPaiementSansFacture(null),
+        });
+    };
 
     return <BackOfficeLayout actif="facturation" filAriane="Facturation & Encaissements">
         <Head title="Facturation & Encaissements" />
@@ -90,24 +109,27 @@ export default function Facturation({ payments, services, today }) {
             <div className="grid grid-cols-1 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
                 <section className="min-w-0 overflow-hidden rounded-xl border border-hairline bg-white shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline px-5 py-4"><h2 className="font-display text-title-md">Grand tableau des encaissements</h2><span className="rounded-full bg-ivory px-2.5 py-1 text-body-sm text-sage">{encaissements.length} écritures</span></div>
-                    {encaissements.length === 0 ? <p className="p-8 text-center text-body text-sage">Aucun encaissement enregistré pour cet exercice.</p> : <div className="overflow-x-auto">
-                        <table className="w-full min-w-[900px] text-left text-body-sm">
-                            <thead className="bg-ivory text-caps uppercase text-sage"><tr>{['Mariage / dossier', 'Facture', 'Type / prestation', 'Montant', 'Échéance', 'Paiement', 'Statut', 'Action'].map((titre) => <th key={titre} className="px-3 py-3 font-semibold">{titre}</th>)}</tr></thead>
+                    {encaissements.length === 0 ? <p className="p-8 text-center text-body text-sage">Aucun encaissement enregistré pour cet exercice.</p> : <>
+                        <div className="divide-y divide-hairline 2xl:hidden">{encaissements.map((ligne) => {
+                            const statut = statutPaiement(ligne, today);
+                            return <article key={ligne.id} className="p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-display text-title-sm">{nomCouple(ligne)}</h3><p className="text-body-sm text-sage">DOS-{ligne.wedding_id} · {ligne.venue_name ?? 'Lieu à préciser'}</p></div><span className={'rounded-full px-2 py-1 text-caps ' + (statut === 'Réglé' ? 'bg-success/10 text-success' : statut === 'En retard' ? 'bg-warning/10 text-warning' : 'bg-ivory text-sage')}>{statut}</span></div>
+                                <dl className="mt-4 grid grid-cols-2 gap-3 text-body-sm"><div><dt className="text-sage">Type / prestation</dt><dd>{typesPaiement[ligne.type] ?? ligne.type} · {ligne.service_name}</dd></div><div><dt className="text-sage">Montant</dt><dd>{euro(ligne.amount)}</dd></div><div><dt className="text-sage">Échéance</dt><dd>{dateFr(ligne.due_date)}</dd></div><div><dt className="text-sage">Paiement</dt><dd>{dateFr(ligne.paid_at)}</dd></div><div><dt className="text-sage">Facture</dt><dd>{/^https?:\/\//i.test(ligne.invoice_url ?? '') ? <a href={ligne.invoice_url} target="_blank" rel="noopener noreferrer" className="underline">{ligne.invoice_number ?? 'Ouvrir la facture'}</a> : ligne.invoice_number ?? '—'}</dd></div></dl>
+                                <div className="mt-3 flex flex-wrap gap-4"><button type="button" onClick={() => ouvrirReglement(ligne)} className={anneauFocus + ' text-body underline'}>{ligne.paid_at ? 'Modifier le règlement' : 'Saisir le règlement'}</button>{!ligne.invoice_number && <button type="button" onClick={() => ouvrirReference(ligne)} className={anneauFocus + ' text-body underline'}>Ajouter la facture</button>}</div></article>;
+                        })}</div>
+                        <table className="hidden w-full table-fixed text-left text-[11px] leading-4 2xl:table">
+                            <thead className="bg-ivory text-caps uppercase text-sage"><tr>{['Mariage / dossier', 'Facture', 'Type / prestation', 'Montant', 'Échéance', 'Paiement', 'Statut / action'].map((titre) => <th key={titre} className="break-words px-2 py-3 font-semibold">{titre}</th>)}</tr></thead>
                             <tbody className="divide-y divide-hairline">{encaissements.map((ligne) => {
                                 const statut = statutPaiement(ligne, today);
                                 return <tr key={ligne.id}>
-                                    <td className="px-3 py-4"><span className="block font-display text-body">{nomCouple(ligne)}</span><span className="text-sage">DOS-{ligne.wedding_id} · {ligne.venue_name ?? 'Lieu à préciser'}</span></td>
-                                    <td className="px-3 py-4">{/^https?:\/\//i.test(ligne.invoice_url ?? '') ? <a href={ligne.invoice_url} target="_blank" rel="noopener noreferrer" className={anneauFocus + ' underline'}>{ligne.invoice_number ?? 'Ouvrir la facture'}</a> : ligne.invoice_number ?? '—'}</td>
-                                    <td className="px-3 py-4">{typesPaiement[ligne.type] ?? ligne.type}<span className="block text-sage">{ligne.service_name}</span></td>
-                                    <td className="px-3 py-4 font-display text-body">{euro(ligne.amount)}</td>
-                                    <td className="px-3 py-4 text-sage">{dateFr(ligne.due_date)}</td>
-                                    <td className="px-3 py-4 text-sage">{dateFr(ligne.paid_at)}</td>
-                                    <td className="px-3 py-4"><span className={'whitespace-nowrap rounded-full px-2 py-1 text-caps ' + (statut === 'Réglé' ? 'bg-success/10 text-success' : statut === 'En retard' ? 'bg-warning/10 text-warning' : 'bg-ivory text-sage')}>{statut}</span></td>
-                                    <td className="px-3 py-4"><button type="button" onClick={() => ouvrirReglement(ligne)} className={anneauFocus + ' text-ink underline'}>{ligne.paid_at ? 'Modifier le règlement' : 'Saisir le règlement'}</button></td>
+                                    <td className="break-words px-2 py-4"><span className="block font-display text-body">{nomCouple(ligne)}</span><span className="text-sage">DOS-{ligne.wedding_id} · {ligne.venue_name ?? 'Lieu à préciser'}</span></td>
+                                    <td className="break-words px-2 py-4">{/^https?:\/\//i.test(ligne.invoice_url ?? '') ? <a href={ligne.invoice_url} target="_blank" rel="noopener noreferrer" className={anneauFocus + ' underline'}>{ligne.invoice_number ?? 'Ouvrir la facture'}</a> : ligne.invoice_number ?? '—'}</td>
+                                    <td className="break-words px-2 py-4">{typesPaiement[ligne.type] ?? ligne.type}<span className="block text-sage">{ligne.service_name}</span></td>
+                                    <td className="break-words px-2 py-4 font-display">{euro(ligne.amount)}</td><td className="break-words px-2 py-4 text-sage">{dateFr(ligne.due_date)}</td><td className="break-words px-2 py-4 text-sage">{dateFr(ligne.paid_at)}</td>
+                                    <td className="break-words px-2 py-4"><span className={'rounded-full px-2 py-1 text-caps ' + (statut === 'Réglé' ? 'bg-success/10 text-success' : statut === 'En retard' ? 'bg-warning/10 text-warning' : 'bg-ivory text-sage')}>{statut}</span><button type="button" onClick={() => ouvrirReglement(ligne)} className={anneauFocus + ' mt-2 block underline'}>{ligne.paid_at ? 'Modifier le règlement' : 'Saisir le règlement'}</button>{!ligne.invoice_number && <button type="button" onClick={() => ouvrirReference(ligne)} className={anneauFocus + ' mt-1 block underline'}>Ajouter la facture</button>}</td>
                                 </tr>;
                             })}</tbody>
                         </table>
-                    </div>}
+                    </>}
                     <div className="flex flex-wrap gap-4 border-t border-hairline bg-ivory/70 px-5 py-4 text-body-sm">
                         <span>Total : <strong>{euro(totaux.total / 100)}</strong></span><span>Réglé : <strong className="text-success">{euro(totaux['Réglé'] / 100)}</strong></span><span>En attente : <strong>{euro(totaux['En attente'] / 100)}</strong></span><span>En retard : <strong className="text-warning">{euro(totaux['En retard'] / 100)}</strong></span>
                     </div>
@@ -115,6 +137,7 @@ export default function Facturation({ payments, services, today }) {
                 <aside className="rounded-xl border border-hairline bg-white p-6 shadow-sm">
                     <p className="text-caps uppercase text-sage">Synthèse des encaissements · {annee}</p><p className="mt-4 font-display text-display">{euro(totaux['Réglé'] / 100)}</p><p className="mt-2 text-body text-sage">Montant reçu pendant l’exercice, selon la date de paiement renseignée.</p>
                     <p className="mt-4 text-body-sm text-sage">Les écritures non réglées sont classées selon leur date d’échéance. Les factures restent produites dans votre outil de facturation ; enregistrez ici leur numéro et leur lien.</p>
+                    {dateReference && <div className="mt-4 space-y-1 text-body-sm text-sage"><p>Seuil enregistré : <strong className="text-ink">{seuilNormal ? euro(seuilNormal.valeur) : 'Non renseigné'}</strong></p><p>Seuil majoré enregistré : <strong className="text-ink">{seuilMajore ? euro(seuilMajore.valeur) : 'Non renseigné'}</strong></p><p>Ces chiffres ne déterminent pas à eux seuls le régime de TVA applicable.</p></div>}
                     <a download={'grand-livre-' + annee + '.csv'} href={'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)} className={anneauFocus + ' mt-5 flex items-center justify-center gap-2 rounded-lg border border-hairline px-3 py-2 text-body hover:bg-ivory'}><Icone nom="download" />Exporter le grand livre (CSV)</a>
                 </aside>
             </div>
@@ -143,6 +166,16 @@ export default function Facturation({ payments, services, today }) {
                 <Champ titre="Date de paiement" erreur={reglement.errors.paid_at}><input type="date" max={today} value={reglement.data.paid_at} onChange={(event) => reglement.setData('paid_at', event.target.value)} className={classeChamp} /></Champ>
                 <p className="text-body-sm text-sage">Laissez la date vide pour indiquer que le paiement n’a pas été reçu.</p>
                 <div className="flex justify-end gap-2"><button type="button" disabled={reglement.processing} onClick={() => setPaiementSelectionne(null)} className={anneauFocus + ' px-4 py-2 text-body text-sage'}>Annuler</button><button disabled={reglement.processing} className={anneauFocus + ' rounded-lg bg-ink px-4 py-2 text-body text-white disabled:opacity-50'}>{reglement.processing ? 'Enregistrement…' : 'Enregistrer'}</button></div>
+            </form>
+        </Modal>
+        <Modal show={paiementSansFacture !== null} onClose={() => { if (!reference.processing) { setPaiementSansFacture(null); } }} closeable={!reference.processing} maxWidth="lg">
+            <form className="space-y-4 p-6" onSubmit={enregistrerReference}>
+                <DialogTitle className="font-display text-title-md">Ajouter une facture externe</DialogTitle>
+                <p className="text-body-sm text-sage">Renseignez la facture correspondant à ce paiement. Elle est créée dans l’outil externe.</p>
+                <Champ titre="Numéro de facture" erreur={reference.errors.invoice_number}><input required maxLength={255} value={reference.data.invoice_number} onChange={(event) => reference.setData('invoice_number', event.target.value)} className={classeChamp} /></Champ>
+                <Champ titre="Date de facturation" erreur={reference.errors.invoiced_at}><input required type="date" value={reference.data.invoiced_at} onChange={(event) => reference.setData('invoiced_at', event.target.value)} className={classeChamp} /></Champ>
+                <Champ titre="Lien de la facture (facultatif)" erreur={reference.errors.invoice_url}><input type="url" maxLength={2048} value={reference.data.invoice_url} onChange={(event) => reference.setData('invoice_url', event.target.value)} className={classeChamp} /></Champ>
+                <div className="flex justify-end gap-2"><button type="button" disabled={reference.processing} onClick={() => setPaiementSansFacture(null)} className={anneauFocus + ' px-4 py-2 text-body text-sage'}>Annuler</button><button disabled={reference.processing} className={anneauFocus + ' rounded-lg bg-ink px-4 py-2 text-body text-white disabled:opacity-50'}>{reference.processing ? 'Enregistrement…' : 'Enregistrer'}</button></div>
             </form>
         </Modal>
     </BackOfficeLayout>;

@@ -1,338 +1,279 @@
+import Icone from '@/Components/Icone';
+import { focusRing, primaryButton, secondaryButton, textLink } from '@/brand';
+import { CONTACT } from '@/contact';
+import { useTranslation } from '@/i18n';
+import PublicLayout from '@/Layouts/PublicLayout';
 import { Head, Link } from '@inertiajs/react';
-import { anneauFocus, boutonPrincipal, boutonSecondaire } from '@/charte';
+import { useState } from 'react';
 
-/**
- * Page d'accueil publique — l'écran que voit un visiteur avant de se connecter.
- *
- * Ce n'est pas un site vitrine : la cliente en a déjà un
- * (ladernieretouche.com). Cette page explique ce qu'est l'espace client et
- * comment y accéder. Il n'y a volontairement aucune inscription libre, les
- * comptes sont créés par la coordinatrice.
- */
-
-// TODO(cliente) : coordonnées à confirmer avec Jessica avant toute mise en
-// ligne. « whatsapp » reste vide tant que le numéro n'est pas validé : le
-// bouton ne s'affiche pas plutôt que de pointer vers un numéro inventé.
-const CONTACT = {
-    email: 'contact@laderniertouche.com',
-    whatsapp: '',
-    website: 'https://www.laderniertouche.com/',
+/** Photos of the page; their alternative texts are in i18n/landing.js. */
+const IMAGE_SOURCES = {
+    arch: '/images/landing/accueil1.jpg',
+    bouquet: '/images/landing/accueil2.jpg',
+    design: '/images/landing/wedding-design.jpg',
+    coordination: '/images/landing/coordination.jpg',
+    officiant: '/images/landing/officiante-de-ceremonie.jpg',
+    jessica: '/images/landing/jessica.jpg',
 };
 
-const DEMANDE_SUJET = 'Demande d’accès à notre espace client';
+/**
+ * Landing page: the services of La Dernière Touche and its client area. Every
+ * call to action leads to the access request page, the way into the site.
+ */
+export default function Landing({ auth }) {
+    const { content } = useTranslation();
 
-const DEMANDE_CORPS = [
-    'Bonjour Jessica,',
-    '',
-    'Nous souhaitons accéder à notre espace client.',
-    '',
-    'Nos prénoms :',
-    'Date du mariage :',
-    'Lieu :',
-    'E-mail de contact :',
-    'Téléphone :',
-    '',
-    'Merci beaucoup,',
-].join('\n');
+    const homeUrl = auth?.homeUrl ?? null;
+    const t = content('landing');
+    const images = Object.fromEntries(
+        Object.entries(IMAGE_SOURCES).map(([name, src]) => [name, { src, alt: t.images[name] }]),
+    );
 
-// TODO(API) : remplacer ce mailto par un vrai formulaire le jour où une route
-// de demande d'accès existera. La page ne bougera pas, seul ce lien deviendra
-// un <form>.
-const LIEN_DEMANDE =
-    `mailto:${CONTACT.email}` +
-    `?subject=${encodeURIComponent(DEMANDE_SUJET)}` +
-    `&body=${encodeURIComponent(DEMANDE_CORPS)}`;
+    return (
+        <PublicLayout>
+            <Head title={t.pageTitle} />
+
+            <Hero homeUrl={homeUrl} t={t} images={images} />
+            <Stats t={t} />
+            <Services t={t} images={images} />
+            <ClientArea homeUrl={homeUrl} t={t} />
+            <About t={t} images={images} />
+            <Start homeUrl={homeUrl} t={t} />
+        </PublicLayout>
+    );
+}
+
+function Photo({ image, ratio, eager = false, className = '', rounded = 'rounded-none' }) {
+    const [failed, setFailed] = useState(false);
+
+    return (
+        <div className={`${ratio} overflow-hidden bg-blush ${rounded} ${className}`}>
+            {!failed && (
+                <img
+                    src={image.src}
+                    alt={image.alt}
+                    loading={eager ? 'eager' : 'lazy'}
+                    decoding="async"
+                    onError={() => setFailed(true)}
+                    className="h-full w-full object-cover transition duration-700 hover:scale-[1.03]"
+                />
+            )}
+        </div>
+    );
+}
+
+function SectionIntro({ id, eyebrow, title, text }) {
+    return (
+        <div className="max-w-2xl">
+            <p className="text-[10px] uppercase tracking-brand text-sage">{eyebrow}</p>
+            <h2 id={id} className="mt-4 font-display text-2xl leading-snug sm:text-3xl">
+                {title}
+            </h2>
+            {text && <p className="mt-6 text-base leading-relaxed text-ink/70">{text}</p>}
+        </div>
+    );
+}
 
 /**
- * Les quatre entrées reprennent le parcours décrit par la cliente
- * (« 1 client, 1 espace digital »). La gestion des tâches et des échéances n'y
- * figure pas : elle relève du back-office, donc de l'autre groupe.
+ * Main call to action: the access request for a visitor, their space for a
+ * logged-in user.
  */
-const RUBRIQUES = [
-    {
-        label: 'Votre mariage',
-        titre: 'Les informations clés',
-        texte: 'La date, le lieu, les temps forts de la journée et les personnes qui vous accompagnent, réunis sur une seule page.',
-    },
-    {
-        label: 'Votre design',
-        titre: 'La conception de votre décor',
-        texte: 'Moodboards, carnet design et projections : vous suivez chaque version et vous y laissez vos commentaires.',
-    },
-    {
-        label: 'Vos documents',
-        titre: 'Tout au même endroit',
-        texte: 'Devis, contrat, conditions générales : consultables et téléchargeables à tout moment, sans rechercher un vieil e-mail.',
-    },
-    {
-        label: 'Vos échanges',
-        titre: 'Une conversation privée',
-        texte: 'Vos messages avec Jessica et l’historique complet de ce qui a été dit et décidé, conservés d’un bout à l’autre du projet.',
-    },
-];
-
-/** Le parcours d'accès, tel que la cliente l'a décrit : rien d'automatique. */
-const ETAPES = [
-    {
-        numero: '01',
-        titre: 'Vous faites la demande',
-        texte: 'Un message à Jessica suffit. Elle vérifie que votre dossier est bien ouvert de son côté.',
-    },
-    {
-        numero: '02',
-        titre: 'Jessica ouvre votre accès',
-        texte: 'Les comptes ne se créent pas tout seuls : c’est elle qui crée le vôtre, une fois votre devis et votre contrat signés.',
-    },
-    {
-        numero: '03',
-        titre: 'Vous choisissez votre mot de passe',
-        texte: 'Vous recevez un identifiant et un code provisoire. À la première connexion, vous le remplacez par le vôtre.',
-    },
-];
-
-export default function Landing({ auth }) {
-    const connecte = Boolean(auth?.user);
-
+function PrimaryAction({ homeUrl, label, loggedLabel, className = '' }) {
     return (
-        <>
-            <Head title="Espace client" />
-
-            <div className="flex min-h-screen flex-col bg-ivory font-sans text-ink">
-                <EnTete connecte={connecte} />
-
-                <main id="contenu" className="flex-1">
-                    <Hero connecte={connecte} />
-                    <Rubriques />
-                    <Acces />
-                    <Contact />
-                </main>
-
-                <PiedDePage />
-            </div>
-        </>
+        <Link href={homeUrl ?? route('access-request.create')} className={`${primaryButton} ${className}`}>
+            {homeUrl ? loggedLabel : label}
+        </Link>
     );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Blocs de la page                                                           */
-/* -------------------------------------------------------------------------- */
-
-function EnTete({ connecte }) {
+function Hero({ homeUrl, t, images }) {
     return (
-        <header className="relative border-b border-ink/10">
-            <a
-                href="#contenu"
-                className={`${anneauFocus} sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-5 focus:z-10 focus:bg-ink focus:px-4 focus:py-2 focus:text-[11px] focus:uppercase focus:tracking-[0.18em] focus:text-ivory`}
-            >
-                Aller au contenu
-            </a>
+        <section className="relative overflow-hidden border-b border-ink/10">
+            <div className="absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-blush/70 to-transparent" />
 
-            <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5 sm:px-10">
-                <Link href="/" className={`${anneauFocus} block`}>
-                    <span className="block whitespace-nowrap font-display text-[11px] tracking-[0.12em] sm:text-base sm:tracking-[0.18em]">
-                        LA DERNIÈRE TOUCHE
-                    </span>
-                    <span className="mt-1 block text-[10px] uppercase tracking-brand text-sage">
-                        Maison de mariage
-                    </span>
-                </Link>
+            <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 pb-20 pt-16 sm:px-10 sm:pt-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+                <div className="relative z-10">
+                    <p className="text-[10px] uppercase tracking-brand text-sage">{t.hero.eyebrow}</p>
+                    <h1 className="mt-5 font-display text-3xl leading-[1.2] sm:text-4xl lg:text-5xl">{t.hero.title}</h1>
+                    <p className="mt-8 max-w-xl text-base leading-relaxed text-ink/70">{t.hero.text}</p>
 
-                <Link
-                    href={connecte ? route('dashboard') : route('login')}
-                    className={`${anneauFocus} shrink-0 border border-ink/20 px-5 py-3 text-[11px] uppercase tracking-[0.18em] transition-colors hover:border-ink hover:bg-ink hover:text-ivory`}
-                >
-                    {connecte ? 'Mon espace' : 'Se connecter'}
-                </Link>
-            </div>
-        </header>
-    );
-}
+                    <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                        <PrimaryAction homeUrl={homeUrl} label={t.hero.primary} loggedLabel={t.hero.loggedPrimary} />
+                        <a href="#prestations" className={secondaryButton}>
+                            {t.hero.secondary}
+                        </a>
+                    </div>
 
-function Hero({ connecte }) {
-    return (
-        <section className="mx-auto max-w-3xl px-6 py-20 text-center sm:px-10 sm:py-28">
-            <img
-                src="/logo-ldt.png"
-                alt="La Dernière Touche"
-                className="mx-auto h-20 w-auto sm:h-28"
-                width={285}
-                height={560}
-            />
+                    {!homeUrl && (
+                        <p className="mt-6 text-sm text-ink/70">
+                            {t.hero.alreadyClient}{' '}
+                            <Link href={route('login')} className={`${textLink} text-ink`}>
+                                {t.hero.login}
+                            </Link>
+                        </p>
+                    )}
+                </div>
 
-            <p className="mt-10 text-[11px] uppercase tracking-brand text-sage">
-                Espace client
-            </p>
-
-            <h1 className="mt-6 font-display text-3xl leading-[1.25] sm:text-4xl lg:text-5xl lg:leading-[1.2]">
-                Votre mariage,
-                <br />
-                réuni en un seul endroit.
-            </h1>
-
-            <p className="mx-auto mt-8 max-w-xl text-base leading-relaxed text-ink/70">
-                Vos documents, votre carnet design, vos moodboards et vos échanges
-                avec Jessica — dans un espace privé qui n’appartient qu’à vous.
-            </p>
-
-            <div className="mt-12 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-                <Link
-                    href={connecte ? route('dashboard') : route('login')}
-                    className={boutonPrincipal}
-                >
-                    {connecte ? 'Accéder à mon espace' : 'Se connecter'}
-                </Link>
-                <a href="#acces" className={boutonSecondaire}>
-                    Demander un accès
-                </a>
+                <div className="grid grid-cols-2 gap-3">
+                    <Photo image={images.arch} ratio="aspect-[3/4]" eager rounded="rounded-3xl" />
+                    <Photo image={images.bouquet} ratio="aspect-[3/4]" eager className="mt-10" rounded="rounded-3xl" />
+                </div>
             </div>
         </section>
     );
 }
 
-function Rubriques() {
+function Stats({ t }) {
     return (
-        <section aria-labelledby="titre-rubriques" className="border-t border-ink/10">
-            <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10">
-                <h2
-                    id="titre-rubriques"
-                    className="text-center text-[11px] uppercase tracking-brand text-sage"
-                >
-                    Ce que vous y retrouverez
-                </h2>
+        <section aria-label={t.statsLabel} className="border-b border-ink/10 bg-blush/40">
+            <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8 sm:grid-cols-3 sm:px-10">
+                {t.stats.map((item) => (
+                    <div key={item.label} className="rounded-2xl border border-ink/10 bg-ivory px-5 py-5">
+                        <p className="font-display text-xl">{item.value}</p>
+                        <p className="mt-1 text-sm text-ink/70">{item.label}</p>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
 
-                <ul className="mt-14 grid gap-px bg-ink/10 sm:grid-cols-2 lg:grid-cols-4">
-                    {RUBRIQUES.map((rubrique) => (
-                        <li key={rubrique.label} className="bg-ivory p-8">
-                            <p className="text-[10px] uppercase tracking-brand text-sage">
-                                {rubrique.label}
-                            </p>
-                            <h3 className="mt-5 font-display text-xl leading-snug">
-                                {rubrique.titre}
-                            </h3>
-                            <p className="mt-4 text-sm leading-relaxed text-ink/70">
-                                {rubrique.texte}
-                            </p>
+function Services({ t, images }) {
+    return (
+        <section id="prestations" aria-labelledby="services-title" className="scroll-mt-24">
+            <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
+                <SectionIntro id="services-title" eyebrow={t.services.eyebrow} title={t.services.title} text={t.services.text} />
+
+                <div className="mt-14 space-y-10">
+                    {t.services.items.map((service, index) => (
+                        <article
+                            key={service.title}
+                            className="grid items-center gap-8 rounded-3xl border border-ink/10 bg-blush/30 p-6 sm:p-8 lg:grid-cols-2 lg:gap-14"
+                        >
+                            <Photo
+                                image={images[service.image]}
+                                ratio="aspect-[5/4]"
+                                rounded="rounded-2xl"
+                                className={index % 2 === 1 ? 'lg:order-2' : ''}
+                            />
+
+                            <div className="max-w-md">
+                                <p className="text-[10px] uppercase tracking-brand text-sage">{service.phase}</p>
+                                <h3 className="mt-4 font-display text-2xl leading-snug">{service.title}</h3>
+                                <p className="mt-4 text-sm leading-relaxed text-ink/70">{service.text}</p>
+
+                                <ul className="mt-6">
+                                    {service.points.map((point) => (
+                                        <li key={point} className="border-t border-ink/15 py-3 text-sm last:border-b">
+                                            {point}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function ClientArea({ homeUrl, t }) {
+    return (
+        <section id="espace-client" aria-labelledby="client-area-title" className="scroll-mt-24 bg-blush">
+            <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
+                <SectionIntro id="client-area-title" eyebrow={t.clientArea.eyebrow} title={t.clientArea.title} text={t.clientArea.text} />
+
+                <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {t.clientArea.features.map((feature) => (
+                        <li key={feature.title} className="rounded-2xl border border-ink/10 bg-ivory p-6">
+                            <Icone nom={feature.icon} className="text-[24px] text-sage" />
+                            <h3 className="mt-4 font-display text-lg leading-snug">{feature.title}</h3>
+                            <p className="mt-3 text-sm leading-relaxed text-ink/70">{feature.text}</p>
                         </li>
                     ))}
                 </ul>
+
+                <div className="mt-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+                    <PrimaryAction homeUrl={homeUrl} label={t.clientArea.cta} loggedLabel={t.hero.loggedPrimary} />
+                    {!homeUrl && <p className="max-w-sm text-sm text-ink/70">{t.clientArea.note}</p>}
+                </div>
             </div>
         </section>
     );
 }
 
-function Acces() {
+function About({ t, images }) {
     return (
-        <section id="acces" aria-labelledby="titre-acces" className="scroll-mt-8 bg-blush">
-            <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
+        <section id="a-propos" aria-labelledby="about-title" className="scroll-mt-24">
+            <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:px-10 sm:py-24 lg:grid-cols-[2fr_3fr] lg:gap-20">
+                <Photo image={images.jessica} ratio="aspect-[4/5]" rounded="rounded-3xl" />
+
                 <div className="max-w-xl">
-                    <p className="text-[11px] uppercase tracking-brand text-sage">
-                        Votre accès
-                    </p>
-                    <h2
-                        id="titre-acces"
-                        className="mt-6 font-display text-2xl leading-snug sm:text-3xl"
-                    >
-                        Un espace ouvert par Jessica, pour vous seuls.
+                    <p className="text-[10px] uppercase tracking-brand text-sage">{t.about.eyebrow}</p>
+                    <h2 id="about-title" className="mt-4 font-display text-2xl leading-snug sm:text-3xl">
+                        {t.about.title}
                     </h2>
-                    <p className="mt-6 text-base leading-relaxed text-ink/70">
-                        Il n’y a pas d’inscription libre. Chaque espace est créé à la
-                        main, pour un couple et pour un mariage — personne d’autre n’y
-                        a accès.
-                    </p>
+                    <p className="mt-6 text-base leading-relaxed text-ink/70">{t.about.first}</p>
+                    <p className="mt-5 text-base leading-relaxed text-ink/70">{t.about.second}</p>
+
+                    <blockquote className="mt-10 border-l-2 border-sage pl-6 font-display text-xl italic leading-snug text-ink/80 sm:text-2xl">
+                        {t.about.quote}
+                    </blockquote>
                 </div>
+            </div>
+        </section>
+    );
+}
 
-                <ol className="mt-14 grid gap-10 sm:grid-cols-3 sm:gap-8">
-                    {ETAPES.map((etape) => (
-                        <li key={etape.numero} className="border-t border-ink/15 pt-6">
-                            <p className="font-display text-sm text-sage">
-                                {etape.numero}
-                            </p>
-                            <h3 className="mt-4 font-display text-lg leading-snug">
-                                {etape.titre}
-                            </h3>
-                            <p className="mt-3 text-sm leading-relaxed text-ink/70">
-                                {etape.texte}
-                            </p>
-                        </li>
-                    ))}
-                </ol>
+/**
+ * Last section: the invitation to send a request, and the contact details for
+ * a question asked beforehand.
+ */
+function Start({ homeUrl, t }) {
+    const contactLink = `${focusRing} transition-colors hover:text-sage`;
 
-                <div className="mt-14 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                    <a href={LIEN_DEMANDE} className={boutonPrincipal}>
-                        Demander un accès
-                    </a>
-                    <Link href={route('login')} className={boutonSecondaire}>
-                        J’ai déjà un identifiant
+    return (
+        <section id="contact" aria-labelledby="start-title" className="scroll-mt-24 border-t border-ink/10 bg-ink text-ivory">
+            <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:px-10 sm:py-24 md:grid-cols-[3fr_2fr] md:items-center md:gap-16">
+                <div className="max-w-xl">
+                    <p className="text-[10px] uppercase tracking-brand text-ivory/60">{t.start.eyebrow}</p>
+                    <h2 id="start-title" className="mt-4 font-display text-3xl leading-snug sm:text-4xl">
+                        {t.start.title}
+                    </h2>
+                    <p className="mt-6 text-base leading-relaxed text-ivory/75">{t.start.text}</p>
+
+                    <Link
+                        href={homeUrl ?? route('access-request.create')}
+                        className={`${focusRing} mt-10 inline-flex items-center justify-center bg-ivory px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-ink transition-opacity hover:opacity-85`}
+                    >
+                        {homeUrl ? t.hero.loggedPrimary : t.start.button}
                     </Link>
                 </div>
+
+                <address className="rounded-3xl border border-ivory/15 p-8 not-italic">
+                    <p className="font-display text-lg leading-snug">{t.start.questionsTitle}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-ivory/70">{t.start.questionsText}</p>
+
+                    <ul className="mt-6 space-y-3 text-sm">
+                        <li>
+                            <a href={CONTACT.phoneLink} className={contactLink}>
+                                {CONTACT.phone}
+                            </a>
+                        </li>
+                        <li>
+                            <a href={`mailto:${CONTACT.email}`} className={contactLink}>
+                                {CONTACT.email}
+                            </a>
+                        </li>
+                        <li>
+                            <a href={CONTACT.instagram} target="_blank" rel="noreferrer" className={contactLink}>
+                                Instagram
+                            </a>
+                        </li>
+                    </ul>
+                </address>
             </div>
         </section>
-    );
-}
-
-function Contact() {
-    return (
-        <section aria-labelledby="titre-contact" className="border-t border-ink/10">
-            <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-20 sm:px-10 md:flex-row md:items-end md:justify-between">
-                <div className="max-w-md">
-                    <p className="text-[11px] uppercase tracking-brand text-sage">
-                        Une question
-                    </p>
-                    <h2
-                        id="titre-contact"
-                        className="mt-6 font-display text-2xl leading-snug"
-                    >
-                        Écrivez-lui, elle répond.
-                    </h2>
-                    <p className="mt-5 text-sm leading-relaxed text-ink/70">
-                        Avant, pendant, après : vous n’avez jamais besoin d’un compte
-                        pour joindre Jessica.
-                    </p>
-                </div>
-
-                <div className="flex flex-col items-stretch gap-3 sm:flex-row">
-                    <a
-                        href={`mailto:${CONTACT.email}`}
-                        className={`${boutonSecondaire} text-sm normal-case tracking-normal`}
-                    >
-                        {CONTACT.email}
-                    </a>
-                    {CONTACT.whatsapp.length > 0 && (
-                        <a
-                            href={`https://wa.me/${CONTACT.whatsapp}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={boutonSecondaire}
-                        >
-                            WhatsApp
-                        </a>
-                    )}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-function PiedDePage() {
-    return (
-        <footer className="border-t border-ink/10 bg-blush">
-            <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 sm:px-10 md:flex-row md:items-center md:justify-between">
-                <p className="font-display text-sm italic text-ink/70">
-                    « Faire de votre mariage, votre endroit préféré au monde. »
-                </p>
-
-                <div className="flex flex-col gap-2 text-[11px] uppercase tracking-[0.18em] text-sage md:items-end">
-                    <p>Wedding design · Coordination · Officiante</p>
-                    <a
-                        href={CONTACT.website}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={`${anneauFocus} transition-colors hover:text-ink`}
-                    >
-                        laderniertouche.com
-                    </a>
-                </div>
-            </div>
-        </footer>
     );
 }

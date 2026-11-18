@@ -1,12 +1,23 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
+import FieldError from '@/Components/FieldError';
+import PasswordField from '@/Components/PasswordField';
+import AuthLayout, { StatusMessage } from '@/Layouts/AuthLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { fieldLabel, primaryButton, textField, textLink } from '@/brand';
+import { useTranslation } from '@/i18n';
 
+/**
+ * Login page, following the project's brand guidelines.
+ *
+ * This is the only login page of the application: couples and Jessica both
+ * use it. There is deliberately no sign-up link, accounts are created by hand
+ * by the coordinator; a visitor without an account is sent to the "Votre
+ * accès" section of the landing page.
+ *
+ * The form and its submission are Breeze's (AuthenticatedSessionController),
+ * only the presentation changes.
+ */
 export default function Login({ status, canResetPassword }) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -22,79 +33,84 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <GuestLayout>
-            <Head title="Log in" />
+        <AuthLayout
+            caption={t('auth.login.caption')}
+            title={t('auth.login.title')}
+            intro={t('auth.login.intro')}
+        >
+            <Head title={t('auth.login.caption')} />
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+            <StatusMessage message={status} />
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="mt-10">
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
+                    <label htmlFor="email" className={fieldLabel}>
+                        {t('auth.email')}
+                    </label>
+                    <input
                         id="email"
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className={`${textField} mt-2`}
                         autoComplete="username"
-                        isFocused={true}
+                        autoFocus
+                        required
+                        aria-invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? 'email-error' : undefined}
                         onChange={(e) => setData('email', e.target.value)}
                     />
-
-                    <InputError message={errors.email} className="mt-2" />
+                    <FieldError id="email-error" message={errors.email} />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
+                <div className="mt-8">
+                    <PasswordField
                         id="password"
-                        type="password"
-                        name="password"
+                        label={t('auth.password')}
                         value={data.password}
-                        className="mt-1 block w-full"
+                        error={errors.password}
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
+                <div className="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm">
+                    <label className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
                             name="remember"
                             checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
+                            className="size-4 rounded-none border-ink/30 text-ink focus:ring-sage"
+                            onChange={(e) => setData('remember', e.target.checked)}
                         />
-                        <span className="ms-2 text-sm text-gray-600">
-                            Remember me
-                        </span>
+                        <span className="text-ink/70">{t('auth.login.remember')}</span>
                     </label>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
                     {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        >
-                            Forgot your password?
+                        <Link href={route('password.request')} className={`${textLink} text-ink/70`}>
+                            {t('auth.login.forgotPassword')}
                         </Link>
                     )}
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
                 </div>
+
+                <button
+                    type="submit"
+                    className={`${primaryButton} mt-12 w-full disabled:cursor-wait disabled:opacity-50`}
+                    disabled={processing}
+                >
+                    {processing ? t('auth.login.submitting') : t('auth.login.submit')}
+                </button>
             </form>
-        </GuestLayout>
+
+            <div className="mt-14 border-t border-ink/10 pt-8">
+                <p className="font-display text-lg leading-snug">{t('auth.login.noAccessTitle')}</p>
+                <p className="mt-3 text-sm leading-relaxed text-ink/70">
+                    {t('auth.login.noAccessText')}{' '}
+                    <Link href={route('access-request.create')} className={`${textLink} text-ink`}>
+                        {t('auth.login.requestAccess')}
+                    </Link>
+                </p>
+            </div>
+        </AuthLayout>
     );
 }
