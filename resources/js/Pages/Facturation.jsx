@@ -3,15 +3,15 @@ import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import BackOfficeLayout from '@/Layouts/BackOfficeLayout';
 import { anneauFocus } from '@/charte';
+import { dateExercice, filtrerEncaissements } from '@/Pages/filtreEncaissements';
 import { DialogTitle } from '@headlessui/react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 const typesPaiement = { deposit: 'Acompte', balance: 'Solde', amendment: 'Avenant' };
 const euro = (valeur) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(valeur);
 const dateFr = (date) => date ? new Date(date.slice(0, 10) + 'T12:00:00').toLocaleDateString('fr-FR') : '—';
 const nomCouple = (ligne) => [ligne.partner1_first_name, ligne.partner2_first_name].filter(Boolean).join(' & ');
-const dateExercice = (ligne) => (ligne.paid_at ?? ligne.due_date ?? ligne.invoiced_at ?? ligne.created_at ?? '').slice(0, 10);
 const statutPaiement = (ligne, aujourdHui) => ligne.paid_at ? 'Réglé' : ligne.due_date && ligne.due_date < aujourdHui ? 'En retard' : 'En attente';
 const classeChamp = 'mt-1 w-full rounded-lg border-hairline text-body';
 
@@ -28,15 +28,18 @@ function Champ({ titre, erreur, children }) {
 }
 
 export default function Facturation({ payments, services, today, seuils = [] }) {
-    const [annee, setAnnee] = useState(today.slice(0, 4));
+    const { url } = usePage();
+    const dossierDansUrl = new URLSearchParams(url.split('?')[1] ?? '').get('wedding_id');
+    const [dossier] = useState(/^\d+$/.test(dossierDansUrl ?? '') ? dossierDansUrl : null);
+    const [annee, setAnnee] = useState(dossierDansUrl && /^\d+$/.test(dossierDansUrl) ? 'toutes' : today.slice(0, 4));
     const [factureOuverte, setFactureOuverte] = useState(false);
     const [paiementSelectionne, setPaiementSelectionne] = useState(null);
     const [paiementSansFacture, setPaiementSansFacture] = useState(null);
     const facture = useForm({ wedding_service_id: '', type: 'deposit', amount: '', due_date: today, invoice_number: '', invoice_url: '', invoiced_at: today, paid_at: '' });
     const reglement = useForm({ paid_at: today });
     const reference = useForm({ invoice_number: '', invoice_url: '', invoiced_at: today });
-    const annees = useMemo(() => [...new Set([today.slice(0, 4), annee, ...payments.map((ligne) => dateExercice(ligne).slice(0, 4) || 'sans-date')])].sort().reverse(), [payments, today, annee]);
-    const encaissements = useMemo(() => payments.filter((ligne) => (dateExercice(ligne).slice(0, 4) || 'sans-date') === annee), [payments, annee]);
+    const annees = useMemo(() => [...new Set([today.slice(0, 4), ...payments.map((ligne) => dateExercice(ligne).slice(0, 4) || 'sans-date')])].sort().reverse(), [payments, today]);
+    const encaissements = useMemo(() => filtrerEncaissements(payments, annee, dossier), [payments, annee, dossier]);
     const totaux = useMemo(() => encaissements.reduce((resultat, ligne) => {
         const centimes = Math.round(Number(ligne.amount) * 100);
         resultat.total += centimes;
@@ -98,18 +101,19 @@ export default function Facturation({ payments, services, today, seuils = [] }) 
         <Head title="Facturation & Encaissements" />
         <div className="flex flex-col gap-6">
             <header className="flex flex-wrap items-end justify-between gap-4">
-                <div><p className="mb-1 text-caps uppercase text-sage">Tenue de livres · Exercice {annee}</p><h1 className="font-display text-3xl tracking-tight text-ink sm:text-display">Facturation &amp; Encaissements</h1></div>
+                <div><p className="mb-1 text-caps uppercase text-sage">Tenue de livres · {annee === 'toutes' ? 'Toutes les années' : `Exercice ${annee}`}</p><h1 className="font-display text-3xl tracking-tight text-ink sm:text-display">Facturation &amp; Encaissements</h1></div>
                 <div className="flex flex-wrap gap-3">
                     <label className="sr-only" htmlFor="exercice">Exercice</label>
-                    <select id="exercice" value={annee} onChange={(event) => setAnnee(event.target.value)} className="rounded-lg border-hairline bg-white px-4 py-2 text-body">{annees.map((valeur) => <option key={valeur} value={valeur}>{valeur === 'sans-date' ? 'Sans date' : valeur}</option>)}</select>
+                    <select id="exercice" value={annee} onChange={(event) => setAnnee(event.target.value)} className="rounded-lg border-hairline bg-white px-4 py-2 text-body"><option value="toutes">Toutes les années</option>{annees.map((valeur) => <option key={valeur} value={valeur}>{valeur === 'sans-date' ? 'Sans date' : valeur}</option>)}</select>
                     <button type="button" disabled={services.length === 0} onClick={() => { facture.clearErrors(); setFactureOuverte(true); }} className={anneauFocus + ' inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-label text-white disabled:opacity-50'}><Icone nom="add" />Enregistrer une facture</button>
                 </div>
             </header>
+            {dossier && <p className="rounded-xl border border-hairline bg-white p-4 text-body">Encaissements du dossier DOS-{dossier}. <Link href={route('facturation.index')} className="underline">Voir tous les dossiers</Link></p>}
             {services.length === 0 && <p className="rounded-xl border border-hairline bg-white p-4 text-body text-sage">Aucune prestation n’est encore rattachée à un dossier mariage. Une facture doit être associée à une prestation existante.</p>}
             <div className="grid grid-cols-1 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
                 <section className="min-w-0 overflow-hidden rounded-xl border border-hairline bg-white shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline px-5 py-4"><h2 className="font-display text-title-md">Grand tableau des encaissements</h2><span className="rounded-full bg-ivory px-2.5 py-1 text-body-sm text-sage">{encaissements.length} écritures</span></div>
-                    {encaissements.length === 0 ? <p className="p-8 text-center text-body text-sage">Aucun encaissement enregistré pour cet exercice.</p> : <>
+                    {encaissements.length === 0 ? <p className="p-8 text-center text-body text-sage">Aucun encaissement pour cette sélection.</p> : <>
                         <div className="divide-y divide-hairline 2xl:hidden">{encaissements.map((ligne) => {
                             const statut = statutPaiement(ligne, today);
                             return <article key={ligne.id} className="p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-display text-title-sm">{nomCouple(ligne)}</h3><p className="text-body-sm text-sage">DOS-{ligne.wedding_id} · {ligne.venue_name ?? 'Lieu à préciser'}</p></div><span className={'rounded-full px-2 py-1 text-caps ' + (statut === 'Réglé' ? 'bg-success/10 text-success' : statut === 'En retard' ? 'bg-warning/10 text-warning' : 'bg-ivory text-sage')}>{statut}</span></div>
@@ -135,7 +139,7 @@ export default function Facturation({ payments, services, today, seuils = [] }) 
                     </div>
                 </section>
                 <aside className="rounded-xl border border-hairline bg-white p-6 shadow-sm">
-                    <p className="text-caps uppercase text-sage">Synthèse des encaissements · {annee}</p><p className="mt-4 font-display text-display">{euro(totaux['Réglé'] / 100)}</p><p className="mt-2 text-body text-sage">Montant reçu pendant l’exercice, selon la date de paiement renseignée.</p>
+                    <p className="text-caps uppercase text-sage">Synthèse des encaissements · {annee === 'toutes' ? 'Toutes les années' : annee}</p><p className="mt-4 font-display text-display">{euro(totaux['Réglé'] / 100)}</p><p className="mt-2 text-body text-sage">Montant reçu pour la sélection, selon la date de paiement renseignée.</p>
                     <p className="mt-4 text-body-sm text-sage">Les écritures non réglées sont classées selon leur date d’échéance. Les factures restent produites dans votre outil de facturation ; enregistrez ici leur numéro et leur lien.</p>
                     {dateReference && <div className="mt-4 space-y-1 text-body-sm text-sage"><p>Seuil enregistré : <strong className="text-ink">{seuilNormal ? euro(seuilNormal.valeur) : 'Non renseigné'}</strong></p><p>Seuil majoré enregistré : <strong className="text-ink">{seuilMajore ? euro(seuilMajore.valeur) : 'Non renseigné'}</strong></p><p>Ces chiffres ne déterminent pas à eux seuls le régime de TVA applicable.</p></div>}
                     <a download={'grand-livre-' + annee + '.csv'} href={'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)} className={anneauFocus + ' mt-5 flex items-center justify-center gap-2 rounded-lg border border-hairline px-3 py-2 text-body hover:bg-ivory'}><Icone nom="download" />Exporter le grand livre (CSV)</a>
