@@ -177,50 +177,7 @@ class DemandesTest extends TestCase
             ->where('demandes.0.notes.0', "Note initiale.\n\n2026-11-08 12:00 · Nouvel échange."));
     }
 
-    public function test_local_import_is_idempotent_and_keeps_services_and_notes(): void
-    {
-        $serviceId = DB::table('services')->insertGetId(['name' => 'Décoration']);
-        $legacy = $this->legacyRequest();
-        $this->actingAs(User::factory()->admin()->create());
-
-        $this->post(route('demandes.import'), ['demandes' => [$legacy]])->assertSessionHasNoErrors()->assertRedirect(route('demandes'));
-        $this->post(route('demandes.import'), ['demandes' => [$legacy]])->assertSessionHasNoErrors();
-
-        $this->assertDatabaseCount('couples', 1);
-        $this->assertDatabaseCount('weddings', 1);
-        $this->assertDatabaseCount('wedding_services', 1);
-        $this->assertDatabaseHas('weddings', ['legacy_inquiry_id' => 'demande-test-1', 'inquiry_stage' => 'qualifie', 'notes' => 'Une note locale.', 'first_contact_at' => null]);
-        $this->assertDatabaseHas('wedding_services', ['service_id' => $serviceId]);
-        $this->get(route('demandes'))->assertInertia(fn (Assert $page) => $page
-            ->where('importedIds.0', 'demande-test-1')->where('demandes.0.nom', 'Lou & Sam'));
-    }
-
-    public function test_a_failed_import_rolls_back_all_requests_in_the_batch(): void
-    {
-        DB::table('services')->insert(['name' => 'Décoration']);
-        $first = $this->legacyRequest();
-        $second = [...$first, 'id' => 'demande-test-2', 'prestations' => ['inconnue']];
-
-        $this->actingAs(User::factory()->admin()->create())->post(route('demandes.import'), ['demandes' => [$first, $second]])
-            ->assertSessionHasErrors('demandes.1.prestations');
-
-        $this->assertDatabaseCount('couples', 0);
-        $this->assertDatabaseCount('weddings', 0);
-        $this->assertDatabaseCount('venues', 0);
-    }
-
-    public function test_mock_requests_cannot_be_imported(): void
-    {
-        $legacy = [...$this->legacyRequest(), 'id' => 'camille-thomas'];
-
-        $this->actingAs(User::factory()->admin()->create())->post(route('demandes.import'), ['demandes' => [$legacy]])
-            ->assertSessionHasErrors('demandes.0.id');
-
-        $this->assertDatabaseCount('weddings', 0);
-    }
-
     #[TestWith(['post', '/demandes', []])]
-    #[TestWith(['post', '/demandes/import', []])]
     #[TestWith(['patch', '/demandes/1', ['statut' => 'signe']])]
     #[TestWith(['patch', '/demandes/1/notes', ['note' => 'Test']])]
     public function test_couples_cannot_write_commercial_requests(string $method, string $url, array $data): void
@@ -253,22 +210,5 @@ class DemandesTest extends TestCase
             'couple_id' => $couple->id,
             ...$attributes,
         ]);
-    }
-
-    /**
-     * @return array{id: string, nom: string, date: string, lieu: string, budget: string, prestations: list<string>, statut: string, notes: list<string>}
-     */
-    private function legacyRequest(): array
-    {
-        return [
-            'id' => 'demande-test-1',
-            'nom' => 'Lou & Sam',
-            'date' => '2027-07-10',
-            'lieu' => 'Domaine de test',
-            'budget' => '4500.50',
-            'prestations' => ['decoration'],
-            'statut' => 'qualifie',
-            'notes' => ['Une note locale.'],
-        ];
     }
 }

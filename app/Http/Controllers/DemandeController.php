@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AddDemandeNoteRequest;
-use App\Http\Requests\ImportDemandesRequest;
 use App\Http\Requests\StoreDemandeRequest;
 use App\Http\Requests\UpdateDemandeRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -94,7 +91,6 @@ class DemandeController extends Controller
                 'active' => (bool) $service->is_active,
             ]),
             'lieux' => DB::table('venues')->distinct()->orderBy('name')->pluck('name'),
-            'importedIds' => $weddings->pluck('legacy_inquiry_id')->filter()->values(),
             'nouvelleDemandeId' => session('created_demande_id'),
             'statistiques' => [
                 'actives' => $active->count(),
@@ -146,44 +142,10 @@ class DemandeController extends Controller
         return to_route('demandes');
     }
 
-    public function import(ImportDemandesRequest $request): RedirectResponse
-    {
-        $services = DB::table('services')->get(['id', 'name']);
-        DB::transaction(function () use ($request, $services): void {
-            foreach ($request->validated('demandes') as $index => $legacy) {
-                if (DB::table('weddings')->where('legacy_inquiry_id', $legacy['id'])->exists()) {
-                    continue;
-                }
-                $names = preg_split('/\s*(?:&|\bet\b)\s*/iu', $legacy['nom'], 2);
-                if (trim($names[0]) === '') {
-                    throw ValidationException::withMessages(['demandes.'.$index.'.nom' => 'Le nom du premier partenaire est obligatoire.']);
-                }
-                $serviceIds = [];
-                foreach ($legacy['prestations'] as $key) {
-                    $serviceIds[] = $this->legacyServiceId($key, $services, $index);
-                }
-                $this->createDemande([
-                    'partner1_first_name' => trim($names[0]),
-                    'partner2_first_name' => isset($names[1]) ? trim($names[1]) : null,
-                    'email' => $legacy['email'] ?? null,
-                    'telephone' => $legacy['telephone'] ?? null,
-                    'origine' => $legacy['origine'] ?? null,
-                    'date' => $legacy['date'] ?? null,
-                    'lieu' => $legacy['lieu'] ?? null,
-                    'budget' => $legacy['budget'] ?? null,
-                    'prestations' => array_values(array_unique($serviceIds)),
-                    'notes' => implode("\n\n", $legacy['notes']),
-                ], $legacy['statut'], $legacy['id'], $legacy['motifPerte'] ?? null);
-            }
-        });
-
-        return to_route('demandes');
-    }
-
     /**
      * @param  array{partner1_first_name: string, partner1_last_name?: ?string, partner2_first_name?: ?string, partner2_last_name?: ?string, email?: ?string, telephone?: ?string, origine?: ?string, date?: ?string, lieu?: ?string, budget?: string|int|float|null, prestations: array<int, int|string>, notes?: ?string}  $data
      */
-    private function createDemande(array $data, string $stage = 'nouveau', ?string $legacyId = null, ?string $reason = null): int
+    private function createDemande(array $data): int
     {
         $notes = $data['notes'] ?? null;
         $this->validateNoteLength($notes ?? '');
@@ -205,14 +167,13 @@ class DemandeController extends Controller
         $id = DB::table('weddings')->insertGetId([
             'couple_id' => $coupleId,
             'venue_id' => $venueId,
-            'status' => $this->weddingStatus($stage),
-            'inquiry_stage' => $stage,
-            'legacy_inquiry_id' => $legacyId,
+            'status' => $this->weddingStatus('nouveau'),
+            'inquiry_stage' => 'nouveau',
             'wedding_date' => $data['date'] ?? null,
-            'first_contact_at' => $legacyId === null ? now()->toDateString() : null,
+            'first_contact_at' => now()->toDateString(),
             'lead_source' => $data['origine'] ?? null,
             'estimated_budget' => $data['budget'] ?? null,
-            'cancellation_reason' => $stage === 'perdu' ? $reason : null,
+            'cancellation_reason' => null,
             'notes' => $notes,
             'created_at' => now(),
             'updated_at' => now(),
@@ -263,33 +224,5 @@ class DemandeController extends Controller
         $cents = (int) $whole * 100 + (int) str_pad(substr($fraction, 0, 2), 2, '0');
 
         return str_starts_with($text, '-') ? -$cents : $cents;
-    }
-
-    /**
-     * @param  Collection<int, object>  $services
-     */
-    private function legacyServiceId(string $key, Collection $services, int $index): int
-    {
-        $matches = $services->filter(function (object $service) use ($key): bool {
-            if ((string) $service->id === $key) {
-                return true;
-            }
-            $name = Str::lower(Str::ascii($service->name));
-
-            return match ($key) {
-                'decoration' => str_contains($name, 'decoration'),
-                'coordination' => str_contains($name, 'coordination'),
-                'officiante' => str_contains($name, 'officiant') || str_contains($name, 'ceremonie'),
-                'organisation' => str_contains($name, 'organisation'),
-                default => false,
-            };
-        });
-        if ($matches->count() !== 1) {
-            throw ValidationException::withMessages([
-                'demandes.'.$index.'.prestations' => 'Impossible de retrouver une prestation unique du catalogue pour « '.$key.' ». Aucun dossier de cet import n’a été ajouté.',
-            ]);
-        }
-
-        return (int) $matches->first()->id;
     }
 }

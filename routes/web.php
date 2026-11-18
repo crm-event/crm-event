@@ -126,7 +126,6 @@ Route::get('/recherche', SearchController::class)->middleware(['auth', 'verified
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('demandes')->group(function () {
     Route::get('/', [DemandeController::class, 'index'])->name('demandes');
     Route::post('/', [DemandeController::class, 'store'])->name('demandes.store');
-    Route::post('/import', [DemandeController::class, 'import'])->name('demandes.import');
     Route::patch('/{demande}', [DemandeController::class, 'update'])->whereNumber('demande')->name('demandes.update');
     Route::patch('/{demande}/notes', [DemandeController::class, 'addNote'])->whereNumber('demande')->name('demandes.notes.store');
 });
