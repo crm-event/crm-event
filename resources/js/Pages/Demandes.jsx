@@ -4,7 +4,6 @@ import { anneauFocus } from '@/charte';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-const CLE_STOCKAGE = 'crm-event.demandes.v1';
 const CLASSES_LARGEUR_PIPELINE = 'w-full min-w-[1540px]';
 const ETAPES = [
     { cle: 'nouveau', libelle: 'Nouveau', couleur: 'bg-sage' },
@@ -38,31 +37,6 @@ function dateFrancaise(date) {
         month: 'long',
         year: 'numeric',
     });
-}
-
-function lireDemandesLocales() {
-    try {
-        const donnees = JSON.parse(window.localStorage.getItem(CLE_STOCKAGE) ?? '[]');
-        if (!Array.isArray(donnees)) {
-            return [];
-        }
-        return donnees.filter((demande) => typeof demande?.id === 'string' && /^demande-[a-zA-Z0-9-]+$/.test(demande.id)).map((demande) => ({
-            id: demande.id,
-            nom: demande.nom,
-            date: demande.date || null,
-            lieu: demande.lieu || null,
-            budget: demande.budget ?? null,
-            prestations: Array.isArray(demande.prestations) ? demande.prestations.map(String) : [],
-            statut: demande.statut ?? 'nouveau',
-            notes: Array.isArray(demande.notes) ? demande.notes : [],
-            motifPerte: demande.motifPerte || null,
-            email: demande.email || null,
-            telephone: demande.telephone || null,
-            origine: demande.origine || null,
-        }));
-    } catch {
-        return [];
-    }
 }
 
 function Prestations({ valeurs, catalogue }) {
@@ -314,14 +288,12 @@ function synchroniserDefilement(position, cible) {
     }
 }
 
-export default function Demandes({ demandes, prestations, lieux, importedIds, statistiques }) {
+export default function Demandes({ demandes, prestations, lieux, statistiques }) {
     const pageUrl = usePage().url;
     const barrePipeline = useRef(null);
     const colonnesPipeline = useRef(null);
-    const [demandesLocales] = useState(() => typeof window === 'undefined' ? [] : lireDemandesLocales());
     const [enCours, setEnCours] = useState(false);
     const [erreurs, setErreurs] = useState({});
-    const aImporter = demandesLocales.filter((demande) => !importedIds.includes(demande.id));
     const filtres = [{ cle: 'toutes', libelle: 'Toutes les prestations' }, ...prestations, { cle: 'budget', libelle: 'Budget > 5 000 €' }];
     const [recherche, setRecherche] = useState('');
     const [filtre, setFiltre] = useState('toutes');
@@ -370,12 +342,6 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
         setCreationOuverte(false);
         setDemandeOuverte(id);
     };
-    const importerDemandes = () => {
-        if (!enCours) {
-            router.post(route('demandes.import'), { demandes: aImporter.slice(0, 100) }, optionsEnregistrement());
-        }
-    };
-
     return (
         <BackOfficeLayout actif="demandes" filAriane="Atelier de Production" policeStitch>
             <Head title="Demandes">
@@ -399,7 +365,6 @@ export default function Demandes({ demandes, prestations, lieux, importedIds, st
                     </div>
                 </header>
 
-                {aImporter.length > 0 && <div className="rounded-lg border border-hairline bg-ivory p-4 text-body"><p>{aImporter.length} ancienne(s) demande(s) créée(s) dans ce navigateur peuvent être importées en base. Les exemples de la maquette sont exclus.</p><button type="button" disabled={enCours} onClick={importerDemandes} className={anneauFocus + ' mt-2 text-ink underline disabled:opacity-50'}>{enCours ? 'Import en cours…' : 'Importer mes anciennes demandes locales'}</button></div>}
                 {Object.keys(erreurs).length > 0 && !demandeSelectionnee && <p role="alert" className="text-body text-warning">{Object.values(erreurs)[0]}</p>}
                 <section aria-label="Recherche et filtres" className="flex flex-col gap-3 rounded-lg bg-ivory p-4 xl:flex-row xl:items-center">
                     <div className="relative w-full shrink-0 xl:w-72"><Icone nom="search" className="absolute left-3 top-2.5 text-[18px] text-sage" /><input type="search" aria-label="Rechercher une demande" value={recherche} onChange={(event) => setRecherche(event.target.value)} placeholder="Couple, date ou lieu" className="w-full rounded-md border-0 bg-white py-2 pl-10 pr-4 text-body italic placeholder:text-sage focus:ring-0" /></div>
